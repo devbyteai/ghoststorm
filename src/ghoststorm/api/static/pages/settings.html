@@ -1,0 +1,127 @@
+<!-- PAGE: Settings -->
+<div id="page-settings" class="page-content hidden w-full p-6 overflow-y-auto">
+    <div class="max-w-4xl mx-auto space-y-6">
+        <h2 class="text-2xl font-bold mb-4">Settings</h2>
+
+        <!-- Browser Settings -->
+        <div class="bg-surface rounded-lg border border-gray-700">
+            <div class="px-4 py-3 border-b border-gray-700">
+                <h3 class="font-medium">Browser Settings</h3>
+            </div>
+            <div class="p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-medium">Default Browser Engine</div>
+                        <div class="text-xs text-gray-400">Which browser to use for automation</div>
+                    </div>
+                    <select id="settings-browser-engine" class="bg-surface-light border border-gray-600 rounded px-3 py-2">
+                        <option value="patchright">Patchright</option>
+                        <option value="playwright">Playwright</option>
+                        <option value="camoufox">Camoufox</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-medium">Headless Mode</div>
+                        <div class="text-xs text-gray-400">Run browsers without visible window</div>
+                    </div>
+                    <input type="checkbox" id="settings-headless" checked class="w-5 h-5 rounded border-gray-600 bg-surface-light">
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-medium">Default Workers</div>
+                        <div class="text-xs text-gray-400">Number of parallel browser sessions</div>
+                    </div>
+                    <input type="number" id="settings-workers" value="5" min="1" max="50" class="w-20 bg-surface-light border border-gray-600 rounded px-3 py-2 text-center">
+                </div>
+            </div>
+        </div>
+
+        <!-- Proxy Settings -->
+        <div class="bg-surface rounded-lg border border-gray-700">
+            <div class="px-4 py-3 border-b border-gray-700">
+                <h3 class="font-medium">Proxy Settings</h3>
+            </div>
+            <div class="p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-medium">Proxy Rotation Strategy</div>
+                        <div class="text-xs text-gray-400">How to rotate between available proxies</div>
+                    </div>
+                    <select id="settings-proxy-provider" class="bg-surface-light border border-gray-600 rounded px-3 py-2">
+                        <option value="weighted">Weighted (by success rate)</option>
+                        <option value="round_robin">Round Robin</option>
+                        <option value="random">Random</option>
+                        <option value="least_used">Least Used</option>
+                        <option value="fastest">Fastest</option>
+                        <option value="sticky">Sticky Session</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-medium">Auto-test Proxies</div>
+                        <div class="text-xs text-gray-400">Test proxies before using them</div>
+                    </div>
+                    <input type="checkbox" id="settings-auto-test" checked class="w-5 h-5 rounded border-gray-600 bg-surface-light">
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-medium">Proxy Timeout (seconds)</div>
+                        <div class="text-xs text-gray-400">Max wait time for proxy connection</div>
+                    </div>
+                    <input type="number" id="settings-proxy-timeout" value="10" min="1" max="60" class="w-20 bg-surface-light border border-gray-600 rounded px-3 py-2 text-center">
+                </div>
+            </div>
+        </div>
+
+        <!-- API Keys -->
+        <div class="bg-surface rounded-lg border border-gray-700">
+            <div class="px-4 py-3 border-b border-gray-700">
+                <h3 class="font-medium">API Keys</h3>
+            </div>
+            <div class="p-4 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">2Captcha API Key</label>
+                    <input type="password" id="settings-2captcha-key" placeholder="Enter API key..." class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Decodo API Key</label>
+                    <input type="password" id="settings-decodo-key" placeholder="Enter API key..." class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">BrightData API Key</label>
+                    <input type="password" id="settings-brightdata-key" placeholder="Enter API key..." class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2">
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Settings -->
+        <div class="bg-surface rounded-lg border border-gray-700">
+            <div class="px-4 py-3 border-b border-gray-700">
+                <h3 class="font-medium">Advanced Settings</h3>
+            </div>
+            <div class="p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-medium">Debug Mode</div>
+                        <div class="text-xs text-gray-400">Enable verbose logging</div>
+                    </div>
+                    <input type="checkbox" id="settings-debug" class="w-5 h-5 rounded border-gray-600 bg-surface-light">
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="font-medium">Auto-save Config</div>
+                        <div class="text-xs text-gray-400">Save settings automatically</div>
+                    </div>
+                    <input type="checkbox" id="settings-autosave" checked class="w-5 h-5 rounded border-gray-600 bg-surface-light">
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="flex justify-end gap-3">
+            <button onclick="resetSettings()" class="px-6 py-2 bg-surface-light border border-gray-600 rounded-lg hover:bg-gray-700">Reset to Defaults</button>
+            <button onclick="saveSettings()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/80">Save Settings</button>
+        </div>
+    </div>
+</div>

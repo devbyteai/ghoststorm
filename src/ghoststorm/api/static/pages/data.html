@@ -1,0 +1,146 @@
+<!-- Data Manager Modal -->
+<div id="data-manager-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+    <div class="bg-surface rounded-lg border border-gray-700 w-full max-w-4xl max-h-[80vh] flex flex-col">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+            <h3 class="font-medium" id="data-manager-title">Data Manager</h3>
+            <button onclick="closeDataManager()" class="text-gray-400 hover:text-white p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-4 flex-1 overflow-y-auto">
+            <div class="mb-4">
+                <label class="block text-sm text-gray-400 mb-2">Select File</label>
+                <select id="data-file-select" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2" onchange="loadFileData()">
+                    <option value="">-- Select a file --</option>
+                </select>
+            </div>
+            <div class="mb-4 flex gap-2">
+                <input type="text" id="new-data-item" placeholder="Add new item..." class="flex-1 bg-surface-light border border-gray-600 rounded px-3 py-2">
+                <button onclick="addDataItem()" class="px-4 py-2 bg-primary text-black rounded hover:bg-primary/80 font-medium">Add</button>
+            </div>
+            <div class="border border-gray-700 rounded">
+                <div class="px-4 py-2 bg-surface-light border-b border-gray-700 flex justify-between items-center">
+                    <span class="text-sm text-gray-400">Items (<span id="data-item-count">0</span>)</span>
+                    <input type="text" id="data-search" placeholder="Search..." class="bg-surface border border-gray-600 rounded px-2 py-1 text-sm w-48" oninput="filterDataItems()">
+                </div>
+                <div id="data-items-list" class="max-h-96 overflow-y-auto">
+                    <div class="p-8 text-center text-gray-500">Select a file to view items</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PAGE: Data -->
+<div id="page-data" class="page-content hidden w-full p-6 overflow-y-auto">
+    <div class="max-w-6xl mx-auto space-y-6">
+        <h2 class="text-2xl font-bold mb-4">Data Management</h2>
+
+        <div class="grid grid-cols-2 gap-4">
+            <!-- User Agents -->
+            <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <div class="font-medium">User Agents</div>
+                        <div class="text-xs text-gray-400">Browser fingerprint strings</div>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-purple-400 mb-2" id="ua-count">0</div>
+                <button onclick="openDataManager('user_agents', 'User Agents')" class="w-full py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+            </div>
+
+            <!-- Fingerprints -->
+            <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/></svg>
+                    </div>
+                    <div>
+                        <div class="font-medium">Fingerprints</div>
+                        <div class="text-xs text-gray-400">Browser profiles</div>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-green-400 mb-2" id="fp-count">0</div>
+                <button onclick="openDataManager('fingerprints', 'Fingerprints')" class="w-full py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+            </div>
+
+            <!-- Referrers -->
+            <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                    </div>
+                    <div>
+                        <div class="font-medium">Referrers</div>
+                        <div class="text-xs text-gray-400">Traffic sources</div>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-blue-400 mb-2" id="ref-count">0</div>
+                <button onclick="openDataManager('referrers', 'Referrers')" class="w-full py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+            </div>
+
+            <!-- Blacklists -->
+            <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                    </div>
+                    <div>
+                        <div class="font-medium">Blacklists</div>
+                        <div class="text-xs text-gray-400">Blocked URLs/domains</div>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-red-400 mb-2" id="bl-count">0</div>
+                <button onclick="openDataManager('blacklists', 'Blacklists')" class="w-full py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+            </div>
+
+            <!-- Screen Sizes -->
+            <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <div class="font-medium">Screen Sizes</div>
+                        <div class="text-xs text-gray-400">Resolution profiles</div>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-cyan-400 mb-2" id="screen-count">0</div>
+                <button onclick="openDataManager('screen_sizes', 'Screen Sizes')" class="w-full py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+            </div>
+
+            <!-- Behavior Patterns -->
+            <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <div>
+                        <div class="font-medium">Behavior</div>
+                        <div class="text-xs text-gray-400">Human-like patterns</div>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-yellow-400 mb-2" id="behavior-count">0</div>
+                <button onclick="openDataManager('behavior', 'Behavior Patterns')" class="w-full py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+            </div>
+
+            <!-- Evasion Scripts -->
+            <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <div>
+                        <div class="font-medium">Evasion</div>
+                        <div class="text-xs text-gray-400">Anti-detection scripts</div>
+                    </div>
+                </div>
+                <div class="text-2xl font-bold text-orange-400 mb-2" id="evasion-count">0</div>
+                <button onclick="openDataManager('evasion', 'Evasion Scripts')" class="w-full py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+            </div>
+        </div>
+    </div>
+</div>

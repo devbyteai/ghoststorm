@@ -1,0 +1,43 @@
+# Aggressive Profile - Maximum speed/volume
+# Use for permissive sites, load testing
+
+engine:
+  default: playwright
+  headless: true
+  stealth_level: low
+
+concurrency:
+  max_workers: 50
+  max_contexts_per_browser: 10
+  task_timeout: 60
+  retry:
+    max_attempts: 1
+
+fingerprint:
+  provider: browserforge
+  randomize_per_session: false  # Reuse fingerprints for speed
+
+evasion:
+  enabled: false  # Skip evasion for speed
+
+behavior:
+  human_simulation: false
+  mouse:
+    enabled: false
+  keyboard:
+    enabled: false
+  scroll:
+    enabled: false
+  timing:
+    dwell_time_s: [1, 3]
+    action_delay_s: [0.1, 0.5]
+
+network:
+  analytics_blocking: true
+  referrer_spoofing: false
+  request_interception: true
+  blocked_resources:
+    - images
+    - media
+    - fonts
+    - analytics

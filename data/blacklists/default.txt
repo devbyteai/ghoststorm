@@ -1,0 +1,145 @@
+# Default URL Blacklist Patterns
+# Lines starting with # are comments
+# Patterns are matched as regex against full URL
+
+# Authentication pages
+login
+signin
+sign-in
+signup
+sign-up
+register
+logout
+log-out
+auth
+oauth
+password
+forgot
+reset-password
+account/create
+account/login
+
+# Search and filters
+search
+filter
+sort
+query=
+q=
+
+# External social media
+facebook\.com
+twitter\.com
+x\.com
+instagram\.com
+linkedin\.com
+youtube\.com
+tiktok\.com
+pinterest\.com
+snapchat\.com
+whatsapp\.com
+telegram\.org
+discord\.com
+
+# Technical protocols
+^mailto:
+^javascript:
+^tel:
+^sms:
+^data:
+^blob:
+^file:
+
+# Anchors only
+^#$
+/#$
+
+# File downloads
+\.pdf$
+\.zip$
+\.rar$
+\.7z$
+\.exe$
+\.dmg$
+\.pkg$
+\.msi$
+\.deb$
+\.rpm$
+\.doc$
+\.docx$
+\.xls$
+\.xlsx$
+\.ppt$
+\.pptx$
+
+# Images (usually not worth crawling)
+\.jpg$
+\.jpeg$
+\.png$
+\.gif$
+\.svg$
+\.webp$
+\.ico$
+
+# Media files
+\.mp3$
+\.mp4$
+\.avi$
+\.mov$
+\.wmv$
+\.flv$
+\.wav$
+
+# Legal and compliance
+privacy-policy
+privacy\.html
+terms-of-service
+terms-and-conditions
+terms\.html
+cookie-policy
+cookies\.html
+gdpr
+legal
+disclaimer
+compliance
+
+# Unsubscribe and preferences
+unsubscribe
+email-preferences
+notification-settings
+opt-out
+
+# Cart and checkout (avoid creating sessions)
+cart
+checkout
+basket
+add-to-cart
+buy-now
+
+# Admin and backend
+/admin
+/wp-admin
+/dashboard
+/backend
+/cms
+/cpanel
+
+# API endpoints
+/api/
+/v1/
+/v2/
+/graphql
+\.json$
+\.xml$
+
+# Tracking and analytics
+utm_
+click\.
+track\.
+pixel\.
+analytics\.
+
+# Error pages
+/404
+/500
+error\.html
+not-found

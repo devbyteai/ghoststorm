@@ -1,0 +1,42 @@
+# Instagram In-App WebView User Agents
+# Format: Full user agent string for Instagram's built-in browser
+# Updated: 2025-01
+
+# iOS WebView User Agents - iPhone
+Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 312.0.0.38.113 (iPhone16,2; iOS 17_2; en_US; en; scale=3.00; 1290x2796; 548153031)
+Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 312.0.0.38.113 (iPhone16,1; iOS 17_1; en_US; en; scale=3.00; 1179x2556; 548153031)
+Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 312.0.0.38.113 (iPhone15,3; iOS 17_0; en_US; en; scale=3.00; 1290x2796; 548153031)
+Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 312.0.0.38.113 (iPhone15,2; iOS 17_0; en_US; en; scale=3.00; 1179x2556; 548153031)
+Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 310.0.0.32.111 (iPhone14,3; iOS 16_6; en_US; en; scale=3.00; 1284x2778; 547520412)
+Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 310.0.0.32.111 (iPhone14,2; iOS 16_6; en_US; en; scale=3.00; 1170x2532; 547520412)
+Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 308.0.0.28.109 (iPhone13,4; iOS 16_5; en_US; en; scale=3.00; 1284x2778; 546234567)
+Mozilla/5.0 (iPhone; CPU iPhone OS 16_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 306.0.0.24.107 (iPhone12,5; iOS 16_4; en_US; en; scale=3.00; 1242x2688; 545123456)
+Mozilla/5.0 (iPhone; CPU iPhone OS 16_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 304.0.0.20.105 (iPhone12,3; iOS 16_3; en_GB; en; scale=3.00; 1125x2436; 544012345)
+
+# iPad WebView User Agents
+Mozilla/5.0 (iPad; CPU OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 312.0.0.38.113 (iPad13,8; iPadOS 17_2; en_US; en; scale=2.00; 2048x2732; 548153031)
+Mozilla/5.0 (iPad; CPU OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 312.0.0.38.113 (iPad13,4; iPadOS 17_1; en_US; en; scale=2.00; 2388x1668; 548153031)
+Mozilla/5.0 (iPad; CPU OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 310.0.0.32.111 (iPad12,1; iPadOS 16_6; en_US; en; scale=2.00; 2360x1640; 547520412)
+
+# Android WebView User Agents - Samsung
+Mozilla/5.0 (Linux; Android 14; SM-S918B Build/UP1A.231005.007; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.6099.144 Mobile Safari/537.36 Instagram 312.0.0.38.113 Android (34/14; 450dpi; 1080x2316; samsung; SM-S918B)
+Mozilla/5.0 (Linux; Android 13; SM-G998B Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.6099.144 Mobile Safari/537.36 Instagram 312.0.0.38.113 Android (33/13; 480dpi; 1080x2316; samsung; SM-G998B)
+Mozilla/5.0 (Linux; Android 13; SM-G991B Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/119.0.6045.193 Mobile Safari/537.36 Instagram 310.0.0.32.111 Android (33/13; 420dpi; 1080x2400; samsung; SM-G991B)
+Mozilla/5.0 (Linux; Android 13; SM-A546B Build/TP1A.220624.014; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/119.0.6045.193 Mobile Safari/537.36 Instagram 310.0.0.32.111 Android (33/13; 400dpi; 1080x2400; samsung; SM-A546B)
+Mozilla/5.0 (Linux; Android 12; SM-G973F Build/SP1A.210812.016; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/118.0.5993.111 Mobile Safari/537.36 Instagram 308.0.0.28.109 Android (31/12; 420dpi; 1080x2280; samsung; SM-G973F)
+
+# Android WebView User Agents - Google Pixel
+Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro Build/UP1A.231105.003; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.6099.144 Mobile Safari/537.36 Instagram 312.0.0.38.113 Android (34/14; 560dpi; 1440x3120; Google; Pixel 8 Pro)
+Mozilla/5.0 (Linux; Android 14; Pixel 8 Build/UP1A.231105.003; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.6099.144 Mobile Safari/537.36 Instagram 312.0.0.38.113 Android (34/14; 420dpi; 1080x2400; Google; Pixel 8)
+Mozilla/5.0 (Linux; Android 14; Pixel 7 Pro Build/UP1A.231005.007; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.6099.144 Mobile Safari/537.36 Instagram 312.0.0.38.113 Android (34/14; 560dpi; 1440x3120; Google; Pixel 7 Pro)
+Mozilla/5.0 (Linux; Android 14; Pixel 7 Build/UP1A.231005.007; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.6099.144 Mobile Safari/537.36 Instagram 312.0.0.38.113 Android (34/14; 420dpi; 1080x2400; Google; Pixel 7)
+Mozilla/5.0 (Linux; Android 13; Pixel 6 Pro Build/TQ3A.230901.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/119.0.6045.193 Mobile Safari/537.36 Instagram 310.0.0.32.111 Android (33/13; 560dpi; 1440x3120; Google; Pixel 6 Pro)
+Mozilla/5.0 (Linux; Android 13; Pixel 6 Build/TQ3A.230901.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/119.0.6045.193 Mobile Safari/537.36 Instagram 310.0.0.32.111 Android (33/13; 420dpi; 1080x2400; Google; Pixel 6)
+
+# Android WebView User Agents - OnePlus
+Mozilla/5.0 (Linux; Android 14; CPH2449 Build/TP1A.220905.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.6099.144 Mobile Safari/537.36 Instagram 312.0.0.38.113 Android (34/14; 560dpi; 1440x3216; OnePlus; CPH2449)
+Mozilla/5.0 (Linux; Android 13; LE2125 Build/TP1A.220905.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/119.0.6045.193 Mobile Safari/537.36 Instagram 310.0.0.32.111 Android (33/13; 520dpi; 1440x3216; OnePlus; LE2125)
+
+# Android WebView User Agents - Xiaomi
+Mozilla/5.0 (Linux; Android 14; 2211133C Build/UKQ1.230917.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.6099.144 Mobile Safari/537.36 Instagram 312.0.0.38.113 Android (34/14; 440dpi; 1220x2712; Xiaomi; 2211133C)
+Mozilla/5.0 (Linux; Android 13; 2201116SG Build/TKQ1.220807.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/119.0.6045.193 Mobile Safari/537.36 Instagram 310.0.0.32.111 Android (33/13; 440dpi; 1080x2400; Xiaomi; 2201116SG)

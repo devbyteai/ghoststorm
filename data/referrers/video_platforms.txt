@@ -1,0 +1,66 @@
+# Video platform referrers
+# These look like clicks from video descriptions/comments
+
+# YouTube - various watch patterns
+https://www.youtube.com/watch?v=dQw4w9WgXcQ
+https://www.youtube.com/watch?v=jNQXAC9IVRw
+https://www.youtube.com/watch?v=kJQP7kiw5Fk
+https://www.youtube.com/watch?v=9bZkp7q19f0
+https://www.youtube.com/watch?v=RgKAFK5djSk
+https://www.youtube.com/
+https://www.youtube.com/results?search_query=
+https://www.youtube.com/feed/subscriptions
+https://www.youtube.com/feed/trending
+https://youtu.be/
+https://m.youtube.com/
+
+# YouTube Shorts
+https://www.youtube.com/shorts/
+
+# Vimeo
+https://vimeo.com/
+https://player.vimeo.com/
+
+# Dailymotion
+https://www.dailymotion.com/
+https://www.dailymotion.com/video/
+
+# TikTok
+https://www.tiktok.com/
+https://vm.tiktok.com/
+https://www.tiktok.com/@
+
+# Twitch
+https://www.twitch.tv/
+https://clips.twitch.tv/
+https://m.twitch.tv/
+
+# Facebook Video
+https://www.facebook.com/watch/
+https://fb.watch/
+
+# Instagram Reels
+https://www.instagram.com/reel/
+https://www.instagram.com/reels/
+
+# Twitter/X Video
+https://twitter.com/i/status/
+https://x.com/i/status/
+
+# Reddit Video
+https://www.reddit.com/r/videos/
+https://v.redd.it/
+
+# Rumble
+https://rumble.com/
+https://rumble.com/v
+
+# Odysee
+https://odysee.com/
+
+# Bitchute
+https://www.bitchute.com/video/
+
+# PeerTube
+https://framatube.org/
+https://peertube.social/

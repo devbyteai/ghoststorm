@@ -1,0 +1,61 @@
+services:
+  ghoststorm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/.venv
+    environment:
+      - GHOSTSTORM_DEBUG=true
+      - GHOSTSTORM_LOG_LEVEL=DEBUG
+      - OLLAMA_URL=http://ollama:11434
+    depends_on:
+      - ollama
+    command: uv run python -m ghoststorm.api --reload
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # Optional: Redis for distributed mode
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    profiles:
+      - distributed
+
+  # Optional: PostgreSQL for production
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ghoststorm
+      POSTGRES_PASSWORD: ghoststorm
+      POSTGRES_DB: ghoststorm
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    profiles:
+      - production
+
+volumes:
+  ollama_data:
+  redis_data:
+  postgres_data:

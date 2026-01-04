@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Linting
+.ruff_cache/
+.mypy_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific - test outputs
+https_working.txt
+https_proxies.txt
+working_proxies.txt
+working_https_proxies.txt
+verified_proxies.txt
+*.log
+
+# Database (if created at runtime)
+*.db
+ghoststorm.db
+
+# Output directory (generated at runtime)
+output/
+
+# Development scripts (contain local paths)
+scripts/

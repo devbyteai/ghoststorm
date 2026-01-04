@@ -1,0 +1,30 @@
+{
+  "tiktok_gorgon": {
+    "last_updated": "2025-01-03T00:00:00",
+    "github_hash": null,
+    "cdn_hash": null,
+    "verified": false,
+    "notes": "Initial implementation from TikTok-ViewBot project"
+  },
+  "tiktok_xbogus": {
+    "last_updated": "2026-01-04T11:58:32.683344",
+    "github_hash": "318ed59576ea92edf807423758f14696",
+    "cdn_hash": null,
+    "verified": false,
+    "notes": "Requires JavaScript VM execution"
+  },
+  "tiktok_xgnarly": {
+    "last_updated": null,
+    "github_hash": null,
+    "cdn_hash": null,
+    "verified": false,
+    "notes": "Used alongside X-Bogus on newer endpoints"
+  },
+  "tiktok_mssdk": {
+    "last_updated": null,
+    "github_hash": null,
+    "cdn_hash": null,
+    "verified": false,
+    "notes": "Mobile SDK - requires APK analysis"
+  }
+}

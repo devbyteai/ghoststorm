@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://devbyteai.github.io/ghoststorm
+    about: Check the documentation before opening an issue
+  - name: Discussions
+    url: https://github.com/devbyteai/ghoststorm/discussions
+    about: Ask questions and discuss ideas
+  - name: Security
+    url: https://github.com/devbyteai/ghoststorm/security/advisories/new
+    about: Report security vulnerabilities privately

@@ -1,0 +1,56 @@
+{
+  "name": "GhostStorm Dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml",
+        "bradlc.vscode-tailwindcss",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens",
+        "usernamehw.errorlens"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/workspaces/ghoststorm/.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit",
+            "source.organizeImports": "explicit"
+          }
+        }
+      }
+    }
+  },
+  "postCreateCommand": "uv sync --all-extras --dev && uv run pre-commit install",
+  "postStartCommand": "uv run patchright install chromium",
+  "forwardPorts": [8000, 11434],
+  "portsAttributes": {
+    "8000": {
+      "label": "GhostStorm API",
+      "onAutoForward": "notify"
+    },
+    "11434": {
+      "label": "Ollama",
+      "onAutoForward": "silent"
+    }
+  },
+  "remoteUser": "vscode"
+}

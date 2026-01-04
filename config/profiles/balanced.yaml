@@ -1,0 +1,39 @@
+# Balanced Profile - Good mix of speed and stealth
+# Default for most use cases
+
+engine:
+  default: patchright
+  headless: true
+  stealth_level: high
+
+concurrency:
+  max_workers: 20
+  max_contexts_per_browser: 5
+  task_timeout: 120
+
+fingerprint:
+  provider: device_profiles
+  randomize_per_session: true
+  consistency: strict
+
+evasion:
+  enabled: true
+  modules:
+    canvas_defense: true
+    webgl_spoof: true
+    battery_fake: true
+    rtc_block: true
+    font_mask: true
+    timezone_geo: true
+
+behavior:
+  human_simulation: true
+  mouse:
+    enabled: true
+    overshoot_probability: 0.15
+  keyboard:
+    wpm_range: [40, 80]
+    typo_probability: 0.02
+  timing:
+    dwell_time_s: [5, 30]
+    action_delay_s: [0.5, 2.0]

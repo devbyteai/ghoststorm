@@ -1,0 +1,287 @@
+<!-- PAGE: Engine -->
+<div id="page-engine" class="page-content hidden w-full p-6 overflow-y-auto">
+    <div class="max-w-6xl mx-auto space-y-6">
+        <h2 class="text-2xl font-bold mb-4">Automation Engine</h2>
+        <p class="text-gray-400 mb-4">Generic automation engine for testing any site. Configure target URL, goal detection, and actions.</p>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-4 gap-4">
+            <div class="bg-surface-light rounded-lg p-4">
+                <div class="text-3xl font-bold text-blue-400" id="engine-total">0</div>
+                <div class="text-sm text-gray-400">Total Runs</div>
+            </div>
+            <div class="bg-surface-light rounded-lg p-4">
+                <div class="text-3xl font-bold text-green-400" id="engine-successful">0</div>
+                <div class="text-sm text-gray-400">Successful</div>
+            </div>
+            <div class="bg-surface-light rounded-lg p-4">
+                <div class="text-3xl font-bold text-red-400" id="engine-failed">0</div>
+                <div class="text-sm text-gray-400">Failed</div>
+            </div>
+            <div class="bg-surface-light rounded-lg p-4">
+                <div class="text-3xl font-bold text-yellow-400" id="engine-running">0</div>
+                <div class="text-sm text-gray-400">Running</div>
+            </div>
+        </div>
+
+        <!-- Presets Panel -->
+        <div class="bg-surface rounded-lg border border-gray-700">
+            <div class="px-4 py-3 border-b border-gray-700 flex justify-between items-center">
+                <h3 class="font-medium flex items-center gap-2">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                    </svg>
+                    Preset Templates
+                </h3>
+                <div class="flex gap-2">
+                    <button onclick="saveCurrentAsPreset()" class="text-xs px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                        </svg>
+                        Save Current
+                    </button>
+                    <button onclick="loadEnginePresets()" class="text-xs text-gray-400 hover:text-white">Refresh</button>
+                </div>
+            </div>
+
+            <!-- Category Tabs -->
+            <div class="px-4 py-2 border-b border-gray-700 flex gap-2 overflow-x-auto">
+                <button onclick="filterPresets('all')" class="preset-tab active text-xs px-3 py-1.5 rounded-full bg-gray-700 hover:bg-gray-600" data-category="all">
+                    All
+                </button>
+                <button onclick="filterPresets('login')" class="preset-tab text-xs px-3 py-1.5 rounded-full bg-gray-800 hover:bg-gray-700" data-category="login">
+                    Login
+                </button>
+                <button onclick="filterPresets('captcha')" class="preset-tab text-xs px-3 py-1.5 rounded-full bg-gray-800 hover:bg-gray-700" data-category="captcha">
+                    Captcha
+                </button>
+                <button onclick="filterPresets('form')" class="preset-tab text-xs px-3 py-1.5 rounded-full bg-gray-800 hover:bg-gray-700" data-category="form">
+                    Form
+                </button>
+                <button onclick="filterPresets('social')" class="preset-tab text-xs px-3 py-1.5 rounded-full bg-gray-800 hover:bg-gray-700" data-category="social">
+                    Social
+                </button>
+                <button onclick="filterPresets('custom')" class="preset-tab text-xs px-3 py-1.5 rounded-full bg-gray-800 hover:bg-gray-700" data-category="custom">
+                    Custom
+                </button>
+            </div>
+
+            <!-- Preset Grid -->
+            <div id="engine-presets-grid" class="p-4 grid grid-cols-4 gap-3">
+                <div class="text-center text-gray-500 py-4 col-span-4">Loading presets...</div>
+            </div>
+        </div>
+
+        <!-- Main Config Panel -->
+        <div class="grid grid-cols-3 gap-6">
+            <!-- Left: Configuration -->
+            <div class="col-span-2 space-y-4">
+                <!-- Quick Test Panel -->
+                <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                    <h3 class="font-medium text-lg mb-4">Quick Test & Analyze</h3>
+                    <div class="flex gap-4">
+                        <input type="text" id="engine-test-url"
+                            placeholder="https://example.com"
+                            class="flex-1 bg-surface-light border border-gray-600 rounded-lg px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                        <button onclick="analyzeEngineUrl()"
+                            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                            </svg>
+                            Analyze
+                        </button>
+                    </div>
+
+                    <!-- Test Result -->
+                    <div id="engine-test-result" class="mt-4 hidden">
+                        <div class="bg-surface-light rounded-lg p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-medium" id="engine-test-title">-</span>
+                                <span class="text-xs px-2 py-1 rounded" id="engine-test-status">-</span>
+                            </div>
+                            <div class="text-sm text-gray-400 mb-2" id="engine-test-url-display">-</div>
+                            <div class="text-xs text-gray-500 max-h-24 overflow-y-auto" id="engine-test-text">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Detection Results -->
+                    <div id="engine-detection-panel" class="mt-4 hidden">
+                        <div class="bg-surface-light rounded-lg p-4 border border-blue-500/30">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="font-medium text-sm flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                    Detection Results
+                                </h4>
+                                <span class="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400" id="engine-page-type">-</span>
+                            </div>
+
+                            <!-- Detected Elements -->
+                            <div class="mb-3">
+                                <label class="text-xs text-gray-500 mb-1 block">Detected Elements</label>
+                                <div id="engine-detected-elements" class="flex flex-wrap gap-2">
+                                    <!-- Element chips will be rendered here -->
+                                </div>
+                            </div>
+
+                            <!-- Suggested Keywords -->
+                            <div class="mb-3">
+                                <label class="text-xs text-gray-500 mb-1 block">Suggested Goal Keywords (click to add)</label>
+                                <div id="engine-suggested-keywords" class="flex flex-wrap gap-1">
+                                    <!-- Keyword chips will be rendered here -->
+                                </div>
+                            </div>
+
+                            <!-- Captcha Selectors -->
+                            <div id="engine-captcha-suggestions" class="mb-3 hidden">
+                                <label class="text-xs text-gray-500 mb-1 block">Detected Captcha Selectors</label>
+                                <div class="bg-surface rounded p-2 text-xs font-mono space-y-1" id="engine-captcha-display">
+                                    <!-- Captcha info will be here -->
+                                </div>
+                            </div>
+
+                            <!-- Apply Button -->
+                            <div class="flex gap-2 mt-4">
+                                <button onclick="applyDetectionResults()"
+                                    class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-sm font-medium flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Apply Suggestions
+                                </button>
+                                <button onclick="applyAndFillUrl()"
+                                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm font-medium">
+                                    Apply + Fill URL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Full Configuration -->
+                <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                    <h3 class="font-medium text-lg mb-4">Automation Configuration</h3>
+
+                    <!-- Site Info -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Target URL</label>
+                            <input type="text" id="engine-url"
+                                placeholder="https://example.com"
+                                class="w-full bg-surface-light border border-gray-600 rounded-lg px-4 py-3 focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Site Name</label>
+                            <input type="text" id="engine-name"
+                                placeholder="My Site"
+                                class="w-full bg-surface-light border border-gray-600 rounded-lg px-4 py-3 focus:border-blue-500 outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Goal Keywords -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">Goal Keywords (comma separated)</label>
+                        <input type="text" id="engine-goal-keywords"
+                            placeholder="dashboard, welcome, success, logged in"
+                            class="w-full bg-surface-light border border-gray-600 rounded-lg px-4 py-3 focus:border-blue-500 outline-none">
+                        <p class="text-xs text-gray-500 mt-1">Engine will stop when these keywords are found on page</p>
+                    </div>
+
+                    <!-- Captcha Selectors -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">Captcha Selectors (optional)</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <input type="text" id="engine-captcha-image"
+                                placeholder="Image: img.captcha"
+                                class="bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm focus:border-blue-500 outline-none">
+                            <input type="text" id="engine-captcha-input"
+                                placeholder="Input: #captcha"
+                                class="bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm focus:border-blue-500 outline-none">
+                            <input type="text" id="engine-captcha-submit"
+                                placeholder="Submit: button"
+                                class="bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm focus:border-blue-500 outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-medium">Actions (executed in order)</label>
+                            <button onclick="addEngineAction()" class="text-xs px-2 py-1 bg-blue-600 rounded hover:bg-blue-700">+ Add Action</button>
+                        </div>
+                        <div id="engine-actions" class="space-y-2">
+                            <!-- Actions will be added here -->
+                        </div>
+                    </div>
+
+                    <!-- Options -->
+                    <div class="flex items-center gap-6 mb-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="engine-headless" checked
+                                class="w-4 h-4 rounded border-gray-600 bg-surface-light accent-blue-500">
+                            <span class="text-sm">Headless Mode</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="engine-solve-captcha" checked
+                                class="w-4 h-4 rounded border-gray-600 bg-surface-light accent-blue-500">
+                            <span class="text-sm">Solve Captcha (OCR)</span>
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm">Max Iterations:</label>
+                            <input type="number" id="engine-max-iterations" value="30" min="1" max="100"
+                                class="w-16 bg-surface-light border border-gray-600 rounded px-2 py-1 text-center text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Start Button -->
+                    <button onclick="startEngineJob()"
+                        class="w-full px-6 py-4 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        RUN AUTOMATION
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right: Jobs & Logs -->
+            <div class="space-y-4">
+                <!-- Active Jobs -->
+                <div class="bg-surface rounded-lg border border-gray-700">
+                    <div class="px-4 py-3 border-b border-gray-700 flex justify-between items-center">
+                        <h3 class="font-medium">Jobs</h3>
+                        <button onclick="refreshEngineJobs()" class="text-xs text-blue-400 hover:text-blue-300">Refresh</button>
+                    </div>
+                    <div id="engine-jobs" class="max-h-64 overflow-y-auto divide-y divide-gray-700">
+                        <div class="text-center text-gray-500 py-4">No jobs yet</div>
+                    </div>
+                </div>
+
+                <!-- Logs -->
+                <div class="bg-surface rounded-lg border border-gray-700">
+                    <div class="px-4 py-3 border-b border-gray-700 flex justify-between items-center">
+                        <h3 class="font-medium">Logs</h3>
+                        <button onclick="clearEngineLogs()" class="text-xs text-gray-400 hover:text-white">Clear</button>
+                    </div>
+                    <div id="engine-logs" class="h-64 overflow-y-auto p-2 font-mono text-xs space-y-1">
+                        <div class="text-gray-500">Engine logs will appear here...</div>
+                    </div>
+                </div>
+
+                <!-- Screenshot Preview -->
+                <div class="bg-surface rounded-lg border border-gray-700">
+                    <div class="px-4 py-3 border-b border-gray-700">
+                        <h3 class="font-medium">Latest Screenshot</h3>
+                    </div>
+                    <div id="engine-screenshot" class="p-2">
+                        <div class="bg-surface-light rounded h-48 flex items-center justify-center text-gray-500 text-sm">
+                            No screenshot
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

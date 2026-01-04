@@ -1,0 +1,49 @@
+# Social Media Boost Automation Preset
+id: social_boost
+name: "Social Boost"
+description: "Social media engagement boost sites (followers, likes, views)"
+category: social
+icon: "trending-up"
+
+goal_keywords:
+  - followers
+  - views
+  - likes
+  - hearts
+  - shares
+  - comments
+  - subscribers
+  - success
+  - sent
+  - added
+
+captcha_selectors:
+  image: "img[src*='captcha'], img.captcha, img.img-thumbnail"
+  input: "input[name*='captcha'], #captchatoken, input[placeholder*='captcha']"
+  submit: "button[type='submit']"
+
+actions:
+  - type: fill
+    name: "Enter video/profile URL"
+    selectors:
+      - "input[type='text']"
+      - "input[placeholder*='url']"
+      - "input[placeholder*='video']"
+      - "input[placeholder*='link']"
+      - "input[type='search']"
+    value: ""
+    required: true
+
+  - type: click
+    name: "Submit URL"
+    selectors:
+      - "button[type='submit']"
+      - "input[type='submit']"
+      - ".btn-primary"
+      - "button:has-text('Search')"
+      - "button:has-text('Send')"
+
+settings:
+  headless: true
+  solve_captcha: true
+  max_iterations: 50

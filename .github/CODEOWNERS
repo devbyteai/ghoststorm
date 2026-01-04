@@ -1,0 +1,40 @@
+# GhostStorm Code Owners
+# These owners will be automatically requested for review
+
+# Global owners
+* @devbyteai
+
+# Core engine
+/src/ghoststorm/core/ @devbyteai
+/src/ghoststorm/engine/ @devbyteai
+
+# API and Web
+/src/ghoststorm/api/ @devbyteai
+/src/ghoststorm/web/ @devbyteai
+
+# Browser automation
+/src/ghoststorm/browser/ @devbyteai
+/src/ghoststorm/plugins/ @devbyteai
+
+# Proxy management
+/src/ghoststorm/proxy/ @devbyteai
+
+# AI/LLM integration
+/src/ghoststorm/llm/ @devbyteai
+/src/ghoststorm/assistant/ @devbyteai
+
+# Tests
+/tests/ @devbyteai
+
+# Documentation
+/docs/ @devbyteai
+*.md @devbyteai
+
+# CI/CD
+/.github/ @devbyteai
+
+# Configuration
+/config/ @devbyteai
+pyproject.toml @devbyteai
+Dockerfile @devbyteai
+docker-compose.yml @devbyteai

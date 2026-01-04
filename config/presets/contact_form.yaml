@@ -1,0 +1,59 @@
+# Contact Form Automation Preset
+id: contact_form
+name: "Contact Form"
+description: "Generic contact/inquiry form submission"
+category: form
+icon: "mail"
+
+goal_keywords:
+  - thank you
+  - message sent
+  - we will contact
+  - received
+  - submitted
+  - success
+
+captcha_selectors:
+  image: "img[src*='captcha'], .g-recaptcha"
+  input: "input[name*='captcha'], textarea[name='g-recaptcha-response']"
+  submit: "button[type='submit'], input[type='submit']"
+
+actions:
+  - type: fill
+    name: "Fill name"
+    selectors:
+      - "input[name*='name']"
+      - "input[placeholder*='name']"
+      - "#name"
+    value: ""
+
+  - type: fill
+    name: "Fill email"
+    selectors:
+      - "input[type='email']"
+      - "input[name*='email']"
+      - "#email"
+    value: ""
+    required: true
+
+  - type: fill
+    name: "Fill message"
+    selectors:
+      - "textarea"
+      - "textarea[name*='message']"
+      - "#message"
+    value: ""
+    required: true
+
+  - type: click
+    name: "Submit form"
+    selectors:
+      - "button[type='submit']"
+      - "input[type='submit']"
+      - "button:has-text('Send')"
+      - "button:has-text('Submit')"
+
+settings:
+  headless: true
+  solve_captcha: true
+  max_iterations: 15

@@ -1,0 +1,155 @@
+behavior:
+  click_delay_ms: !!python/tuple
+  - 50
+  - 200
+  dwell_time_s: !!python/tuple
+  - 5.0
+  - 30.0
+  human_simulation: true
+  mistake_rate: 0.02
+  mistakes_enabled: true
+  mouse: bezier
+  scroll: natural
+  typing_wpm: !!python/tuple
+  - 40
+  - 80
+captcha:
+  api_key: null
+  enabled: false
+  retry_count: 2
+  solver: 2captcha
+  timeout: 120.0
+concurrency:
+  context_recycle_after: 50
+  max_browsers: 1
+  max_contexts_per_browser: 5
+  max_workers: 20
+  memory_limit_mb: 0
+  queue_size: 10000
+  retry:
+    backoff_base: 2.0
+    backoff_max: 60.0
+    max_attempts: 3
+  task_timeout: 120.0
+  worker_recycle_after: 100
+dom:
+  enabled: false
+  extract_on_load: false
+  include_attributes: true
+  include_hidden: false
+  include_styles: true
+  max_depth: 10
+engine:
+  args: []
+  default: camoufox
+  fallback_chain:
+  - patchright
+  - camoufox
+  - playwright
+  headless: false
+  slow_mo: 0.0
+  stealth_level: high
+  timeout: 30000.0
+evasion:
+  enabled: true
+  modules:
+  - canvas_defense
+  - webgl_spoof
+  - battery_fake
+  - rtc_block
+  - font_mask
+  - timezone_geo
+  stealth_js_path: null
+fingerprint:
+  consistency: strict
+  constraints:
+    browsers:
+    - chrome
+    - firefox
+    - edge
+    min_version: 100
+    os_list:
+    - windows
+    - macos
+    - linux
+  device_profiles_path: null
+  provider: browserforge
+  randomize_per_session: true
+llm:
+  anthropic:
+    api_key: ''
+    base_url: null
+    model: claude-sonnet-4-20250514
+  controller_mode: assist
+  default_provider: openai
+  enabled: false
+  max_retries: 3
+  max_steps: 20
+  max_tokens: null
+  min_confidence: 0.5
+  ollama:
+    api_key: ''
+    base_url: http://localhost:11434
+    model: llama3
+  openai:
+    api_key: ''
+    base_url: null
+    model: gpt-4o
+  temperature: 0.2
+  timeout: 60.0
+  vision:
+    detail_level: auto
+    fallback_threshold: 0.6
+    max_height: 800
+    max_width: 1280
+    mode: auto
+network:
+  analytics_blocking: true
+  referrer_spoofing: true
+  request_interception: false
+  throttle: false
+  throttle_profile: wifi
+  timeout: 30000.0
+output:
+  data:
+    batch_size: 100
+    directory: !!python/object/apply:pathlib.PosixPath
+    - output
+    - data
+    format: json
+  logs:
+    backup_count: 5
+    file: null
+    level: INFO
+    max_size_mb: 100
+    structured: true
+  screenshots:
+    directory: !!python/object/apply:pathlib.PosixPath
+    - output
+    - screenshots
+    enabled: true
+    format: png
+    full_page: false
+    on_error: true
+    quality: 80
+plugins:
+  autoload: true
+  directory: !!python/object/apply:pathlib.PosixPath
+  - plugins
+  disabled: []
+  enabled: true
+proxy:
+  health_check_interval: 300
+  max_consecutive_failures: 3
+  providers: []
+  rotation_strategy: weighted
+watchdog:
+  alert_threshold: 3
+  auto_recovery: true
+  browser_timeout: 60.0
+  enabled: true
+  health_check_interval: 30.0
+  max_recovery_attempts: 3
+  network_timeout: 15.0
+  page_timeout: 30.0
+  recovery_cooldown: 5.0

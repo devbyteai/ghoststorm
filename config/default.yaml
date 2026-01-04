@@ -1,0 +1,106 @@
+# GhostStorm Default Configuration
+# Production-grade browser automation platform
+
+engine:
+  default: patchright
+  fallback_chain:
+    - patchright
+    - camoufox
+    - playwright
+  headless: true
+  stealth_level: high  # low, medium, high, paranoid
+
+concurrency:
+  max_workers: 20
+  max_contexts_per_browser: 5
+  task_timeout: 120
+  retry:
+    max_attempts: 3
+    backoff_base: 2
+    backoff_max: 60
+
+fingerprint:
+  provider: device_profiles  # browserforge or device_profiles
+  device_profiles_path: ./data/fingerprints/devices.json
+  randomize_per_session: true
+  consistency: strict  # strict = same fingerprint throughout session
+  filters:
+    os: null  # windows, macos, linux, android, ios
+    browser: null  # chrome, firefox, edge, safari
+    device_category: null  # desktop, mobile, tablet
+
+proxy:
+  enabled: false
+  rotation_strategy: weighted  # random, round_robin, weighted, sticky
+  health_check_interval: 300
+  providers: []
+  # Example provider configs:
+  # - type: file
+  #   path: ./data/proxies.txt
+  #   format: "ip:port:user:pass"
+  # - type: rotating
+  #   strategy: weighted
+  #   fallback_to_direct: true
+
+evasion:
+  enabled: true
+  stealth_js_path: ./data/evasion/stealth_template.js
+  modules:
+    canvas_defense: true
+    webgl_spoof: true
+    battery_fake: true
+    rtc_block: true
+    font_mask: true
+    timezone_geo: true
+    webdriver_hide: true
+    plugins_spoof: true
+
+behavior:
+  human_simulation: true
+  mouse:
+    enabled: true
+    bezier_curves: true
+    overshoot_probability: 0.15
+    tremor_amplitude: 1.5
+  keyboard:
+    enabled: true
+    wpm_range: [40, 80]
+    typo_probability: 0.02
+  scroll:
+    enabled: true
+    smooth: true
+    reading_pauses: true
+  timing:
+    dwell_time_s: [5, 30]
+    action_delay_s: [0.5, 2.0]
+    idle_probability: 0.1
+
+network:
+  analytics_blocking: true
+  referrer_spoofing: true
+  request_interception: false
+  blocked_resources:
+    - analytics
+    - tracking
+    - ads
+
+output:
+  screenshots:
+    enabled: false
+    format: png
+    quality: 80
+    on_error: true
+    directory: ./output/screenshots
+  data:
+    format: json
+    directory: ./output/data
+  logs:
+    level: INFO
+    structured: true
+    directory: ./output/logs
+
+plugins:
+  enabled: true
+  directory: ./plugins
+  autoload: true
+  disabled: []

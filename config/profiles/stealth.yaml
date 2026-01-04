@@ -1,0 +1,42 @@
+# Stealth Profile - Maximum anti-detection
+# Use for sites with aggressive bot detection
+
+engine:
+  default: camoufox  # Firefox-based, 0% CreepJS detection
+  headless: false    # Headed mode is less detectable
+  stealth_level: paranoid
+
+concurrency:
+  max_workers: 5     # Lower concurrency = more human-like
+  task_timeout: 180
+
+fingerprint:
+  provider: device_profiles
+  randomize_per_session: true
+  consistency: strict
+
+evasion:
+  enabled: true
+  modules:
+    canvas_defense: true
+    webgl_spoof: true
+    battery_fake: true
+    rtc_block: true
+    font_mask: true
+    timezone_geo: true
+    webdriver_hide: true
+    plugins_spoof: true
+
+behavior:
+  human_simulation: true
+  mouse:
+    enabled: true
+    overshoot_probability: 0.20
+    tremor_amplitude: 2.0
+  keyboard:
+    wpm_range: [30, 50]
+    typo_probability: 0.05
+  timing:
+    dwell_time_s: [15, 60]
+    action_delay_s: [1.0, 3.0]
+    idle_probability: 0.20

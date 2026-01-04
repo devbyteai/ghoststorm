@@ -1,0 +1,52 @@
+# Login Form Automation Preset
+id: login_form
+name: "Login Form"
+description: "Generic login page automation with username/email and password"
+category: login
+icon: "key"
+
+goal_keywords:
+  - dashboard
+  - welcome
+  - account
+  - profile
+  - home
+  - logged in
+  - my account
+
+captcha_selectors:
+  image: "img[src*='captcha'], img.captcha, #captcha-image"
+  input: "input[name*='captcha'], input[id*='captcha'], input[placeholder*='captcha']"
+  submit: "button[type='submit'], input[type='submit']"
+
+actions:
+  - type: fill
+    name: "Fill username/email"
+    selectors:
+      - "input[name*='user']"
+      - "input[name*='email']"
+      - "input[type='email']"
+      - "input[autocomplete='username']"
+    value: ""
+    required: true
+
+  - type: fill
+    name: "Fill password"
+    selectors:
+      - "input[type='password']"
+      - "input[name*='pass']"
+    value: ""
+    required: true
+
+  - type: click
+    name: "Submit login"
+    selectors:
+      - "button[type='submit']"
+      - "input[type='submit']"
+      - "button:has-text('Login')"
+      - "button:has-text('Sign in')"
+
+settings:
+  headless: true
+  solve_captcha: true
+  max_iterations: 20

@@ -1,0 +1,39 @@
+# Captcha Form Automation Preset
+id: captcha_form
+name: "Captcha Form"
+description: "Generic form with captcha verification"
+category: captcha
+icon: "shield-check"
+
+goal_keywords:
+  - success
+  - verified
+  - continue
+  - proceed
+  - thank you
+  - submitted
+
+captcha_selectors:
+  image: "img[src*='captcha'], img.captcha, img.img-thumbnail, canvas[class*='captcha'], #captcha-image"
+  input: "input[name*='captcha'], input[id*='captcha'], #captchatoken, input[placeholder*='code']"
+  submit: "button[type='submit'], input[type='submit'], .btn-primary"
+
+actions:
+  - type: wait
+    name: "Wait for captcha to load"
+    duration: 2000
+
+  - type: solve_captcha
+    name: "Solve captcha"
+
+  - type: click
+    name: "Submit form"
+    selectors:
+      - "button[type='submit']"
+      - "input[type='submit']"
+      - ".btn-primary"
+
+settings:
+  headless: true
+  solve_captcha: true
+  max_iterations: 30

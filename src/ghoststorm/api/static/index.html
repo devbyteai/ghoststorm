@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GhostStorm Control Panel</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/static/images/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/images/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/images/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/images/apple-touch-icon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#a855f7',
+                        surface: '#1e1e2e',
+                        'surface-light': '#2a2a3e',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .platform-chip { transition: all 0.2s ease; }
+        .platform-chip.active { transform: scale(1.05); }
+        .task-progress { transition: width 0.3s ease; }
+        .event-fade { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .slider-thumb::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #6366f1; cursor: pointer; }
+        .config-panel::-webkit-scrollbar { width: 6px; }
+        .config-panel::-webkit-scrollbar-thumb { background: #4a4a5e; border-radius: 3px; }
+    </style>
+</head>
+<body class="dark bg-gray-900 text-gray-100 min-h-screen">
+    <div id="app" class="flex flex-col h-screen">
+        <!-- Header -->
+        <header class="bg-surface border-b border-gray-700">
+            <div class="px-6 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="/static/images/favicon.svg" alt="GhostStorm" class="w-10 h-10 rounded-lg">
+                    <div>
+                        <h1 class="text-xl font-bold bg-gradient-to-r from-purple-400 to-amber-400 bg-clip-text text-transparent">GhostStorm</h1>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="connection-status" class="flex items-center gap-2 text-sm">
+                        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                        <span>Disconnected</span>
+                    </span>
+                    <!-- Algorithms Button -->
+                    <button onclick="switchPage('algorithms')" class="p-2 hover:bg-surface-light rounded-lg transition-colors" title="API Algorithms">
+                        <svg class="w-5 h-5 text-gray-400 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                        </svg>
+                    </button>
+                    <!-- Settings Button -->
+                    <button onclick="switchPage('settings')" class="p-2 hover:bg-surface-light rounded-lg transition-colors" title="Settings">
+                        <svg class="w-5 h-5 text-gray-400 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </button>
+                    <!-- AI Assistant Toggle -->
+                    <button id="sidebar-toggle-btn" onclick="toggleSidebar()" class="p-2 hover:bg-surface-light rounded-lg transition-colors" title="AI Assistant (Cmd+K)">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <!-- Main Navigation Tabs -->
+            <div class="flex px-6 gap-1">
+                <button class="main-tab px-4 py-2 text-sm font-medium border-b-2 border-primary text-primary bg-surface-light/50 rounded-t-lg" data-page="tasks" onclick="switchPage('tasks')">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        Tasks
+                    </span>
+                </button>
+                <button class="main-tab px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-200 rounded-t-lg" data-page="proxies" onclick="switchPage('proxies')">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+                        Proxies
+                    </span>
+                </button>
+                <button class="main-tab px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-200 rounded-t-lg" data-page="data" onclick="switchPage('data')">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+                        Data
+                    </span>
+                </button>
+                <button class="main-tab px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-200 rounded-t-lg" data-page="zefoy" onclick="switchPage('zefoy')">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        Zefoy
+                    </span>
+                </button>
+                <button class="main-tab px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-200 rounded-t-lg" data-page="engine" onclick="switchPage('engine')">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        Engine
+                    </span>
+                </button>
+                <button class="main-tab px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-200 rounded-t-lg" data-page="llm" onclick="switchPage('llm')">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        AI Control
+                    </span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content - Pages loaded dynamically -->
+        <main id="pages-container" class="flex-1 flex overflow-hidden transition-all duration-300">
+            <!-- Pages will be loaded here by app.js -->
+        </main>
+
+        <!-- AI Assistant Sidebar -->
+        <aside id="ai-sidebar" class="fixed right-0 top-0 h-full w-96 bg-surface border-l border-gray-700 transform translate-x-full transition-transform duration-300 z-50 flex flex-col">
+            <!-- Sidebar Header -->
+            <div class="flex items-center justify-between p-4 border-b border-gray-700">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    <span class="font-medium">AI Assistant</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleSettings()" class="p-1.5 hover:bg-surface-light rounded" title="Settings">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </button>
+                    <button onclick="toggleSidebar()" class="p-1.5 hover:bg-surface-light rounded">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chat Panel -->
+            <div id="chat-panel" class="flex-1 flex flex-col overflow-hidden">
+                <!-- Quick Actions -->
+                <div class="flex gap-2 p-3 border-b border-gray-700">
+                    <button onclick="browseFiles()" class="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-surface-light hover:bg-gray-600 rounded text-xs">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                        </svg>
+                        Files
+                    </button>
+                    <button onclick="quickSearch()" class="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-surface-light hover:bg-gray-600 rounded text-xs">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        Search
+                    </button>
+                    <button onclick="quickExecute()" class="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-surface-light hover:bg-gray-600 rounded text-xs">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        Terminal
+                    </button>
+                    <button onclick="clearChat()" class="px-2 py-1.5 bg-red-600/20 hover:bg-red-600/40 rounded text-xs text-red-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Pending Actions -->
+                <div id="pending-actions" class="p-3 border-b border-gray-700 hidden"></div>
+
+                <!-- Chat Messages -->
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-3 space-y-3">
+                    <!-- Messages will be rendered here -->
+                </div>
+
+                <!-- Chat Input -->
+                <div class="p-3 border-t border-gray-700">
+                    <div class="flex gap-2">
+                        <textarea
+                            id="chat-input"
+                            placeholder="Ask anything about the codebase... (Enter to send)"
+                            class="flex-1 bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary"
+                            rows="2"
+                        ></textarea>
+                        <button id="send-btn" onclick="sendMessage()" class="px-3 bg-primary hover:bg-primary/80 rounded-lg transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1 text-center">
+                        Press <kbd class="bg-surface-light px-1 rounded">Cmd+K</kbd> to toggle
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Panel (hidden by default) -->
+            <div id="settings-panel" class="flex-1 flex flex-col overflow-hidden hidden">
+                <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <!-- Back to Chat -->
+                    <button onclick="toggleSettings()" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Back to Chat
+                    </button>
+
+                    <!-- Docker/Ollama Section -->
+                    <div class="bg-surface-light rounded-lg p-3">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/>
+                                </svg>
+                                <span class="font-medium">Ollama (Docker)</span>
+                            </div>
+                            <div id="docker-status" class="flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-gray-500"></span>
+                                <span class="text-xs text-gray-400">Checking...</span>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 mb-3">
+                            <button id="docker-start-btn" onclick="startOllama()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Start Ollama
+                            </button>
+                            <button id="docker-stop-btn" onclick="stopOllama()" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
+                                </svg>
+                                Stop
+                            </button>
+                        </div>
+
+                        <!-- Docker Logs Toggle -->
+                        <button onclick="toggleDockerLogs()" class="w-full flex items-center justify-between text-xs text-gray-400 hover:text-white py-1">
+                            <span>Container Logs</span>
+                            <svg id="docker-logs-chevron" class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div id="docker-logs" class="hidden mt-2 bg-gray-900 rounded p-2 max-h-32 overflow-y-auto text-xs font-mono text-gray-400">
+                            <p class="text-gray-500">No logs yet. Start Ollama to see logs.</p>
+                        </div>
+
+                        <p id="docker-error" class="hidden text-xs text-red-400 mt-2"></p>
+                    </div>
+
+                    <!-- Installed Models -->
+                    <div>
+                        <h3 class="text-sm font-medium mb-2">Installed Models</h3>
+                        <div id="installed-models" class="max-h-40 overflow-y-auto">
+                            <p class="text-gray-400 text-sm">Loading...</p>
+                        </div>
+                    </div>
+
+                    <!-- Download Progress -->
+                    <div id="pull-progress" class="hidden">
+                        <div class="bg-gray-700 rounded-full h-2 overflow-hidden">
+                            <div id="pull-progress-bar" class="bg-primary h-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <p id="pull-progress-text" class="text-xs text-gray-400 mt-1">Downloading...</p>
+                    </div>
+
+                    <!-- Install Recommended Models -->
+                    <div>
+                        <h3 class="text-sm font-medium mb-2">Recommended Coding Models</h3>
+                        <p class="text-xs text-gray-400 mb-2">Click to install. Requires Ollama running.</p>
+                        <div id="recommended-models" class="max-h-48 overflow-y-auto">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Custom Model -->
+                    <div>
+                        <h3 class="text-sm font-medium mb-2">Install Custom Model</h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="custom-model-input"
+                                   placeholder="e.g., mistral:7b"
+                                   class="flex-1 bg-surface-light border border-gray-600 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-primary">
+                            <button onclick="pullCustomModel()" class="px-3 py-1.5 bg-primary hover:bg-primary/80 rounded text-sm">
+                                Pull
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Model Settings -->
+                    <div class="border-t border-gray-700 pt-4">
+                        <h3 class="text-sm font-medium mb-3">Generation Settings</h3>
+
+                        <!-- Temperature -->
+                        <div class="mb-4">
+                            <div class="flex justify-between text-xs mb-1">
+                                <span>Temperature</span>
+                                <span id="temp-value">0.3</span>
+                            </div>
+                            <input type="range" id="temp-slider" min="0" max="2" step="0.1" value="0.3"
+                                   class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                                   oninput="document.getElementById('temp-value').textContent = this.value; updateSetting('temperature', this.value)">
+                            <p class="text-xs text-gray-500 mt-1">Lower = more precise, Higher = more creative</p>
+                        </div>
+
+                        <!-- Max Tokens -->
+                        <div class="mb-4">
+                            <div class="flex justify-between text-xs mb-1">
+                                <span>Max Tokens</span>
+                                <span id="tokens-value">8192</span>
+                            </div>
+                            <input type="range" id="tokens-slider" min="256" max="32768" step="256" value="8192"
+                                   class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                                   oninput="document.getElementById('tokens-value').textContent = this.value; updateSetting('max_tokens', this.value)">
+                        </div>
+
+                        <!-- Command Timeout -->
+                        <div class="mb-4">
+                            <div class="flex justify-between text-xs mb-1">
+                                <span>Command Timeout</span>
+                                <span id="timeout-value">30s</span>
+                            </div>
+                            <input type="range" id="timeout-slider" min="5" max="300" step="5" value="30"
+                                   class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                                   oninput="document.getElementById('timeout-value').textContent = this.value + 's'; updateSetting('command_timeout', this.value)">
+                        </div>
+                    </div>
+
+                    <!-- Hardware Info -->
+                    <div class="border-t border-gray-700 pt-4">
+                        <h3 class="text-sm font-medium mb-2">Model Requirements</h3>
+                        <div class="text-xs text-gray-400 space-y-1">
+                            <p><span class="text-green-400">32b models:</span> 24GB VRAM (RTX 3090/4090)</p>
+                            <p><span class="text-yellow-400">16b models:</span> 12GB VRAM (RTX 3060/4070)</p>
+                            <p><span class="text-blue-400">7b models:</span> 8GB VRAM (Any modern GPU)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- File Browser Modal -->
+        <div id="file-browser-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div class="bg-surface rounded-lg w-96 max-h-96 overflow-hidden">
+                <div class="flex items-center justify-between p-3 border-b border-gray-700">
+                    <span class="font-medium">Browse Files</span>
+                    <button onclick="closeFileModal()" class="p-1 hover:bg-surface-light rounded">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div id="file-list" class="p-2 overflow-y-auto max-h-80">
+                    <!-- Files will be listed here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Modal -->
+        <div id="search-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div class="bg-surface rounded-lg w-96 overflow-hidden">
+                <div class="flex items-center justify-between p-3 border-b border-gray-700">
+                    <span class="font-medium">Search Codebase</span>
+                    <button onclick="closeSearchModal()" class="p-1 hover:bg-surface-light rounded">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <input type="text" id="search-input" placeholder="Search for..."
+                           class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary mb-3"
+                           onkeydown="if(event.key==='Enter')executeSearch()">
+                    <div class="flex gap-2 mb-3">
+                        <select id="search-pattern" class="flex-1 bg-surface-light border border-gray-600 rounded px-2 py-1.5 text-sm">
+                            <option value="*.py">Python (*.py)</option>
+                            <option value="*.js">JavaScript (*.js)</option>
+                            <option value="*.ts">TypeScript (*.ts)</option>
+                            <option value="*.html">HTML (*.html)</option>
+                            <option value="*">All files (*)</option>
+                        </select>
+                        <button onclick="executeSearch()" class="px-4 py-1.5 bg-primary hover:bg-primary/80 rounded text-sm font-medium">
+                            Search
+                        </button>
+                    </div>
+                    <div id="search-results" class="max-h-60 overflow-y-auto text-sm">
+                        <!-- Results will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Terminal Modal -->
+        <div id="terminal-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div class="bg-surface rounded-lg w-[500px] overflow-hidden">
+                <div class="flex items-center justify-between p-3 border-b border-gray-700">
+                    <span class="font-medium">Terminal</span>
+                    <button onclick="closeTerminalModal()" class="p-1 hover:bg-surface-light rounded">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="terminal-input" placeholder="Enter command..."
+                               class="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-primary"
+                               onkeydown="if(event.key==='Enter')executeTerminalCommand()">
+                        <button onclick="executeTerminalCommand()" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-sm font-medium">
+                            Run
+                        </button>
+                    </div>
+                    <div id="terminal-output" class="bg-gray-900 rounded-lg p-3 max-h-64 overflow-y-auto font-mono text-xs">
+                        <p class="text-gray-500">Output will appear here...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer / Status Bar -->
+        <footer class="bg-surface border-t border-gray-700 px-6 py-2 flex items-center justify-between text-sm text-gray-400">
+            <div class="flex items-center gap-6">
+                <span>Proxies: <span class="text-green-400" id="proxy-count">0</span></span>
+                <span>Active: <span id="active-workers">0</span></span>
+                <span>Uptime: <span id="uptime">0m</span></span>
+            </div>
+            <div>
+                <span class="text-gray-500">GhostStorm v1.0.0</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Load app.js which handles everything -->
+    <script src="/static/js/app.js"></script>
+    <!-- Load AI Assistant sidebar -->
+    <script src="/static/js/sidebar.js"></script>
+</body>
+</html>

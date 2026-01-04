@@ -1,0 +1,67 @@
+# Core
+core:
+  - changed-files:
+      - any-glob-to-any-file: 'src/ghoststorm/core/**/*'
+
+# API
+api:
+  - changed-files:
+      - any-glob-to-any-file: 'src/ghoststorm/api/**/*'
+
+# Browser
+browser:
+  - changed-files:
+      - any-glob-to-any-file:
+        - 'src/ghoststorm/plugins/browsers/**/*'
+        - 'src/ghoststorm/browser/**/*'
+
+# Proxy
+proxy:
+  - changed-files:
+      - any-glob-to-any-file: 'src/ghoststorm/proxy/**/*'
+
+# LLM
+llm:
+  - changed-files:
+      - any-glob-to-any-file:
+        - 'src/ghoststorm/llm/**/*'
+        - 'src/ghoststorm/assistant/**/*'
+
+# Tests
+tests:
+  - changed-files:
+      - any-glob-to-any-file: 'tests/**/*'
+
+# Documentation
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+        - 'docs/**/*'
+        - '*.md'
+        - 'mkdocs.yml'
+
+# CI/CD
+ci:
+  - changed-files:
+      - any-glob-to-any-file: '.github/**/*'
+
+# Dependencies
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+        - 'pyproject.toml'
+        - 'uv.lock'
+        - 'requirements*.txt'
+
+# Docker
+docker:
+  - changed-files:
+      - any-glob-to-any-file:
+        - 'Dockerfile*'
+        - 'docker-compose*.yml'
+        - '.dockerignore'
+
+# Web Dashboard
+web:
+  - changed-files:
+      - any-glob-to-any-file: 'src/ghoststorm/web/**/*'

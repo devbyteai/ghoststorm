@@ -1,0 +1,1406 @@
+<!-- PAGE: Tasks -->
+<div id="page-tasks" class="page-content flex w-full">
+    <!-- Left Panel - Task Wizard -->
+    <div class="w-2/3 flex flex-col border-r border-gray-700">
+        <!-- Wizard Header with Step Indicator -->
+        <div class="p-4 border-b border-gray-700 bg-surface-light/30">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-lg font-medium">Task Setup</h2>
+                <div class="flex items-center gap-3">
+                    <!-- Flow Buttons -->
+                    <button onclick="openRecordFlowModal()" class="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-sm hover:bg-red-500/30 transition-colors" title="Record a new flow">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+                        Record Flow
+                    </button>
+                    <button onclick="openFlowLibraryModal()" class="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-lg text-sm hover:bg-purple-500/30 transition-colors" title="Flow Library">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        Flows
+                    </button>
+                    <span class="text-sm text-gray-400">Step <span id="wizard-current-step">1</span> of 6</span>
+                </div>
+            </div>
+            <!-- Step Progress Bar -->
+            <div class="flex gap-1">
+                <div class="wizard-step-indicator flex-1 h-1 rounded-full bg-primary cursor-pointer" data-step="1" onclick="goToWizardStep(1)"></div>
+                <div class="wizard-step-indicator flex-1 h-1 rounded-full bg-gray-700 cursor-pointer" data-step="2" onclick="goToWizardStep(2)"></div>
+                <div class="wizard-step-indicator flex-1 h-1 rounded-full bg-gray-700 cursor-pointer" data-step="3" onclick="goToWizardStep(3)"></div>
+                <div class="wizard-step-indicator flex-1 h-1 rounded-full bg-gray-700 cursor-pointer" data-step="4" onclick="goToWizardStep(4)"></div>
+                <div class="wizard-step-indicator flex-1 h-1 rounded-full bg-gray-700 cursor-pointer" data-step="5" onclick="goToWizardStep(5)"></div>
+                <div class="wizard-step-indicator flex-1 h-1 rounded-full bg-gray-700 cursor-pointer" data-step="6" onclick="goToWizardStep(6)"></div>
+            </div>
+            <!-- Step Labels -->
+            <div class="flex mt-2 text-xs text-gray-500">
+                <div class="flex-1 text-center wizard-step-label text-primary" data-step="1">Target</div>
+                <div class="flex-1 text-center wizard-step-label" data-step="2">Proxies</div>
+                <div class="flex-1 text-center wizard-step-label" data-step="3">User Agents</div>
+                <div class="flex-1 text-center wizard-step-label" data-step="4">Fingerprints</div>
+                <div class="flex-1 text-center wizard-step-label" data-step="5">Behavior</div>
+                <div class="flex-1 text-center wizard-step-label" data-step="6">Execute</div>
+            </div>
+        </div>
+
+        <!-- Wizard Steps Content -->
+        <div class="flex-1 overflow-y-auto p-6">
+            <!-- Step 1: Target -->
+            <div id="wizard-step-1" class="wizard-step">
+                <div class="mb-6">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 bg-indigo-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-medium">Target URL</h3>
+                            <p class="text-sm text-gray-400">Enter the URL you want to visit</p>
+                        </div>
+                    </div>
+                    <input type="text" id="url-input" placeholder="https://tiktok.com/@user/video/123..."
+                        class="w-full bg-surface-light border border-gray-600 rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                        oninput="detectPlatform(this.value)">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Platform</label>
+                    <div class="flex flex-wrap gap-2" id="platform-chips">
+                        <button class="platform-chip px-4 py-2 rounded-full text-sm font-medium bg-pink-500/20 text-pink-400 border border-pink-500/30" data-platform="tiktok">TikTok</button>
+                        <button class="platform-chip px-4 py-2 rounded-full text-sm font-medium bg-purple-500/20 text-purple-400 border border-purple-500/30" data-platform="instagram">Instagram</button>
+                        <button class="platform-chip px-4 py-2 rounded-full text-sm font-medium bg-red-500/20 text-red-400 border border-red-500/30" data-platform="youtube">YouTube</button>
+                        <button class="platform-chip px-4 py-2 rounded-full text-sm font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30" data-platform="dextools">DEXTools</button>
+                        <button class="platform-chip px-4 py-2 rounded-full text-sm font-medium bg-gray-500/20 text-gray-400 border border-gray-500/30" data-platform="generic">Generic</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Proxies -->
+            <div id="wizard-step-2" class="wizard-step hidden">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-medium">Proxy Settings</h3>
+                        <p class="text-sm text-gray-400">Configure proxy rotation for anonymity</p>
+                    </div>
+                </div>
+
+                <!-- Proxy Provider Selection -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-3">Proxy Provider</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Free Proxies -->
+                        <label class="proxy-provider-option relative flex items-start gap-3 p-3 bg-surface rounded-lg border border-gray-700 cursor-pointer hover:border-gray-600">
+                            <input type="radio" name="proxy_provider" value="file" checked class="mt-1" onchange="setProxyProvider('file')">
+                            <div>
+                                <div class="font-medium text-sm">Free Proxies</div>
+                                <div class="text-xs text-gray-400">Use scraped proxy list</div>
+                                <div class="text-xs text-green-400 mt-1" id="wizard-free-proxy-count">0 available</div>
+                            </div>
+                        </label>
+                        <!-- No Proxy -->
+                        <label class="proxy-provider-option relative flex items-start gap-3 p-3 bg-surface rounded-lg border border-gray-700 cursor-pointer hover:border-gray-600">
+                            <input type="radio" name="proxy_provider" value="none" class="mt-1" onchange="setProxyProvider('none')">
+                            <div>
+                                <div class="font-medium text-sm">No Proxy</div>
+                                <div class="text-xs text-gray-400">Direct connection</div>
+                                <div class="text-xs text-yellow-400 mt-1">Less anonymous</div>
+                            </div>
+                        </label>
+                        <!-- Tor -->
+                        <label class="proxy-provider-option relative flex items-start gap-3 p-3 bg-surface rounded-lg border border-gray-700 cursor-pointer hover:border-gray-600" id="proxy-option-tor">
+                            <input type="radio" name="proxy_provider" value="tor" class="mt-1" onchange="setProxyProvider('tor')">
+                            <div>
+                                <div class="font-medium text-sm flex items-center gap-2">
+                                    <span class="w-4 h-4 bg-purple-500/30 rounded text-purple-400 text-xs flex items-center justify-center font-bold">T</span>
+                                    Tor Network
+                                </div>
+                                <div class="text-xs text-gray-400">Free, anonymous</div>
+                                <div class="text-xs text-purple-400 mt-1" id="tor-status">Requires Tor daemon</div>
+                            </div>
+                        </label>
+                        <!-- Decodo -->
+                        <label class="proxy-provider-option relative flex items-start gap-3 p-3 bg-surface rounded-lg border border-gray-700 cursor-pointer hover:border-gray-600" id="proxy-option-decodo">
+                            <input type="radio" name="proxy_provider" value="decodo" class="mt-1" onchange="setProxyProvider('decodo')">
+                            <div>
+                                <div class="font-medium text-sm flex items-center gap-2">
+                                    <span class="w-4 h-4 bg-blue-500/30 rounded text-blue-400 text-xs flex items-center justify-center font-bold">D</span>
+                                    Decodo
+                                </div>
+                                <div class="text-xs text-gray-400">$3.50/GB residential</div>
+                                <div class="text-xs text-gray-500 mt-1" id="decodo-status">Not configured</div>
+                            </div>
+                        </label>
+                        <!-- Bright Data -->
+                        <label class="proxy-provider-option relative flex items-start gap-3 p-3 bg-surface rounded-lg border border-gray-700 cursor-pointer hover:border-gray-600" id="proxy-option-brightdata">
+                            <input type="radio" name="proxy_provider" value="brightdata" class="mt-1" onchange="setProxyProvider('brightdata')">
+                            <div>
+                                <div class="font-medium text-sm flex items-center gap-2">
+                                    <span class="w-4 h-4 bg-orange-500/30 rounded text-orange-400 text-xs flex items-center justify-center font-bold">B</span>
+                                    Bright Data
+                                </div>
+                                <div class="text-xs text-gray-400">$8/GB enterprise</div>
+                                <div class="text-xs text-gray-500 mt-1" id="brightdata-status">Not configured</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Free Proxy Details (shown when file selected) -->
+                <div id="wizard-free-proxy-section" class="bg-surface rounded-lg border border-gray-700 p-4 mb-4">
+                    <div class="flex gap-4 text-sm mb-4">
+                        <span class="text-green-400"><span id="wizard-proxy-alive">0</span> alive</span>
+                        <span class="text-red-400"><span id="wizard-proxy-dead">0</span> dead</span>
+                        <span class="text-gray-400"><span id="wizard-proxy-untested">0</span> untested</span>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Rotation Strategy</label>
+                        <select id="wizard-proxy-rotation" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2">
+                            <option value="per_request">Per Request (new proxy each request)</option>
+                            <option value="per_session">Per Session (same proxy for session)</option>
+                            <option value="on_fail">On Failure (rotate when blocked)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Premium Provider Options (shown when premium selected) -->
+                <div id="wizard-premium-proxy-section" class="bg-surface rounded-lg border border-primary/50 p-4 mb-4 hidden">
+                    <h4 class="font-medium mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                        Premium Provider Settings
+                    </h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Target Country</label>
+                            <select id="wizard-proxy-country" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm">
+                                <option value="">Any Country</option>
+                                <option value="us">United States</option>
+                                <option value="gb">United Kingdom</option>
+                                <option value="de">Germany</option>
+                                <option value="fr">France</option>
+                                <option value="ca">Canada</option>
+                                <option value="au">Australia</option>
+                                <option value="il">Israel</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Session Type</label>
+                            <select id="wizard-proxy-session" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm">
+                                <option value="rotating">Rotating (new IP each request)</option>
+                                <option value="sticky">Sticky (maintain same IP)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-500">
+                        <span id="premium-provider-info"></span>
+                    </div>
+                </div>
+
+                <!-- Tor Settings (shown when tor selected) -->
+                <div id="wizard-tor-proxy-section" class="bg-surface rounded-lg border border-purple-500/50 p-4 mb-4 hidden">
+                    <h4 class="font-medium mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        Tor Network Settings
+                    </h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">SOCKS Port</label>
+                            <input type="number" id="wizard-tor-port" value="9050" min="1" max="65535" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Circuit Rotation</label>
+                            <select id="wizard-tor-rotation" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm">
+                                <option value="per_session">Per Session (new circuit each session)</option>
+                                <option value="per_request">Per Request (new circuit each request)</option>
+                                <option value="static">Static (keep same circuit)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex items-center gap-2">
+                        <button onclick="testTorConnection()" class="px-3 py-1.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded text-xs hover:bg-purple-500/30">
+                            Test Connection
+                        </button>
+                        <span id="tor-connection-status" class="text-xs text-gray-400"></span>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500">
+                        Make sure Tor daemon is running: <code class="bg-surface-light px-1 rounded">sudo systemctl start tor</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: User Agents -->
+            <div id="wizard-step-3" class="wizard-step hidden">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-medium">User Agents</h3>
+                        <p class="text-sm text-gray-400">Browser identity strings for stealth</p>
+                    </div>
+                </div>
+
+                <!-- Platform Recommendation Banner -->
+                <div id="ua-recommendation-banner" class="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg p-3 mb-4 hidden">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        <div class="flex-1">
+                            <div class="text-sm font-medium text-purple-300">Recommended for <span id="ua-recommendation-platform">this platform</span></div>
+                            <div class="text-xs text-gray-400 mt-1" id="ua-recommendation-text">Recommendation loading...</div>
+                        </div>
+                        <button onclick="applyUARecommendation()" class="px-3 py-1.5 bg-purple-500/30 text-purple-300 text-xs rounded hover:bg-purple-500/40 flex items-center gap-1 flex-shrink-0">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Apply Settings
+                        </button>
+                    </div>
+                </div>
+
+                <!-- UA Mode Selection -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">User Agent Mode</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="ua-mode-option flex flex-col items-center p-3 bg-surface rounded-lg border border-primary cursor-pointer" onclick="setUAMode('dynamic')">
+                            <input type="radio" name="ua_mode" value="dynamic" checked class="hidden">
+                            <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center mb-2">
+                                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            </div>
+                            <span class="text-xs font-medium">Dynamic</span>
+                            <span class="text-xs text-gray-500 text-center">Generate fresh UAs</span>
+                        </label>
+                        <label class="ua-mode-option flex flex-col items-center p-3 bg-surface rounded-lg border border-gray-700 cursor-pointer hover:border-gray-600" onclick="setUAMode('file')">
+                            <input type="radio" name="ua_mode" value="file" class="hidden">
+                            <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center mb-2">
+                                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <span class="text-xs font-medium">From File</span>
+                            <span class="text-xs text-gray-500 text-center">Use pre-collected</span>
+                        </label>
+                        <label class="ua-mode-option flex flex-col items-center p-3 bg-surface rounded-lg border border-gray-700 cursor-pointer hover:border-gray-600" onclick="setUAMode('none')">
+                            <input type="radio" name="ua_mode" value="none" class="hidden">
+                            <div class="w-8 h-8 rounded-full bg-gray-500/20 flex items-center justify-center mb-2">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                            </div>
+                            <span class="text-xs font-medium">None</span>
+                            <span class="text-xs text-gray-500 text-center">Browser default</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Dynamic UA Options -->
+                <div id="ua-dynamic-options" class="bg-surface rounded-lg border border-gray-700 p-4 mb-4">
+                    <h4 class="font-medium mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        Dynamic Generation (browserforge)
+                    </h4>
+                    <div class="grid grid-cols-3 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Browser</label>
+                            <select id="ua-dynamic-browser" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm">
+                                <option value="chrome">Chrome (Most common)</option>
+                                <option value="firefox">Firefox</option>
+                                <option value="safari">Safari</option>
+                                <option value="edge">Edge</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Operating System</label>
+                            <select id="ua-dynamic-os" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm">
+                                <option value="windows">Windows</option>
+                                <option value="macos">macOS</option>
+                                <option value="linux">Linux</option>
+                                <option value="android">Android</option>
+                                <option value="ios">iOS</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Pool Size</label>
+                            <input type="number" id="ua-dynamic-pool-size" value="1000" min="1" max="100000"
+                                   class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm"
+                                   placeholder="1000">
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-3">
+                        <span class="text-green-400 font-medium">Pool Size</span>: Number of unique UAs to pre-generate.
+                        For 50K requests, use pool of 10K-50K for variety. Each request picks randomly from pool.
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="previewDynamicUA()" class="px-3 py-1.5 bg-green-500/20 text-green-400 border border-green-500/30 rounded text-xs hover:bg-green-500/30">
+                            Generate Preview
+                        </button>
+                        <button onclick="generateUAPool()" class="px-3 py-1.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-xs hover:bg-blue-500/30">
+                            Pre-generate Pool
+                        </button>
+                        <span id="ua-pool-status" class="text-xs text-gray-500"></span>
+                    </div>
+                </div>
+
+                <!-- File-based UA Options -->
+                <div id="ua-file-options" class="bg-surface rounded-lg border border-gray-700 p-4 mb-4 hidden">
+                    <h4 class="font-medium mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        File-based User Agents
+                    </h4>
+                    <div class="mb-3">
+                        <label class="block text-xs text-gray-400 mb-1">Source File</label>
+                        <select id="wizard-ua-source" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm" onchange="updateUAFileInfo()">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-400">Available: <span class="text-purple-400 font-medium" id="wizard-ua-total">0</span></span>
+                        <button onclick="previewFileUA()" class="px-3 py-1.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-xs hover:bg-blue-500/30">
+                            Preview Sample
+                        </button>
+                    </div>
+                </div>
+
+                <!-- UA Preview Panel -->
+                <div id="ua-preview-panel" class="bg-surface-light rounded-lg border border-gray-600 p-3 mb-4 hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-medium text-gray-400">User Agent Preview</span>
+                        <button onclick="hideUAPreview()" class="text-gray-500 hover:text-gray-300">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <code id="ua-preview-text" class="block text-xs text-green-400 break-all bg-surface p-2 rounded"></code>
+                    <div id="ua-preview-details" class="mt-2 grid grid-cols-3 gap-2 text-xs">
+                        <div class="bg-surface p-2 rounded">
+                            <span class="text-gray-500">Browser:</span>
+                            <span class="text-white" id="ua-preview-browser">-</span>
+                        </div>
+                        <div class="bg-surface p-2 rounded">
+                            <span class="text-gray-500">OS:</span>
+                            <span class="text-white" id="ua-preview-os">-</span>
+                        </div>
+                        <div class="bg-surface p-2 rounded">
+                            <span class="text-gray-500">Device:</span>
+                            <span class="text-white" id="ua-preview-device">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Platform-Specific Recommendations -->
+                <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                    <h4 class="font-medium mb-3 text-sm">Platform-Specific Options</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="flex items-center gap-2 p-2 rounded hover:bg-surface-light cursor-pointer">
+                            <input type="checkbox" id="ua-include-mobile" class="w-4 h-4 rounded border-gray-600 bg-surface-light text-primary">
+                            <div>
+                                <div class="text-sm">Include Mobile</div>
+                                <div class="text-xs text-gray-500">Android/iOS user agents</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded hover:bg-surface-light cursor-pointer">
+                            <input type="checkbox" id="ua-include-webview" class="w-4 h-4 rounded border-gray-600 bg-surface-light text-primary">
+                            <div>
+                                <div class="text-sm">Include WebView</div>
+                                <div class="text-xs text-gray-500">In-app browsers</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded hover:bg-surface-light cursor-pointer">
+                            <input type="checkbox" id="ua-modern-only" checked class="w-4 h-4 rounded border-gray-600 bg-surface-light text-primary">
+                            <div>
+                                <div class="text-sm">Modern Only</div>
+                                <div class="text-xs text-gray-500">Recent browser versions</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded hover:bg-surface-light cursor-pointer">
+                            <input type="checkbox" id="ua-match-fingerprint" checked class="w-4 h-4 rounded border-gray-600 bg-surface-light text-primary">
+                            <div>
+                                <div class="text-sm">Match Fingerprint</div>
+                                <div class="text-xs text-gray-500">Sync with Step 4</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Fingerprints -->
+            <div id="wizard-step-4" class="wizard-step hidden">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-medium">Browser Fingerprints</h3>
+                        <p class="text-sm text-gray-400">Unique browser profiles for anti-detection</p>
+                    </div>
+                </div>
+
+                <!-- What is a fingerprint? -->
+                <div class="bg-cyan-500/5 border border-cyan-500/20 rounded-lg p-3 mb-4">
+                    <div class="flex gap-2 text-xs text-gray-400">
+                        <svg class="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Browser fingerprints include: screen resolution, timezone, language, fonts, WebGL renderer, audio context, and more. Sites use these to track users even without cookies.</span>
+                    </div>
+                </div>
+
+                <!-- Fingerprint Mode Selection -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Fingerprint Mode</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="fp-mode-option flex flex-col items-center p-3 bg-surface rounded-lg border border-primary cursor-pointer" onclick="setFPMode('dynamic')">
+                            <input type="radio" name="fp_mode" value="dynamic" checked class="hidden">
+                            <div class="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center mb-2">
+                                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            </div>
+                            <span class="text-xs font-medium">Dynamic</span>
+                            <span class="text-xs text-gray-500 text-center">Generate fresh</span>
+                        </label>
+                        <label class="fp-mode-option flex flex-col items-center p-3 bg-surface rounded-lg border border-gray-700 cursor-pointer hover:border-gray-600" onclick="setFPMode('file')">
+                            <input type="radio" name="fp_mode" value="file" class="hidden">
+                            <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center mb-2">
+                                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <span class="text-xs font-medium">From File</span>
+                            <span class="text-xs text-gray-500 text-center">2,505 profiles</span>
+                        </label>
+                        <label class="fp-mode-option flex flex-col items-center p-3 bg-surface rounded-lg border border-gray-700 cursor-pointer hover:border-gray-600" onclick="setFPMode('none')">
+                            <input type="radio" name="fp_mode" value="none" class="hidden">
+                            <div class="w-8 h-8 rounded-full bg-gray-500/20 flex items-center justify-center mb-2">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                            </div>
+                            <span class="text-xs font-medium">None</span>
+                            <span class="text-xs text-gray-500 text-center">Real browser</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Dynamic Fingerprint Options -->
+                <div id="fp-dynamic-options" class="bg-surface rounded-lg border border-gray-700 p-4 mb-4">
+                    <h4 class="font-medium mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        Dynamic Generation (browserforge)
+                    </h4>
+                    <div class="grid grid-cols-3 gap-3 mb-3">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Browser</label>
+                            <select id="fp-dynamic-browser" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm">
+                                <option value="chrome">Chrome</option>
+                                <option value="firefox">Firefox</option>
+                                <option value="safari">Safari</option>
+                                <option value="edge">Edge</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Operating System</label>
+                            <select id="fp-dynamic-os" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm">
+                                <option value="windows">Windows</option>
+                                <option value="macos">macOS</option>
+                                <option value="linux">Linux</option>
+                                <option value="android">Android</option>
+                                <option value="ios">iOS</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">Pool Size</label>
+                            <input type="number" id="fp-dynamic-pool-size" value="1000" min="1" max="100000"
+                                   class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Fingerprint Components -->
+                    <div class="mb-3">
+                        <label class="block text-xs text-gray-400 mb-2">Components to randomize</label>
+                        <div class="grid grid-cols-4 gap-2">
+                            <label class="flex items-center gap-1.5 text-xs">
+                                <input type="checkbox" id="fp-comp-screen" checked class="w-3.5 h-3.5 rounded border-gray-600 bg-surface-light text-cyan-500">
+                                <span>Screen</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 text-xs">
+                                <input type="checkbox" id="fp-comp-webgl" checked class="w-3.5 h-3.5 rounded border-gray-600 bg-surface-light text-cyan-500">
+                                <span>WebGL</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 text-xs">
+                                <input type="checkbox" id="fp-comp-audio" checked class="w-3.5 h-3.5 rounded border-gray-600 bg-surface-light text-cyan-500">
+                                <span>Audio</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 text-xs">
+                                <input type="checkbox" id="fp-comp-fonts" checked class="w-3.5 h-3.5 rounded border-gray-600 bg-surface-light text-cyan-500">
+                                <span>Fonts</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 text-xs">
+                                <input type="checkbox" id="fp-comp-canvas" checked class="w-3.5 h-3.5 rounded border-gray-600 bg-surface-light text-cyan-500">
+                                <span>Canvas</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 text-xs">
+                                <input type="checkbox" id="fp-comp-timezone" checked class="w-3.5 h-3.5 rounded border-gray-600 bg-surface-light text-cyan-500">
+                                <span>Timezone</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 text-xs">
+                                <input type="checkbox" id="fp-comp-language" checked class="w-3.5 h-3.5 rounded border-gray-600 bg-surface-light text-cyan-500">
+                                <span>Language</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 text-xs">
+                                <input type="checkbox" id="fp-comp-hardware" checked class="w-3.5 h-3.5 rounded border-gray-600 bg-surface-light text-cyan-500">
+                                <span>Hardware</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="previewDynamicFP()" class="px-3 py-1.5 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded text-xs hover:bg-cyan-500/30">
+                            Generate Preview
+                        </button>
+                        <button onclick="generateFPPool()" class="px-3 py-1.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-xs hover:bg-blue-500/30">
+                            Pre-generate Pool
+                        </button>
+                        <span id="fp-pool-status" class="text-xs text-gray-500"></span>
+                    </div>
+                </div>
+
+                <!-- File-based Fingerprint Options -->
+                <div id="fp-file-options" class="bg-surface rounded-lg border border-gray-700 p-4 mb-4 hidden">
+                    <h4 class="font-medium mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        File-based Fingerprints
+                    </h4>
+                    <div class="mb-3">
+                        <label class="block text-xs text-gray-400 mb-1">Source File</label>
+                        <select id="wizard-fp-source" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2 text-sm">
+                            <option value="devices.json">devices.json (2,505 profiles)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-400">Available: <span class="text-cyan-400 font-medium" id="wizard-fp-total">2,505</span></span>
+                        <button onclick="previewFileFP()" class="px-3 py-1.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-xs hover:bg-blue-500/30">
+                            Preview Sample
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Fingerprint Preview Panel -->
+                <div id="fp-preview-panel" class="bg-surface-light rounded-lg border border-gray-600 p-3 mb-4 hidden">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-medium text-gray-400">Fingerprint Preview</span>
+                        <button onclick="hideFPPreview()" class="text-gray-500 hover:text-gray-300">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="bg-surface p-2 rounded">
+                            <span class="text-gray-500">Screen:</span>
+                            <span class="text-cyan-400" id="fp-preview-screen">-</span>
+                        </div>
+                        <div class="bg-surface p-2 rounded">
+                            <span class="text-gray-500">Platform:</span>
+                            <span class="text-cyan-400" id="fp-preview-platform">-</span>
+                        </div>
+                        <div class="bg-surface p-2 rounded">
+                            <span class="text-gray-500">GPU:</span>
+                            <span class="text-cyan-400" id="fp-preview-gpu">-</span>
+                        </div>
+                        <div class="bg-surface p-2 rounded">
+                            <span class="text-gray-500">Memory:</span>
+                            <span class="text-cyan-400" id="fp-preview-memory">-</span>
+                        </div>
+                        <div class="bg-surface p-2 rounded">
+                            <span class="text-gray-500">Cores:</span>
+                            <span class="text-cyan-400" id="fp-preview-cores">-</span>
+                        </div>
+                        <div class="bg-surface p-2 rounded">
+                            <span class="text-gray-500">Language:</span>
+                            <span class="text-cyan-400" id="fp-preview-language">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Screen Size Options -->
+                <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="font-medium flex items-center gap-2">
+                            <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            Screen Sizes
+                        </h4>
+                        <label class="flex items-center gap-2 text-xs">
+                            <input type="checkbox" id="wizard-use-screen-sizes" checked class="w-4 h-4 rounded border-gray-600 bg-surface-light text-cyan-500">
+                            <span class="text-gray-400">Randomize viewport</span>
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2" id="screen-size-options">
+                        <label class="flex items-center gap-2 p-2 bg-surface-light rounded cursor-pointer hover:bg-surface">
+                            <input type="checkbox" name="screen_type" value="desktop" checked class="w-3.5 h-3.5 rounded border-gray-600 bg-surface text-cyan-500">
+                            <div>
+                                <div class="text-xs font-medium">Desktop</div>
+                                <div class="text-xs text-gray-500">1920x1080+</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 bg-surface-light rounded cursor-pointer hover:bg-surface">
+                            <input type="checkbox" name="screen_type" value="laptop" checked class="w-3.5 h-3.5 rounded border-gray-600 bg-surface text-cyan-500">
+                            <div>
+                                <div class="text-xs font-medium">Laptop</div>
+                                <div class="text-xs text-gray-500">1366x768</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 bg-surface-light rounded cursor-pointer hover:bg-surface">
+                            <input type="checkbox" name="screen_type" value="mobile" class="w-3.5 h-3.5 rounded border-gray-600 bg-surface text-cyan-500">
+                            <div>
+                                <div class="text-xs font-medium">Mobile</div>
+                                <div class="text-xs text-gray-500">390x844</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500">
+                        Selected: <span id="wizard-screen-total" class="text-cyan-400">0</span> screen sizes
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Behavior Patterns (Enhanced) -->
+            <div id="wizard-step-5" class="wizard-step hidden">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-medium">Behavior Patterns</h3>
+                        <p class="text-sm text-gray-400">Human-like interaction & traffic simulation</p>
+                    </div>
+                </div>
+
+                <!-- Section A: Behavior Mode -->
+                <div class="bg-surface rounded-lg border border-gray-700 p-4 mb-3">
+                    <h4 class="text-sm font-medium mb-3 flex items-center gap-2">
+                        <span class="w-5 h-5 rounded-full bg-yellow-500/20 flex items-center justify-center text-xs text-yellow-400">A</span>
+                        Decision Mode
+                    </h4>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="behavior-mode-option flex flex-col items-center p-3 rounded-lg border cursor-pointer transition-all border-cyan-500 bg-cyan-500/10" onclick="setBehaviorMode('preset')">
+                            <input type="radio" name="behavior_mode" value="preset" checked class="hidden">
+                            <div class="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center mb-2">
+                                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-medium">Preset</span>
+                            <span class="text-xs text-gray-500 text-center">Predefined patterns</span>
+                        </label>
+                        <label class="behavior-mode-option flex flex-col items-center p-3 rounded-lg border cursor-pointer transition-all border-gray-600 hover:border-gray-500" onclick="setBehaviorMode('llm')">
+                            <input type="radio" name="behavior_mode" value="llm" class="hidden">
+                            <div class="w-8 h-8 rounded-full bg-violet-500/20 flex items-center justify-center mb-2">
+                                <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-medium">LLM</span>
+                            <span class="text-xs text-gray-500 text-center">AI-driven actions</span>
+                        </label>
+                        <label class="behavior-mode-option flex flex-col items-center p-3 rounded-lg border cursor-pointer transition-all border-gray-600 hover:border-gray-500" onclick="setBehaviorMode('hybrid')">
+                            <input type="radio" name="behavior_mode" value="hybrid" class="hidden">
+                            <div class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center mb-2">
+                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-medium">Hybrid</span>
+                            <span class="text-xs text-gray-500 text-center">Preset + AI fallback</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Section B: Traffic Source / Referrer Distribution -->
+                <div class="bg-surface rounded-lg border border-gray-700 p-4 mb-3">
+                    <h4 class="text-sm font-medium mb-3 flex items-center gap-2">
+                        <span class="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center text-xs text-green-400">B</span>
+                        Traffic Source Distribution
+                    </h4>
+
+                    <!-- Referrer Mode Selection -->
+                    <div class="flex gap-2 mb-3">
+                        <button onclick="setReferrerMode('realistic')" id="ref-mode-realistic" class="flex-1 px-3 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-medium">Realistic</button>
+                        <button onclick="setReferrerMode('custom')" id="ref-mode-custom" class="flex-1 px-3 py-2 bg-surface-light text-gray-400 border border-gray-600 rounded-lg hover:border-gray-500 text-xs font-medium">Custom</button>
+                        <button onclick="setReferrerMode('none')" id="ref-mode-none" class="flex-1 px-3 py-2 bg-surface-light text-gray-400 border border-gray-600 rounded-lg hover:border-gray-500 text-xs font-medium">None</button>
+                    </div>
+
+                    <!-- Realistic Preset Options -->
+                    <div id="referrer-realistic-options" class="mb-3">
+                        <select id="referrer-preset" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-sm" onchange="updateReferrerPreset()">
+                            <option value="realistic">Realistic (Balanced traffic)</option>
+                            <option value="search_heavy">Search Heavy (Content/Blog sites)</option>
+                            <option value="social_viral">Social Viral (Trending content)</option>
+                            <option value="brand_focused">Brand Focused (Direct traffic)</option>
+                            <option value="email_campaign">Email Campaign (Newsletter)</option>
+                        </select>
+                    </div>
+
+                    <!-- Custom Weights (hidden by default) -->
+                    <div id="referrer-custom-weights" class="hidden space-y-2 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-16 text-xs text-gray-400">Direct</span>
+                            <input type="range" id="ref-direct" min="0" max="100" value="45" class="flex-1 slider-thumb" oninput="updateRefSlider('direct')">
+                            <span id="ref-direct-val" class="w-10 text-xs text-right">45%</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-16 text-xs text-gray-400">Google</span>
+                            <input type="range" id="ref-google" min="0" max="100" value="25" class="flex-1 slider-thumb" oninput="updateRefSlider('google')">
+                            <span id="ref-google-val" class="w-10 text-xs text-right">25%</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-16 text-xs text-gray-400">Social</span>
+                            <input type="range" id="ref-social" min="0" max="100" value="12" class="flex-1 slider-thumb" oninput="updateRefSlider('social')">
+                            <span id="ref-social-val" class="w-10 text-xs text-right">12%</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-16 text-xs text-gray-400">Referral</span>
+                            <input type="range" id="ref-referral" min="0" max="100" value="8" class="flex-1 slider-thumb" oninput="updateRefSlider('referral')">
+                            <span id="ref-referral-val" class="w-10 text-xs text-right">8%</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-16 text-xs text-gray-400">Email</span>
+                            <input type="range" id="ref-email" min="0" max="100" value="5" class="flex-1 slider-thumb" oninput="updateRefSlider('email')">
+                            <span id="ref-email-val" class="w-10 text-xs text-right">5%</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-16 text-xs text-gray-400">AI Search</span>
+                            <input type="range" id="ref-ai" min="0" max="100" value="2" class="flex-1 slider-thumb" oninput="updateRefSlider('ai')">
+                            <span id="ref-ai-val" class="w-10 text-xs text-right">2%</span>
+                        </div>
+                    </div>
+
+                    <!-- Variance Control -->
+                    <div id="referrer-variance-control" class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400">Variance:</span>
+                        <input type="range" id="ref-variance" min="0" max="30" value="10" class="flex-1 slider-thumb" oninput="updateRefSlider('variance')">
+                        <span class="text-xs">±<span id="ref-variance-val">10</span>%</span>
+                    </div>
+                </div>
+
+                <!-- Section C: Interaction Patterns -->
+                <div class="bg-surface rounded-lg border border-gray-700 p-4 mb-3">
+                    <h4 class="text-sm font-medium mb-3 flex items-center gap-2">
+                        <span class="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center text-xs text-blue-400">C</span>
+                        Interaction Patterns
+                    </h4>
+
+                    <!-- Mouse Style -->
+                    <div class="mb-3">
+                        <label class="text-xs text-gray-400 mb-2 block">Mouse Movement</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="setMouseStyle('natural')" id="mouse-natural" class="mouse-style-btn px-2 py-1.5 bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded text-xs">Natural</button>
+                            <button onclick="setMouseStyle('fast')" id="mouse-fast" class="mouse-style-btn px-2 py-1.5 bg-surface-light text-gray-400 border border-gray-600 rounded hover:border-gray-500 text-xs">Fast</button>
+                            <button onclick="setMouseStyle('slow')" id="mouse-slow" class="mouse-style-btn px-2 py-1.5 bg-surface-light text-gray-400 border border-gray-600 rounded hover:border-gray-500 text-xs">Slow</button>
+                            <button onclick="setMouseStyle('nervous')" id="mouse-nervous" class="mouse-style-btn px-2 py-1.5 bg-surface-light text-gray-400 border border-gray-600 rounded hover:border-gray-500 text-xs">Nervous</button>
+                            <button onclick="setMouseStyle('confident')" id="mouse-confident" class="mouse-style-btn px-2 py-1.5 bg-surface-light text-gray-400 border border-gray-600 rounded hover:border-gray-500 text-xs">Confident</button>
+                            <button onclick="setMouseStyle('random')" id="mouse-random" class="mouse-style-btn px-2 py-1.5 bg-surface-light text-gray-400 border border-gray-600 rounded hover:border-gray-500 text-xs">Random</button>
+                        </div>
+                    </div>
+
+                    <!-- Scroll Behavior -->
+                    <div class="mb-3">
+                        <label class="text-xs text-gray-400 mb-2 block">Scroll Behavior</label>
+                        <select id="scroll-behavior" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-sm">
+                            <option value="smooth">Smooth (human-like)</option>
+                            <option value="reading">Reading (pause at content)</option>
+                            <option value="jump">Jump scroll</option>
+                            <option value="minimal">Minimal scrolling</option>
+                        </select>
+                    </div>
+
+                    <!-- Advanced Toggle -->
+                    <button onclick="toggleAdvancedMouse()" class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
+                        <svg id="advanced-mouse-icon" class="w-3 h-3 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        Advanced Settings
+                    </button>
+                    <div id="advanced-mouse" class="hidden mt-3 space-y-2 pl-4 border-l-2 border-gray-700">
+                        <div class="flex items-center gap-2">
+                            <span class="w-20 text-xs text-gray-400">Tremor</span>
+                            <input type="range" id="mouse-tremor" min="0" max="50" value="15" class="flex-1 slider-thumb" oninput="updateMouseSlider('tremor')">
+                            <span id="mouse-tremor-val" class="w-10 text-xs text-right">1.5</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-20 text-xs text-gray-400">Overshoot</span>
+                            <input type="range" id="mouse-overshoot" min="0" max="50" value="15" class="flex-1 slider-thumb" oninput="updateMouseSlider('overshoot')">
+                            <span id="mouse-overshoot-val" class="w-10 text-xs text-right">15%</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-20 text-xs text-gray-400">Speed</span>
+                            <input type="range" id="mouse-speed" min="30" max="200" value="100" class="flex-1 slider-thumb" oninput="updateMouseSlider('speed')">
+                            <span id="mouse-speed-val" class="w-10 text-xs text-right">1.0x</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section D: Session Behavior -->
+                <div class="bg-surface rounded-lg border border-gray-700 p-4 mb-3">
+                    <h4 class="text-sm font-medium mb-3 flex items-center gap-2">
+                        <span class="w-5 h-5 rounded-full bg-purple-500/20 flex items-center justify-center text-xs text-purple-400">D</span>
+                        Session Behavior
+                    </h4>
+
+                    <!-- Engagement Level -->
+                    <div class="mb-3">
+                        <label class="text-xs text-gray-400 mb-2 block">Engagement Level</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="setEngagement('passive')" id="engage-passive" class="engagement-btn flex flex-col items-center p-2 bg-surface-light border border-gray-600 rounded-lg hover:border-gray-500">
+                                <span class="text-sm font-medium text-gray-300">Passive</span>
+                                <span class="text-xs text-gray-500">5-15s, quick</span>
+                            </button>
+                            <button onclick="setEngagement('active')" id="engage-active" class="engagement-btn flex flex-col items-center p-2 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
+                                <span class="text-sm font-medium text-cyan-400">Active</span>
+                                <span class="text-xs text-gray-500">15-60s, normal</span>
+                            </button>
+                            <button onclick="setEngagement('deep')" id="engage-deep" class="engagement-btn flex flex-col items-center p-2 bg-surface-light border border-gray-600 rounded-lg hover:border-gray-500">
+                                <span class="text-sm font-medium text-gray-300">Deep</span>
+                                <span class="text-xs text-gray-500">60-300s, thorough</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dwell Time -->
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="text-xs text-gray-400 mb-1 block">Min Dwell (sec)</label>
+                            <input type="number" id="dwell-min" value="15" min="1" max="600" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-sm text-center">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 mb-1 block">Max Dwell (sec)</label>
+                            <input type="number" id="dwell-max" value="60" min="1" max="600" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-sm text-center">
+                        </div>
+                    </div>
+
+                    <!-- Page Depth -->
+                    <div class="mb-3">
+                        <label class="text-xs text-gray-400 mb-1 block">Pages to Visit</label>
+                        <div class="flex gap-2 items-center">
+                            <input type="number" id="depth-min" value="1" min="1" max="50" class="w-16 bg-surface-light border border-gray-600 rounded-lg px-2 py-2 text-sm text-center">
+                            <span class="text-gray-400 text-sm">to</span>
+                            <input type="number" id="depth-max" value="5" min="1" max="50" class="w-16 bg-surface-light border border-gray-600 rounded-lg px-2 py-2 text-sm text-center">
+                            <span class="text-xs text-gray-500">pages</span>
+                        </div>
+                    </div>
+
+                    <!-- Micro-breaks -->
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs text-gray-400">Micro-breaks</label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="micro-breaks" checked class="w-4 h-4 rounded border-gray-600 bg-surface-light text-cyan-500">
+                            <span class="text-xs text-gray-400">Random pauses (1-5s)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Section E: LLM Settings (shown when LLM/Hybrid mode selected) -->
+                <div id="behavior-llm-section" class="bg-surface rounded-lg border border-violet-500/30 p-4 mb-3 hidden">
+                    <h4 class="text-sm font-medium mb-3 flex items-center gap-2">
+                        <span class="w-5 h-5 rounded-full bg-violet-500/20 flex items-center justify-center text-xs text-violet-400">E</span>
+                        <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                        LLM Settings
+                    </h4>
+
+                    <!-- Provider Selection -->
+                    <div class="mb-3">
+                        <label class="text-xs text-gray-400 mb-2 block">Provider</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="setLLMProvider('openai')" id="llm-openai" class="llm-provider-btn px-2 py-1.5 bg-green-500/20 text-green-400 border border-green-500/30 rounded text-xs">OpenAI</button>
+                            <button onclick="setLLMProvider('anthropic')" id="llm-anthropic" class="llm-provider-btn px-2 py-1.5 bg-surface-light text-gray-400 border border-gray-600 rounded hover:border-gray-500 text-xs">Anthropic</button>
+                            <button onclick="setLLMProvider('ollama')" id="llm-ollama" class="llm-provider-btn px-2 py-1.5 bg-surface-light text-gray-400 border border-gray-600 rounded hover:border-gray-500 text-xs">Ollama</button>
+                        </div>
+                    </div>
+
+                    <!-- Model Selection -->
+                    <div class="mb-3">
+                        <label class="text-xs text-gray-400 mb-1 block">Model</label>
+                        <select id="llm-model" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-sm">
+                            <option value="gpt-4o">GPT-4o (Recommended)</option>
+                            <option value="gpt-4o-mini">GPT-4o Mini (Faster)</option>
+                            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                        </select>
+                    </div>
+
+                    <!-- Personality -->
+                    <div class="mb-3">
+                        <label class="text-xs text-gray-400 mb-1 block">Personality</label>
+                        <select id="llm-personality" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-sm" onchange="toggleCustomPrompt()">
+                            <option value="casual">Casual Browser</option>
+                            <option value="researcher">Researcher</option>
+                            <option value="shopper">Shopper</option>
+                            <option value="scanner">Quick Scanner</option>
+                            <option value="custom">Custom Prompt...</option>
+                        </select>
+                    </div>
+
+                    <!-- Custom Prompt (hidden by default) -->
+                    <div id="llm-custom-prompt-container" class="hidden mb-3">
+                        <label class="text-xs text-gray-400 mb-1 block">Custom Behavior Prompt</label>
+                        <textarea id="llm-custom-prompt" rows="2" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-sm" placeholder="You are a curious user interested in..."></textarea>
+                    </div>
+
+                    <!-- Decision Frequency -->
+                    <div class="mb-3">
+                        <label class="text-xs text-gray-400 mb-1 block">Decision Frequency</label>
+                        <select id="llm-frequency" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-sm">
+                            <option value="every">Every Action (expensive)</option>
+                            <option value="key" selected>Key Decisions Only</option>
+                            <option value="fallback">Fallback Only (cheapest)</option>
+                        </select>
+                    </div>
+
+                    <!-- Vision & Temperature -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="flex items-center justify-between p-2 bg-surface-light rounded-lg">
+                            <div>
+                                <span class="text-xs font-medium">Vision</span>
+                                <div class="text-xs text-gray-500">Screenshot analysis</div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="llm-vision" class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-600 rounded-full peer peer-checked:bg-violet-500 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4"></div>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400">Temp: <span id="llm-temp-val">0.3</span></label>
+                            <input type="range" id="llm-temperature" min="0" max="10" value="3" class="w-full slider-thumb" oninput="updateLLMTemp()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: Review & Execute -->
+            <div id="wizard-step-6" class="wizard-step hidden">
+                <!-- Header -->
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 bg-pink-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-medium">Review & Execute</h3>
+                        <p class="text-sm text-gray-400">Verify settings and start your task</p>
+                    </div>
+                </div>
+
+                <!-- Section A: Execution Settings -->
+                <div class="bg-surface rounded-lg border border-gray-700 p-4 mb-3">
+                    <h4 class="text-sm font-medium mb-3 flex items-center gap-2">
+                        <span class="w-5 h-5 rounded-full bg-pink-500/20 text-pink-400 flex items-center justify-center text-xs font-bold">A</span>
+                        Execution Settings
+                    </h4>
+
+                    <!-- Row 1: Mode & Browser -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Mode</label>
+                            <div class="flex bg-surface-light rounded-lg p-1 mb-1">
+                                <button id="mode-batch" onclick="setMode('batch')" class="flex-1 px-4 py-2 rounded-md text-sm bg-primary text-white">Batch</button>
+                                <button id="mode-debug" onclick="setMode('debug')" class="flex-1 px-4 py-2 rounded-md text-sm text-gray-400">Debug</button>
+                            </div>
+                            <p class="text-xs text-gray-500">
+                                <span class="text-cyan-400">Batch:</span> Run multiple sessions in parallel |
+                                <span class="text-yellow-400">Debug:</span> Single session with visible browser
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Browser Engine</label>
+                            <select id="browser-engine" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 mb-1">
+                                <option value="patchright">Patchright (Recommended)</option>
+                                <option value="playwright">Playwright</option>
+                                <option value="camoufox">Camoufox</option>
+                            </select>
+                            <p class="text-xs text-gray-500">
+                                <span class="text-green-400">Patchright:</span> Undetected Chrome |
+                                <span class="text-gray-400">Playwright:</span> Standard |
+                                <span class="text-orange-400">Camoufox:</span> Firefox-based
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Workers, Repeat, Headless -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div id="workers-control">
+                            <label class="block text-sm font-medium mb-1">Workers</label>
+                            <input type="number" id="workers" value="5" min="1" max="50" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-center mb-1">
+                            <p class="text-xs text-gray-500">Parallel browsers running at once</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Repeat</label>
+                            <input type="number" id="repeat" value="1" min="1" max="1000" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-center mb-1">
+                            <p class="text-xs text-gray-500">Times each worker visits the URL</p>
+                        </div>
+                        <div>
+                            <label class="flex items-center gap-2 cursor-pointer mb-1 mt-6">
+                                <input type="checkbox" id="headless" checked class="w-5 h-5 rounded border-gray-600 bg-surface-light text-primary">
+                                <span class="text-sm">Headless</span>
+                            </label>
+                            <p class="text-xs text-gray-500">Hide browser windows (faster)</p>
+                        </div>
+                    </div>
+
+                    <!-- Quick math -->
+                    <div class="mt-3 pt-3 border-t border-gray-700/50 text-xs text-gray-500">
+                        <span class="text-gray-400">Total Sessions:</span>
+                        <span class="text-white font-medium" id="total-sessions-preview">5</span>
+                        <span class="text-gray-600 ml-2">(Workers x Repeat)</span>
+                    </div>
+                </div>
+
+                <!-- Section B: Configuration Summary -->
+                <div class="bg-surface rounded-lg border border-gray-700 p-4 mb-3">
+                    <h4 class="text-sm font-medium mb-3 flex items-center gap-2">
+                        <span class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs font-bold">B</span>
+                        Configuration Summary
+                    </h4>
+                    <div id="config-summary" class="space-y-2">
+                        <!-- Populated by generateConfigSummary() -->
+                        <div class="text-sm text-gray-500 text-center py-4">Loading configuration...</div>
+                    </div>
+                </div>
+
+                <!-- Section C: Resource Estimate -->
+                <div class="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 rounded-lg p-4">
+                    <h4 class="text-sm font-medium mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                        </svg>
+                        Resource Estimate
+                    </h4>
+                    <div id="resource-estimate" class="grid grid-cols-3 gap-4 text-sm">
+                        <!-- Populated by generateResourceEstimate() -->
+                        <div class="text-center p-3 bg-surface-light/50 rounded-lg">
+                            <div class="text-2xl font-bold text-cyan-400">-</div>
+                            <div class="text-xs text-gray-500">Total Sessions</div>
+                        </div>
+                        <div class="text-center p-3 bg-surface-light/50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-400">-</div>
+                            <div class="text-xs text-gray-500">Proxy Requests</div>
+                        </div>
+                        <div class="text-center p-3 bg-surface-light/50 rounded-lg">
+                            <div class="text-2xl font-bold text-purple-400">-</div>
+                            <div class="text-xs text-gray-500">Est. Runtime</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wizard Navigation -->
+        <div class="p-4 border-t border-gray-700 bg-surface-light flex items-center justify-between">
+            <button id="wizard-back-btn" onclick="prevWizardStep()" class="px-6 py-3 bg-surface border border-gray-600 rounded-lg hover:bg-gray-700 hidden">
+                <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    Back
+                </span>
+            </button>
+            <div></div>
+            <button id="wizard-next-btn" onclick="nextWizardStep()" class="px-6 py-3 bg-primary hover:bg-primary/80 rounded-lg font-medium">
+                <span class="flex items-center gap-2">
+                    Next
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </span>
+            </button>
+            <button id="wizard-start-btn" onclick="startTask()" class="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-lg font-medium hidden">
+                <span class="flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    START TASK
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Right Panel - Task Monitor -->
+    <div class="w-1/3 flex flex-col">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-3 gap-4 p-4 border-b border-gray-700">
+            <div class="bg-surface-light rounded-lg p-3 text-center cursor-pointer hover:ring-1 hover:ring-yellow-500/50" onclick="setTaskFilter('running')">
+                <div class="text-2xl font-bold text-yellow-400" id="stat-running">0</div>
+                <div class="text-xs text-gray-400">Running</div>
+            </div>
+            <div class="bg-surface-light rounded-lg p-3 text-center cursor-pointer hover:ring-1 hover:ring-green-500/50" onclick="setTaskFilter('completed')">
+                <div class="text-2xl font-bold text-green-400" id="stat-completed">0</div>
+                <div class="text-xs text-gray-400">Completed</div>
+            </div>
+            <div class="bg-surface-light rounded-lg p-3 text-center cursor-pointer hover:ring-1 hover:ring-red-500/50" onclick="setTaskFilter('failed')">
+                <div class="text-2xl font-bold text-red-400" id="stat-failed">0</div>
+                <div class="text-xs text-gray-400">Failed</div>
+            </div>
+        </div>
+
+        <!-- Task Filter Tabs -->
+        <div class="flex border-b border-gray-700 px-4">
+            <button class="task-filter-tab px-3 py-2 text-xs font-medium border-b-2 border-primary text-primary" data-filter="all" onclick="setTaskFilter('all')">All</button>
+            <button class="task-filter-tab px-3 py-2 text-xs font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-200" data-filter="running" onclick="setTaskFilter('running')">Running</button>
+            <button class="task-filter-tab px-3 py-2 text-xs font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-200" data-filter="completed" onclick="setTaskFilter('completed')">Completed</button>
+            <button class="task-filter-tab px-3 py-2 text-xs font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-200" data-filter="failed" onclick="setTaskFilter('failed')">Failed</button>
+        </div>
+
+        <!-- Task List -->
+        <div class="flex-1 overflow-y-auto" id="task-list-container">
+            <div id="tasks-list" class="divide-y divide-gray-700">
+                <div class="text-sm text-gray-500 text-center py-8">No tasks yet</div>
+            </div>
+        </div>
+
+        <!-- Task Details Panel -->
+        <div id="task-details-panel" class="hidden border-t border-gray-700 bg-surface max-h-[45%] overflow-y-auto">
+            <div class="sticky top-0 bg-surface border-b border-gray-700 px-4 py-2 flex items-center justify-between">
+                <h3 class="text-sm font-medium">Task Details</h3>
+                <button onclick="closeTaskDetails()" class="text-gray-400 hover:text-white">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="task-details-content" class="p-4 space-y-4"></div>
+        </div>
+
+        <!-- Event Log -->
+        <div id="event-log-container" class="border-t border-gray-700 flex-shrink-0 flex flex-col" style="height: 150px; min-height: 80px; max-height: 400px;">
+            <div class="h-1 bg-gray-700 cursor-ns-resize hover:bg-primary/50 transition-colors" onmousedown="startResizeEventLog(event)"></div>
+            <div class="flex items-center justify-between px-4 py-2 border-b border-gray-700">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-xs font-medium">Event Log</h3>
+                    <span class="text-xs text-gray-500" id="event-count">(0)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="expandEventLog()" class="text-xs text-gray-400 hover:text-gray-200" title="Expand">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                    </button>
+                    <button onclick="clearEvents()" class="text-xs text-gray-400 hover:text-gray-200">Clear</button>
+                </div>
+            </div>
+            <div id="event-log" class="flex-1 overflow-y-auto px-4 py-1 text-xs font-mono space-y-1"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Record Flow Modal -->
+<div id="record-flow-modal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center">
+    <div class="bg-surface border border-gray-700 rounded-xl p-6 w-[500px] max-w-[90vw]">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium">Record New Flow</h3>
+                    <p class="text-sm text-gray-400">Launch browser and record your actions</p>
+                </div>
+            </div>
+            <button onclick="closeRecordFlowModal()" class="text-gray-400 hover:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium mb-2">Flow Name *</label>
+                <input type="text" id="record-flow-name" placeholder="e.g., Login to Dashboard" class="w-full bg-surface-light border border-gray-600 rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Start URL *</label>
+                <input type="text" id="record-flow-url" placeholder="https://example.com" class="w-full bg-surface-light border border-gray-600 rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-2">Description (optional)</label>
+                <textarea id="record-flow-description" rows="2" placeholder="What does this flow do?" class="w-full bg-surface-light border border-gray-600 rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"></textarea>
+            </div>
+
+            <!-- Stealth Mode Section -->
+            <div class="border-t border-gray-700 pt-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <span class="text-sm font-medium text-green-400">Stealth Mode (Optional)</span>
+                </div>
+
+                <div class="space-y-3">
+                    <!-- Use Proxy -->
+                    <div class="flex items-center justify-between p-3 bg-surface-light rounded-lg">
+                        <div>
+                            <span class="text-sm font-medium">🌐 Hide IP (Proxy)</span>
+                            <p class="text-xs text-gray-500">Route through proxy to hide your real IP</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="record-use-proxy" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:bg-green-500 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                        </label>
+                    </div>
+
+                    <!-- Random Fingerprint -->
+                    <div class="flex items-center justify-between p-3 bg-surface-light rounded-lg">
+                        <div>
+                            <span class="text-sm font-medium">🎭 Fake Identity (Fingerprint)</span>
+                            <p class="text-xs text-gray-500">Random browser fingerprint, user agent, timezone</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="record-use-fingerprint" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:bg-green-500 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                        </label>
+                    </div>
+
+                    <!-- WebRTC Protection -->
+                    <div class="flex items-center justify-between p-3 bg-surface-light rounded-lg">
+                        <div>
+                            <span class="text-sm font-medium">🔒 Block WebRTC Leak</span>
+                            <p class="text-xs text-gray-500">Prevent real IP leak via WebRTC</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="record-block-webrtc" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:bg-green-500 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                        </label>
+                    </div>
+
+                    <!-- Canvas/WebGL Noise -->
+                    <div class="flex items-center justify-between p-3 bg-surface-light rounded-lg">
+                        <div>
+                            <span class="text-sm font-medium">🖼️ Canvas/WebGL Noise</span>
+                            <p class="text-xs text-gray-500">Add noise to prevent canvas fingerprinting</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="record-canvas-noise" checked class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:bg-green-500 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Quick Presets -->
+                <div class="flex gap-2 mt-3">
+                    <button onclick="setRecordStealth('none')" class="px-3 py-1.5 text-xs bg-gray-600/50 hover:bg-gray-600 rounded-lg">No Protection</button>
+                    <button onclick="setRecordStealth('basic')" class="px-3 py-1.5 text-xs bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-lg">Basic</button>
+                    <button onclick="setRecordStealth('full')" class="px-3 py-1.5 text-xs bg-green-500/20 text-green-400 hover:bg-green-500/30 rounded-lg">Full Stealth</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="text-sm">
+                    <p class="text-yellow-400 font-medium">How Recording Works</p>
+                    <ul class="text-gray-400 mt-1 space-y-1">
+                        <li>• A browser window will open with a recording toolbar</li>
+                        <li>• Mark checkpoints using the bookmark icon</li>
+                        <li>• Each checkpoint captures a goal, not exact steps</li>
+                        <li>• Replay will achieve same goals with different paths</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeRecordFlowModal()" class="px-4 py-2 text-gray-400 hover:text-white">Cancel</button>
+            <button onclick="startRecording()" class="px-6 py-2 bg-red-500 hover:bg-red-600 rounded-lg font-medium flex items-center gap-2">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+                Start Recording
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Flow Library Modal -->
+<div id="flow-library-modal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center">
+    <div class="bg-surface border border-gray-700 rounded-xl p-6 w-[700px] max-w-[90vw] max-h-[80vh] flex flex-col">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium">Flow Library</h3>
+                    <p class="text-sm text-gray-400">Your recorded flows</p>
+                </div>
+            </div>
+            <button onclick="closeFlowLibraryModal()" class="text-gray-400 hover:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <!-- Flow Stats -->
+        <div class="grid grid-cols-3 gap-4 mb-4">
+            <div class="bg-surface-light rounded-lg p-3 text-center">
+                <div class="text-2xl font-bold text-purple-400" id="flows-total">0</div>
+                <div class="text-xs text-gray-400">Total Flows</div>
+            </div>
+            <div class="bg-surface-light rounded-lg p-3 text-center">
+                <div class="text-2xl font-bold text-green-400" id="flows-ready">0</div>
+                <div class="text-xs text-gray-400">Ready</div>
+            </div>
+            <div class="bg-surface-light rounded-lg p-3 text-center">
+                <div class="text-2xl font-bold text-yellow-400" id="flows-draft">0</div>
+                <div class="text-xs text-gray-400">Draft</div>
+            </div>
+        </div>
+
+        <!-- Flow List -->
+        <div class="flex-1 overflow-y-auto" id="flow-list-container">
+            <div id="flow-list" class="space-y-2">
+                <div class="text-sm text-gray-500 text-center py-8">Loading flows...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Execute Flow Modal -->
+<div id="execute-flow-modal" class="fixed inset-0 bg-black/70 z-50 hidden items-center justify-center">
+    <div class="bg-surface border border-gray-700 rounded-xl p-6 w-[500px] max-w-[90vw]">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium">Execute Flow</h3>
+                    <p class="text-sm text-gray-400" id="execute-flow-name">-</p>
+                </div>
+            </div>
+            <button onclick="closeExecuteFlowModal()" class="text-gray-400 hover:text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <input type="hidden" id="execute-flow-id">
+
+        <div class="space-y-4">
+            <!-- Browser Engine -->
+            <div>
+                <label class="block text-sm font-medium mb-2">Browser Engine</label>
+                <select id="execute-flow-browser" class="w-full bg-surface-light border border-gray-600 rounded-lg px-4 py-3">
+                    <option value="camoufox">Camoufox (Recommended - Max Stealth)</option>
+                    <option value="patchright">Patchright (9/10 Stealth)</option>
+                    <option value="playwright">Playwright (Standard)</option>
+                </select>
+            </div>
+
+            <!-- Variation Level -->
+            <div>
+                <label class="block text-sm font-medium mb-2">Path Variation</label>
+                <select id="execute-flow-variation" class="w-full bg-surface-light border border-gray-600 rounded-lg px-4 py-3">
+                    <option value="low">Low - Stick close to recording</option>
+                    <option value="medium" selected>Medium - Natural variation</option>
+                    <option value="high">High - Very different paths</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Higher variation = more anti-detection but slower</p>
+            </div>
+
+            <!-- Workers -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Workers</label>
+                    <input type="number" id="execute-flow-workers" value="1" min="1" max="50" class="w-full bg-surface-light border border-gray-600 rounded-lg px-4 py-3 text-center">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Timeout (s)</label>
+                    <input type="number" id="execute-flow-timeout" value="60" min="10" max="300" class="w-full bg-surface-light border border-gray-600 rounded-lg px-4 py-3 text-center">
+                </div>
+            </div>
+
+            <!-- Use Proxy -->
+            <div class="flex items-center justify-between p-3 bg-surface-light rounded-lg">
+                <div>
+                    <span class="text-sm font-medium">Use Proxy</span>
+                    <p class="text-xs text-gray-500">Route through proxy for anonymity</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="execute-flow-proxy" checked class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:bg-green-500 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+                </label>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-6">
+            <button onclick="closeExecuteFlowModal()" class="px-4 py-2 text-gray-400 hover:text-white">Cancel</button>
+            <button onclick="executeFlow()" class="px-6 py-2 bg-green-500 hover:bg-green-600 rounded-lg font-medium flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+                Execute
+            </button>
+        </div>
+    </div>
+</div>

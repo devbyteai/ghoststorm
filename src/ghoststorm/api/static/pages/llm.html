@@ -1,0 +1,545 @@
+<!-- PAGE: LLM/AI Control -->
+<div id="page-llm" class="page-content hidden flex w-full h-full">
+    <!-- Left Panel - Configuration & Input -->
+    <div class="w-1/3 flex flex-col border-r border-gray-700">
+        <!-- LLM Configuration -->
+        <div class="p-4 border-b border-gray-700 bg-surface-light/30">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-gradient-to-br from-violet-500 to-fuchsia-600 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-lg font-medium">AI Control Center</h2>
+                    <p class="text-sm text-gray-400">LLM-driven browser automation</p>
+                </div>
+            </div>
+
+            <!-- Provider Selection -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Provider</label>
+                    <select id="llm-provider" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-sm">
+                        <option value="ollama">Ollama (Local)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Model</label>
+                    <select id="llm-model" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-sm">
+                        <option value="llama3.2-vision">Llama 3.2 Vision (Recommended)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Mode & Vision -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Control Mode</label>
+                    <select id="llm-mode" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-sm">
+                        <option value="autonomous">Autonomous</option>
+                        <option value="assist">Assist (Human approves)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Vision</label>
+                    <select id="llm-vision" class="w-full bg-surface-light border border-gray-600 rounded-lg px-3 py-2 text-sm">
+                        <option value="auto">Auto (fallback)</option>
+                        <option value="always">Always (screenshot)</option>
+                        <option value="off">Off (DOM only)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Input -->
+        <div class="p-4 border-b border-gray-700">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Target URL</label>
+                <input type="text" id="llm-url" placeholder="https://example.com"
+                    class="w-full bg-surface-light border border-gray-600 rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Goal (natural language)</label>
+                <textarea id="llm-goal" rows="3" placeholder="e.g., Find the login button and fill in the form with test credentials..."
+                    class="w-full bg-surface-light border border-gray-600 rounded-lg px-4 py-3 focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"></textarea>
+            </div>
+            <button onclick="startLLMTask()" class="w-full px-6 py-3 bg-gradient-to-r from-violet-500 to-fuchsia-600 hover:from-violet-600 hover:to-fuchsia-700 rounded-lg font-medium flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Start AI Task
+            </button>
+        </div>
+
+        <!-- LLM Analysis Panel -->
+        <div class="flex-1 overflow-y-auto p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-medium">AI Analysis</h3>
+                <span id="llm-confidence" class="text-xs px-2 py-1 rounded-full bg-gray-700 text-gray-400">--</span>
+            </div>
+            <div id="llm-analysis-content" class="bg-surface rounded-lg border border-gray-700 p-4 min-h-[100px]">
+                <p class="text-sm text-gray-500">Start a task to see AI analysis...</p>
+            </div>
+
+            <!-- Suggested Action -->
+            <div id="llm-action-panel" class="mt-4 hidden">
+                <h4 class="text-sm font-medium mb-2">Suggested Action</h4>
+                <div class="bg-surface rounded-lg border border-violet-500/30 p-4">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-violet-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg id="action-icon" class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <div id="action-type" class="text-sm font-medium text-violet-300">Click</div>
+                            <div id="action-target" class="text-sm text-gray-400 mt-1">button.login-btn</div>
+                            <div id="action-reason" class="text-xs text-gray-500 mt-2">To proceed with the login flow</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <button onclick="approveAction()" class="flex-1 px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/30 text-sm">
+                            Approve
+                        </button>
+                        <button onclick="rejectAction()" class="flex-1 px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 text-sm">
+                            Reject
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usage Stats -->
+            <div class="mt-4 pt-4 border-t border-gray-700">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-400">Tokens Used</span>
+                    <span id="llm-tokens" class="font-mono">0</span>
+                </div>
+                <div class="flex items-center justify-between text-sm mt-1">
+                    <span class="text-gray-400">Cost</span>
+                    <span id="llm-cost" class="font-mono text-green-400">Free (Local)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center Panel - Live View -->
+    <div class="flex-1 flex flex-col border-r border-gray-700">
+        <!-- Screenshot Header -->
+        <div class="p-3 border-b border-gray-700 flex items-center justify-between bg-surface-light/30">
+            <div class="flex items-center gap-2">
+                <div id="live-indicator" class="w-2 h-2 rounded-full bg-gray-500"></div>
+                <span class="text-sm font-medium">Live View</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="refreshScreenshot()" class="p-1.5 hover:bg-surface-light rounded-lg" title="Refresh">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                </button>
+                <button onclick="toggleFullscreen()" class="p-1.5 hover:bg-surface-light rounded-lg" title="Fullscreen">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Screenshot Container -->
+        <div class="flex-1 overflow-hidden bg-black/50 flex items-center justify-center p-4">
+            <div id="screenshot-wrapper" class="relative max-w-full max-h-full">
+                <img id="live-screenshot" src="" alt="Live screenshot" class="max-w-full max-h-full rounded-lg shadow-lg border border-gray-700 hidden">
+                <div id="screenshot-placeholder" class="w-[640px] h-[400px] bg-surface-light rounded-lg border border-gray-700 flex items-center justify-center">
+                    <div class="text-center">
+                        <svg class="w-16 h-16 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        <p class="text-gray-500 text-sm">No active session</p>
+                        <p class="text-gray-600 text-xs mt-1">Start a task to see live view</p>
+                    </div>
+                </div>
+                <!-- Element highlight overlay -->
+                <div id="element-highlight" class="absolute border-2 border-violet-500 bg-violet-500/20 rounded hidden pointer-events-none"></div>
+            </div>
+        </div>
+
+        <!-- URL Bar -->
+        <div class="p-2 border-t border-gray-700 bg-surface-light/30">
+            <div class="flex items-center gap-2 bg-surface rounded-lg px-3 py-2">
+                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/>
+                </svg>
+                <span id="current-url" class="text-sm text-gray-400 truncate flex-1">--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel - Elements & Timeline -->
+    <div class="w-1/4 flex flex-col">
+        <!-- Detected Elements -->
+        <div class="flex-1 overflow-hidden flex flex-col border-b border-gray-700">
+            <div class="p-3 border-b border-gray-700 flex items-center justify-between">
+                <h3 class="text-sm font-medium">Detected Elements</h3>
+                <span id="elements-count" class="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-400">0</span>
+            </div>
+            <div id="elements-list" class="flex-1 overflow-y-auto p-2 space-y-1">
+                <div class="text-sm text-gray-500 text-center py-4">No elements detected</div>
+            </div>
+        </div>
+
+        <!-- Action Timeline -->
+        <div class="flex-1 overflow-hidden flex flex-col">
+            <div class="p-3 border-b border-gray-700 flex items-center justify-between">
+                <h3 class="text-sm font-medium">Action Timeline</h3>
+                <button onclick="clearTimeline()" class="text-xs text-gray-400 hover:text-gray-200">Clear</button>
+            </div>
+            <div id="action-timeline" class="flex-1 overflow-y-auto p-2 space-y-2">
+                <div class="text-sm text-gray-500 text-center py-4">No actions yet</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// LLM Page JavaScript
+
+// Model lists - Ollama only (text + vision)
+const LLM_MODELS = {
+    text: [
+        { value: 'llama3.2', label: 'Llama 3.2 (Recommended)' },
+        { value: 'llama3', label: 'Llama 3' },
+        { value: 'llama3:70b', label: 'Llama 3 70B' },
+        { value: 'mistral', label: 'Mistral' },
+        { value: 'mixtral', label: 'Mixtral 8x7B' },
+        { value: 'codellama', label: 'Code Llama' },
+        { value: 'qwen2.5', label: 'Qwen 2.5' },
+    ],
+    vision: [
+        { value: 'llama3.2-vision', label: 'Llama 3.2 Vision (Recommended)' },
+        { value: 'llava', label: 'LLaVA (~4GB)' },
+        { value: 'llava:13b', label: 'LLaVA 13B (~8GB)' },
+        { value: 'llava:34b', label: 'LLaVA 34B (~20GB)' },
+        { value: 'bakllava', label: 'BakLLaVA' },
+    ],
+};
+
+// Current task state
+let currentLLMTask = null;
+let pendingAction = null;
+
+function updateLLMModels() {
+    const vision = document.getElementById('llm-vision').value;
+    const modelSelect = document.getElementById('llm-model');
+
+    // Use vision models if vision is enabled, otherwise text models
+    const useVision = vision === 'always' || vision === 'auto';
+    const models = useVision ? LLM_MODELS.vision : LLM_MODELS.text;
+
+    modelSelect.innerHTML = models.map(m =>
+        `<option value="${m.value}">${m.label}</option>`
+    ).join('');
+}
+
+async function startLLMTask() {
+    const url = document.getElementById('llm-url').value.trim();
+    const goal = document.getElementById('llm-goal').value.trim();
+    const provider = document.getElementById('llm-provider').value;
+    const mode = document.getElementById('llm-mode').value;
+    const vision = document.getElementById('llm-vision').value;
+
+    if (!url) {
+        showToast('Please enter a URL', 'error');
+        return;
+    }
+
+    // Show live indicator
+    document.getElementById('live-indicator').classList.remove('bg-gray-500');
+    document.getElementById('live-indicator').classList.add('bg-green-500', 'animate-pulse');
+
+    try {
+        const response = await fetch('/api/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                url: url,
+                llm_mode: mode,
+                llm_task: goal || null,
+                vision_mode: vision,
+                mode: 'debug',
+                workers: 1,
+                config: {
+                    llm_provider: provider,
+                }
+            })
+        });
+
+        if (response.ok) {
+            const task = await response.json();
+            currentLLMTask = task.task_id;
+            showToast('AI task started', 'success');
+            addTimelineEntry('navigate', url, 'Navigating to URL');
+        } else {
+            const error = await response.json();
+            showToast(error.detail || 'Failed to start task', 'error');
+        }
+    } catch (err) {
+        showToast('Network error', 'error');
+        console.error(err);
+    }
+}
+
+function addTimelineEntry(action, target, description) {
+    const timeline = document.getElementById('action-timeline');
+    const isEmpty = timeline.querySelector('.text-gray-500');
+    if (isEmpty) isEmpty.remove();
+
+    const icons = {
+        navigate: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3"/>',
+        click: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>',
+        type: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>',
+        scroll: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>',
+        wait: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+        extract: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>',
+    };
+
+    const entry = document.createElement('div');
+    entry.className = 'flex items-start gap-2 p-2 rounded-lg bg-surface-light/50 animate-fade-in';
+    entry.innerHTML = `
+        <div class="w-6 h-6 bg-violet-500/20 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+            <svg class="w-3 h-3 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                ${icons[action] || icons.click}
+            </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+            <div class="text-xs font-medium text-violet-300 capitalize">${action}</div>
+            <div class="text-xs text-gray-400 truncate" title="${target}">${target}</div>
+        </div>
+        <span class="text-xs text-gray-600">${new Date().toLocaleTimeString()}</span>
+    `;
+
+    timeline.insertBefore(entry, timeline.firstChild);
+}
+
+function updateElements(elements) {
+    const container = document.getElementById('elements-list');
+    const countEl = document.getElementById('elements-count');
+
+    if (!elements || elements.length === 0) {
+        container.innerHTML = '<div class="text-sm text-gray-500 text-center py-4">No elements detected</div>';
+        countEl.textContent = '0';
+        return;
+    }
+
+    countEl.textContent = elements.length;
+
+    container.innerHTML = elements.slice(0, 50).map((el, i) => `
+        <div class="flex items-center gap-2 p-2 rounded hover:bg-surface-light cursor-pointer" onclick="highlightElement(${i})">
+            <span class="text-xs px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400">${el.tag || 'div'}</span>
+            <span class="text-xs text-gray-300 truncate flex-1">${el.text || el.selector || 'unnamed'}</span>
+            <span class="text-xs text-gray-500">${(el.confidence * 100).toFixed(0)}%</span>
+        </div>
+    `).join('');
+}
+
+function updateScreenshot(base64Data) {
+    const img = document.getElementById('live-screenshot');
+    const placeholder = document.getElementById('screenshot-placeholder');
+
+    img.src = `data:image/png;base64,${base64Data}`;
+    img.classList.remove('hidden');
+    placeholder.classList.add('hidden');
+}
+
+function updateAnalysis(analysis) {
+    const content = document.getElementById('llm-analysis-content');
+    const confidence = document.getElementById('llm-confidence');
+
+    content.innerHTML = `<p class="text-sm text-gray-300">${analysis.text || analysis}</p>`;
+
+    if (analysis.confidence !== undefined) {
+        const conf = (analysis.confidence * 100).toFixed(0);
+        confidence.textContent = `${conf}% confident`;
+        confidence.className = `text-xs px-2 py-1 rounded-full ${
+            conf >= 80 ? 'bg-green-500/20 text-green-400' :
+            conf >= 50 ? 'bg-yellow-500/20 text-yellow-400' :
+            'bg-red-500/20 text-red-400'
+        }`;
+    }
+}
+
+function showSuggestedAction(action) {
+    const panel = document.getElementById('llm-action-panel');
+    document.getElementById('action-type').textContent = action.type || 'Action';
+    document.getElementById('action-target').textContent = action.selector || action.target || '--';
+    document.getElementById('action-reason').textContent = action.reason || '';
+    panel.classList.remove('hidden');
+    pendingAction = action;
+}
+
+function approveAction() {
+    if (!pendingAction || !currentLLMTask) return;
+
+    // Send approval via WebSocket
+    if (window.ws && window.ws.readyState === WebSocket.OPEN) {
+        window.ws.send(JSON.stringify({
+            type: 'llm_action_approved',
+            task_id: currentLLMTask,
+            action: pendingAction
+        }));
+    }
+
+    addTimelineEntry(pendingAction.type || 'action', pendingAction.selector || pendingAction.target || '--', 'Approved');
+    document.getElementById('llm-action-panel').classList.add('hidden');
+    pendingAction = null;
+}
+
+function rejectAction() {
+    if (!pendingAction || !currentLLMTask) return;
+
+    // Send rejection via WebSocket
+    if (window.ws && window.ws.readyState === WebSocket.OPEN) {
+        window.ws.send(JSON.stringify({
+            type: 'llm_action_rejected',
+            task_id: currentLLMTask,
+            action: pendingAction
+        }));
+    }
+
+    document.getElementById('llm-action-panel').classList.add('hidden');
+    pendingAction = null;
+}
+
+function clearTimeline() {
+    document.getElementById('action-timeline').innerHTML =
+        '<div class="text-sm text-gray-500 text-center py-4">No actions yet</div>';
+}
+
+function highlightElement(index) {
+    // This would highlight the element on the screenshot
+    console.log('Highlight element', index);
+}
+
+function refreshScreenshot() {
+    if (!currentLLMTask) return;
+    // Request new screenshot via API
+    fetch(`/api/llm/screenshot/${currentLLMTask}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.screenshot) {
+                updateScreenshot(data.screenshot);
+            }
+        })
+        .catch(console.error);
+}
+
+function toggleFullscreen() {
+    const wrapper = document.getElementById('screenshot-wrapper');
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else {
+        wrapper.requestFullscreen();
+    }
+}
+
+// Handle WebSocket events for LLM page
+function handleLLMWebSocketEvent(data) {
+    switch (data.type) {
+        case 'screenshot_captured':
+        case 'visual.screenshot_live':
+            if (data.task_id === currentLLMTask && data.data?.screenshot) {
+                updateScreenshot(data.data.screenshot);
+            }
+            break;
+
+        case 'llm_analysis_ready':
+        case 'llm.analysis_ready':
+            if (data.task_id === currentLLMTask) {
+                updateAnalysis(data.data || data);
+                if (data.next_action) {
+                    showSuggestedAction(data.next_action);
+                }
+            }
+            break;
+
+        case 'dom_extracted':
+        case 'dom.extracted':
+            if (data.task_id === currentLLMTask) {
+                updateElements(data.elements || []);
+            }
+            break;
+
+        case 'llm_navigated':
+            if (data.task_id === currentLLMTask) {
+                document.getElementById('current-url').textContent = data.url;
+            }
+            break;
+
+        case 'llm.action_executing':
+            if (data.task_id === currentLLMTask && data.action) {
+                addTimelineEntry(data.action.type, data.action.selector || '', 'Executing');
+            }
+            break;
+
+        case 'llm_task_complete':
+        case 'llm.task_complete':
+            if (data.task_id === currentLLMTask) {
+                document.getElementById('live-indicator').classList.remove('animate-pulse');
+                if (data.success) {
+                    showToast('AI task completed successfully', 'success');
+                } else {
+                    showToast('AI task failed', 'error');
+                }
+            }
+            break;
+
+        case 'task_failed':
+            if (data.task_id === currentLLMTask) {
+                document.getElementById('live-indicator').classList.remove('bg-green-500', 'animate-pulse');
+                document.getElementById('live-indicator').classList.add('bg-red-500');
+                showToast(data.error || 'Task failed', 'error');
+            }
+            break;
+    }
+}
+
+// Register with main app's WebSocket handler
+if (typeof window.registerLLMHandler === 'function') {
+    window.registerLLMHandler(handleLLMWebSocketEvent);
+} else {
+    // Will be registered when app.js loads
+    window.llmEventHandler = handleLLMWebSocketEvent;
+}
+
+// Check provider health on page load
+async function checkProviderHealth() {
+    try {
+        const response = await fetch('/api/llm/health');
+        const health = await response.json();
+
+        // Check Ollama status
+        const ollamaStatus = health.providers?.ollama;
+        if (!ollamaStatus || !ollamaStatus.available) {
+            // Show warning banner with installation instructions
+            const banner = document.createElement('div');
+            banner.className = 'fixed top-0 left-0 right-0 bg-yellow-500/90 text-black px-4 py-2 text-center text-sm z-50';
+            banner.innerHTML = `
+                <strong>Ollama not running!</strong>
+                Install: <code class="bg-black/20 px-2 py-0.5 rounded">curl -fsSL https://ollama.com/install.sh | sh</code>
+                Then: <code class="bg-black/20 px-2 py-0.5 rounded">ollama serve && ollama pull llama3.2-vision</code>
+                <button onclick="this.parentElement.remove()" class="ml-4 px-2 hover:bg-black/20 rounded">×</button>
+            `;
+            document.body.prepend(banner);
+        }
+    } catch (err) {
+        console.error('Failed to check provider health:', err);
+    }
+}
+
+// Update models when vision mode changes
+document.getElementById('llm-vision').addEventListener('change', updateLLMModels);
+
+// Initialize
+updateLLMModels();
+checkProviderHealth();
+</script>

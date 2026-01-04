@@ -1,0 +1,48 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Git
+.git/
+.github/
+.gitignore
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+
+# Linting/typing
+.ruff_cache/
+.mypy_cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Output (mounted as volume)
+output/
+
+# Temp files
+*.log
+*.tmp
+.DS_Store
+
+# Proxy test files (large)
+*.txt
+!data/**/*.txt

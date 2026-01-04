@@ -1,0 +1,387 @@
+<!-- Algorithm Detail Modal -->
+<div id="algorithm-detail-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+    <div class="bg-surface rounded-lg border border-gray-700 w-full max-w-4xl max-h-[85vh] flex flex-col">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+            <h3 class="font-medium" id="algo-modal-title">Algorithm Details</h3>
+            <div class="flex items-center gap-2">
+                <span id="algo-modal-status" class="px-2 py-1 rounded text-xs font-medium"></span>
+                <button onclick="closeAlgorithmModal()" class="text-gray-400 hover:text-white p-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4">
+            <div id="algo-modal-content" class="space-y-4">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+        <div class="px-4 py-3 border-t border-gray-700 flex justify-between">
+            <div class="flex gap-2">
+                <button onclick="refreshAlgorithm()" id="algo-refresh-btn" class="px-4 py-2 bg-primary hover:bg-primary/80 rounded-lg text-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    Refresh
+                </button>
+                <button onclick="fetchAlgorithmFromCDN()" id="algo-cdn-btn" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm flex items-center gap-2 hidden">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+                    CDN Scrape
+                </button>
+            </div>
+            <button onclick="testAlgorithm()" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+                Test
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- PAGE: Algorithms -->
+<div id="page-algorithms" class="page-content hidden w-full p-6 overflow-y-auto">
+    <div class="max-w-7xl mx-auto space-y-6">
+        <!-- Explanation Banner -->
+        <div class="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-lg p-5">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-white mb-2">WTF is this screen?</h3>
+                        <p class="text-sm text-gray-300 leading-relaxed">
+                            This screen manages the <strong class="text-purple-300">secret codes</strong> that let GhostStorm talk to social media platforms like TikTok, Instagram, YouTube, etc.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div class="bg-surface/50 rounded-lg p-3 border border-gray-700">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="w-6 h-6 bg-pink-500/20 rounded flex items-center justify-center text-pink-400 text-xs font-bold">T</span>
+                                <span class="font-medium text-pink-300">TikTok Algorithms</span>
+                            </div>
+                            <p class="text-gray-400 text-xs leading-relaxed">
+                                TikTok uses special "signatures" (X-Bogus, X-Gorgon) to block bots. These signatures are like passwords that change every week.
+                                We need to keep them updated or TikTok will block our requests.
+                            </p>
+                        </div>
+
+                        <div class="bg-surface/50 rounded-lg p-3 border border-gray-700">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center text-blue-400 text-xs font-bold">S</span>
+                                <span class="font-medium text-blue-300">Social Platform APIs</span>
+                            </div>
+                            <p class="text-gray-400 text-xs leading-relaxed">
+                                Instagram, YouTube, Twitter etc. use "OAuth tokens" - these are like login sessions that let us access their data.
+                                They're more stable but expire after 60 days.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="px-2 py-1 bg-green-500/20 text-green-400 rounded">Active</span>
+                        <span class="text-gray-500">= Working fine</span>
+                        <span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded ml-2">Weekly Update</span>
+                        <span class="text-gray-500">= Needs refresh often</span>
+                        <span class="px-2 py-1 bg-red-500/20 text-red-400 rounded ml-2">Deprecated</span>
+                        <span class="text-gray-500">= Old, don't use</span>
+                    </div>
+
+                    <p class="text-xs text-yellow-400/80 border-t border-gray-700 pt-3">
+                        <strong>Note:</strong> Most users don't need to touch this. It's for debugging when automation stops working.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-bold">Platform Algorithms</h2>
+                <p class="text-sm text-gray-400">API signature algorithms and authentication methods</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="refreshAllAlgorithms()" class="px-4 py-2 bg-surface-light border border-gray-600 rounded-lg hover:bg-gray-700 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    Refresh All
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="grid grid-cols-4 gap-4">
+            <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-green-400" id="algo-active-count">0</div>
+                        <div class="text-xs text-gray-400">Active</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-yellow-400" id="algo-outdated-count">0</div>
+                        <div class="text-xs text-gray-400">Needs Update</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-red-400" id="algo-deprecated-count">0</div>
+                        <div class="text-xs text-gray-400">Deprecated</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-surface rounded-lg border border-gray-700 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-blue-400" id="algo-total-count">0</div>
+                        <div class="text-xs text-gray-400">Total</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TikTok Section -->
+        <div>
+            <h3 class="text-lg font-medium mb-3 flex items-center gap-2">
+                <span class="w-6 h-6 bg-pink-500/20 rounded flex items-center justify-center text-pink-400 text-xs font-bold">T</span>
+                TikTok Algorithms
+            </h3>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- X-Gorgon -->
+                <div class="algo-card bg-surface rounded-lg border border-gray-700 p-4 hover:border-gray-600 transition-colors cursor-pointer" data-algo="tiktok_gorgon" onclick="showAlgorithmDetail('tiktok_gorgon')">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                        <span class="status-badge px-2 py-0.5 rounded text-xs font-medium bg-red-500/20 text-red-400">Deprecated</span>
+                    </div>
+                    <h4 class="font-medium mb-1">X-Gorgon</h4>
+                    <p class="text-xs text-gray-400 mb-3">Legacy Mobile API</p>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between"><span class="text-gray-500">Method:</span><span>MD5 + XOR</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Headers:</span><span>X-Gorgon, X-Khronos</span></div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-700 flex gap-2">
+                        <button onclick="event.stopPropagation(); showAlgorithmDetail('tiktok_gorgon')" class="flex-1 py-1.5 bg-surface-light rounded text-xs hover:bg-gray-700">View Code</button>
+                        <button onclick="event.stopPropagation(); fetchAlgorithm('tiktok_gorgon')" class="flex-1 py-1.5 bg-primary/20 text-primary rounded text-xs hover:bg-primary/30">Refresh</button>
+                    </div>
+                </div>
+
+                <!-- X-Bogus -->
+                <div class="algo-card bg-surface rounded-lg border border-gray-700 p-4 hover:border-gray-600 transition-colors cursor-pointer" data-algo="tiktok_xbogus" onclick="showAlgorithmDetail('tiktok_xbogus')">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        </div>
+                        <span class="status-badge px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/20 text-yellow-400">Weekly Update</span>
+                    </div>
+                    <h4 class="font-medium mb-1">X-Bogus</h4>
+                    <p class="text-xs text-gray-400 mb-3">Current Web API</p>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between"><span class="text-gray-500">Method:</span><span>JS VM Obfuscated</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Headers:</span><span>X-Bogus</span></div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-700 flex gap-2">
+                        <button onclick="event.stopPropagation(); showAlgorithmDetail('tiktok_xbogus')" class="flex-1 py-1.5 bg-surface-light rounded text-xs hover:bg-gray-700">View Code</button>
+                        <button onclick="event.stopPropagation(); fetchAlgorithm('tiktok_xbogus')" class="flex-1 py-1.5 bg-primary/20 text-primary rounded text-xs hover:bg-primary/30">Refresh</button>
+                    </div>
+                </div>
+
+                <!-- X-Gnarly -->
+                <div class="algo-card bg-surface rounded-lg border border-gray-700 p-4 hover:border-gray-600 transition-colors cursor-pointer" data-algo="tiktok_xgnarly" onclick="showAlgorithmDetail('tiktok_xgnarly')">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <span class="status-badge px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/20 text-yellow-400">Weekly Update</span>
+                    </div>
+                    <h4 class="font-medium mb-1">X-Gnarly</h4>
+                    <p class="text-xs text-gray-400 mb-3">Enhanced Web Security</p>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between"><span class="text-gray-500">Method:</span><span>JS VM + X-Bogus</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Headers:</span><span>X-Gnarly</span></div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-700 flex gap-2">
+                        <button onclick="event.stopPropagation(); showAlgorithmDetail('tiktok_xgnarly')" class="flex-1 py-1.5 bg-surface-light rounded text-xs hover:bg-gray-700">View Code</button>
+                        <button onclick="event.stopPropagation(); fetchAlgorithm('tiktok_xgnarly')" class="flex-1 py-1.5 bg-primary/20 text-primary rounded text-xs hover:bg-primary/30">Refresh</button>
+                    </div>
+                </div>
+
+                <!-- MSSDK -->
+                <div class="algo-card bg-surface rounded-lg border border-gray-700 p-4 hover:border-gray-600 transition-colors cursor-pointer" data-algo="tiktok_mssdk" onclick="showAlgorithmDetail('tiktok_mssdk')">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        </div>
+                        <span class="status-badge px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">Active</span>
+                    </div>
+                    <h4 class="font-medium mb-1">MSSDK</h4>
+                    <p class="text-xs text-gray-400 mb-3">Mobile SDK Token</p>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between"><span class="text-gray-500">Method:</span><span>Device Registration</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Headers:</span><span>X-SS-STUB</span></div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-700 flex gap-2">
+                        <button onclick="event.stopPropagation(); showAlgorithmDetail('tiktok_mssdk')" class="flex-1 py-1.5 bg-surface-light rounded text-xs hover:bg-gray-700">View Code</button>
+                        <button onclick="event.stopPropagation();" class="flex-1 py-1.5 bg-gray-700 text-gray-500 rounded text-xs cursor-not-allowed" disabled>Manual Only</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Social Platforms Section -->
+        <div>
+            <h3 class="text-lg font-medium mb-3 flex items-center gap-2">
+                <span class="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center text-blue-400 text-xs font-bold">S</span>
+                Social Platform APIs
+            </h3>
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Instagram -->
+                <div class="algo-card bg-surface rounded-lg border border-gray-700 p-4 hover:border-gray-600 transition-colors cursor-pointer" data-algo="instagram_oauth" onclick="showAlgorithmDetail('instagram_oauth')">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"/></svg>
+                        </div>
+                        <span class="status-badge px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">Active</span>
+                    </div>
+                    <h4 class="font-medium mb-1">Instagram Graph API</h4>
+                    <p class="text-xs text-gray-400 mb-3">OAuth 2.0 Token</p>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between"><span class="text-gray-500">Method:</span><span>Bearer Token</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Token Life:</span><span>60 days</span></div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-700 flex gap-2">
+                        <button onclick="event.stopPropagation(); openDocs('instagram')" class="flex-1 py-1.5 bg-surface-light rounded text-xs hover:bg-gray-700">View Docs</button>
+                        <button onclick="event.stopPropagation(); testToken('instagram')" class="flex-1 py-1.5 bg-primary/20 text-primary rounded text-xs hover:bg-primary/30">Test Token</button>
+                    </div>
+                </div>
+
+                <!-- YouTube -->
+                <div class="algo-card bg-surface rounded-lg border border-gray-700 p-4 hover:border-gray-600 transition-colors cursor-pointer" data-algo="youtube_api" onclick="showAlgorithmDetail('youtube_api')">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+                        </div>
+                        <span class="status-badge px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">Active</span>
+                    </div>
+                    <h4 class="font-medium mb-1">YouTube Data API v3</h4>
+                    <p class="text-xs text-gray-400 mb-3">API Key + OAuth 2.0</p>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between"><span class="text-gray-500">Method:</span><span>Key or Bearer</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Quota:</span><span>10K/day</span></div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-700 flex gap-2">
+                        <button onclick="event.stopPropagation(); openDocs('youtube')" class="flex-1 py-1.5 bg-surface-light rounded text-xs hover:bg-gray-700">View Docs</button>
+                        <button onclick="event.stopPropagation(); testToken('youtube')" class="flex-1 py-1.5 bg-primary/20 text-primary rounded text-xs hover:bg-primary/30">Test Key</button>
+                    </div>
+                </div>
+
+                <!-- Twitter/X -->
+                <div class="algo-card bg-surface rounded-lg border border-gray-700 p-4 hover:border-gray-600 transition-colors cursor-pointer" data-algo="twitter_api" onclick="showAlgorithmDetail('twitter_api')">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 bg-gray-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </div>
+                        <span class="status-badge px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">Active</span>
+                    </div>
+                    <h4 class="font-medium mb-1">Twitter/X API v2</h4>
+                    <p class="text-xs text-gray-400 mb-3">OAuth 2.0 PKCE</p>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between"><span class="text-gray-500">Method:</span><span>Bearer Token</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Limit:</span><span>500K-1M/mo</span></div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-700 flex gap-2">
+                        <button onclick="event.stopPropagation(); openDocs('twitter')" class="flex-1 py-1.5 bg-surface-light rounded text-xs hover:bg-gray-700">View Docs</button>
+                        <button onclick="event.stopPropagation(); testToken('twitter')" class="flex-1 py-1.5 bg-primary/20 text-primary rounded text-xs hover:bg-primary/30">Test Token</button>
+                    </div>
+                </div>
+
+                <!-- Facebook -->
+                <div class="algo-card bg-surface rounded-lg border border-gray-700 p-4 hover:border-gray-600 transition-colors cursor-pointer" data-algo="facebook_api" onclick="showAlgorithmDetail('facebook_api')">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        </div>
+                        <span class="status-badge px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">Active</span>
+                    </div>
+                    <h4 class="font-medium mb-1">Facebook Graph API</h4>
+                    <p class="text-xs text-gray-400 mb-3">OAuth 2.0 + Page Tokens</p>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between"><span class="text-gray-500">Method:</span><span>Bearer Token</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Token Life:</span><span>60 days</span></div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-700 flex gap-2">
+                        <button onclick="event.stopPropagation(); openDocs('facebook')" class="flex-1 py-1.5 bg-surface-light rounded text-xs hover:bg-gray-700">View Docs</button>
+                        <button onclick="event.stopPropagation(); testToken('facebook')" class="flex-1 py-1.5 bg-primary/20 text-primary rounded text-xs hover:bg-primary/30">Test Token</button>
+                    </div>
+                </div>
+
+                <!-- Spotify -->
+                <div class="algo-card bg-surface rounded-lg border border-gray-700 p-4 hover:border-gray-600 transition-colors cursor-pointer" data-algo="spotify_api" onclick="showAlgorithmDetail('spotify_api')">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                        </div>
+                        <span class="status-badge px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">Active</span>
+                    </div>
+                    <h4 class="font-medium mb-1">Spotify Web API</h4>
+                    <p class="text-xs text-gray-400 mb-3">OAuth 2.0 Auth Code</p>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between"><span class="text-gray-500">Method:</span><span>Bearer Token</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Refresh:</span><span>Supported</span></div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-700 flex gap-2">
+                        <button onclick="event.stopPropagation(); openDocs('spotify')" class="flex-1 py-1.5 bg-surface-light rounded text-xs hover:bg-gray-700">View Docs</button>
+                        <button onclick="event.stopPropagation(); testToken('spotify')" class="flex-1 py-1.5 bg-primary/20 text-primary rounded text-xs hover:bg-primary/30">Test Token</button>
+                    </div>
+                </div>
+
+                <!-- Twitch -->
+                <div class="algo-card bg-surface rounded-lg border border-gray-700 p-4 hover:border-gray-600 transition-colors cursor-pointer" data-algo="twitch_api" onclick="showAlgorithmDetail('twitch_api')">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 24 24"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+                        </div>
+                        <span class="status-badge px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">Active</span>
+                    </div>
+                    <h4 class="font-medium mb-1">Twitch Helix API</h4>
+                    <p class="text-xs text-gray-400 mb-3">OAuth 2.0 + Client-Id</p>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex justify-between"><span class="text-gray-500">Method:</span><span>Bearer + Client-Id</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Required:</span><span>Client-Id always</span></div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t border-gray-700 flex gap-2">
+                        <button onclick="event.stopPropagation(); openDocs('twitch')" class="flex-1 py-1.5 bg-surface-light rounded text-xs hover:bg-gray-700">View Docs</button>
+                        <button onclick="event.stopPropagation(); testToken('twitch')" class="flex-1 py-1.5 bg-primary/20 text-primary rounded text-xs hover:bg-primary/30">Test Token</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fetch Log -->
+        <div class="bg-surface rounded-lg border border-gray-700">
+            <div class="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+                <h3 class="font-medium">Fetch Log</h3>
+                <button onclick="clearFetchLog()" class="text-xs text-gray-400 hover:text-white">Clear</button>
+            </div>
+            <div id="algo-fetch-log" class="p-4 max-h-48 overflow-y-auto text-xs font-mono space-y-1">
+                <div class="text-gray-500">No fetch operations yet...</div>
+            </div>
+        </div>
+    </div>
+</div>

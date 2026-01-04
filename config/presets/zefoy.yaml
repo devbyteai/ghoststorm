@@ -1,0 +1,54 @@
+# Zefoy TikTok Boost Preset
+id: zefoy
+name: "Zefoy"
+description: "Zefoy.com TikTok engagement boost"
+category: social
+icon: "music"
+url: "https://zefoy.com"
+
+goal_keywords:
+  - followers
+  - hearts
+  - views
+  - shares
+  - favorites
+  - comments
+  - sent
+  - success
+
+captcha_selectors:
+  image: "img.img-thumbnail"
+  input: "#captchatoken"
+  submit: "button[type='submit']"
+
+actions:
+  - type: wait
+    name: "Wait for page load"
+    duration: 3000
+
+  - type: solve_captcha
+    name: "Solve initial captcha"
+
+  - type: click
+    name: "Select service (views/followers/etc)"
+    selectors:
+      - ".row .col-sm-6"
+      - "button[data-target]"
+
+  - type: fill
+    name: "Enter TikTok video URL"
+    selectors:
+      - "input[type='text']"
+      - "input[placeholder*='url']"
+    value: ""
+    required: true
+
+  - type: click
+    name: "Submit"
+    selectors:
+      - "button[type='submit']"
+
+settings:
+  headless: false
+  solve_captcha: true
+  max_iterations: 100

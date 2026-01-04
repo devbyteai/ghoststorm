@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <!-- Gradient for ghost body -->
+    <linearGradient id="ghostGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#a855f7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <!-- Gradient for lightning -->
+    <linearGradient id="lightningGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
+    </linearGradient>
+    <!-- Glow effect -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Storm cloud gradient -->
+    <linearGradient id="cloudGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#374151;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1f2937;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="#111827"/>
+  <circle cx="256" cy="256" r="230" fill="#1f2937" stroke="#374151" stroke-width="2"/>
+
+  <!-- Storm clouds at top -->
+  <ellipse cx="180" cy="120" rx="70" ry="35" fill="url(#cloudGradient)" opacity="0.8"/>
+  <ellipse cx="280" cy="100" rx="90" ry="45" fill="url(#cloudGradient)" opacity="0.9"/>
+  <ellipse cx="360" cy="130" rx="60" ry="30" fill="url(#cloudGradient)" opacity="0.7"/>
+
+  <!-- Ghost body -->
+  <path d="M256 140
+           C180 140 130 200 130 280
+           C130 380 130 420 130 420
+           C130 430 145 430 155 415
+           C165 400 175 400 185 415
+           C195 430 210 430 220 415
+           C230 400 240 400 256 415
+           C272 400 282 400 292 415
+           C302 430 317 430 327 415
+           C337 400 347 400 357 415
+           C367 430 382 430 382 420
+           C382 420 382 380 382 280
+           C382 200 332 140 256 140 Z"
+        fill="url(#ghostGradient)"
+        filter="url(#glow)"
+        opacity="0.95"/>
+
+  <!-- Ghost eyes -->
+  <ellipse cx="210" cy="260" rx="25" ry="30" fill="#1f2937"/>
+  <ellipse cx="302" cy="260" rx="25" ry="30" fill="#1f2937"/>
+
+  <!-- Eye highlights -->
+  <ellipse cx="218" cy="252" rx="8" ry="10" fill="#f8fafc"/>
+  <ellipse cx="310" cy="252" rx="8" ry="10" fill="#f8fafc"/>
+
+  <!-- Lightning bolt 1 (main) -->
+  <path d="M290 90 L260 180 L300 180 L240 300 L280 300 L200 420 L230 290 L190 290 L250 170 L210 170 Z"
+        fill="url(#lightningGradient)"
+        filter="url(#glow)"
+        opacity="0.95"/>
+
+  <!-- Lightning bolt 2 (smaller, right) -->
+  <path d="M380 110 L365 160 L385 160 L350 230 L375 230 L330 300 L350 225 L325 225 L360 155 L340 155 Z"
+        fill="url(#lightningGradient)"
+        opacity="0.7"/>
+
+  <!-- Outer ring accent -->
+  <circle cx="256" cy="256" r="245" fill="none" stroke="#a855f7" stroke-width="3" opacity="0.3"/>
+</svg>
