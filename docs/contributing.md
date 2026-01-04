@@ -1,3 +1,3 @@
 # Contributing
 
-See the main [CONTRIBUTING.md](../CONTRIBUTING.md) in the repository root.
+See the main [CONTRIBUTING.md](https://github.com/devbyteai/ghoststorm/blob/main/CONTRIBUTING.md) in the repository root.

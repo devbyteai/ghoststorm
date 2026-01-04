@@ -151,4 +151,4 @@ uv run patchright install chromium
 
 - [Architecture](architecture.md) - System design
 - [API Reference](api.md) - API documentation
-- [Contributing](../CONTRIBUTING.md) - How to contribute
+- [Contributing](contributing.md) - How to contribute
