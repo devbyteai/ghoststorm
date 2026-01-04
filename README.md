@@ -1,72 +1,97 @@
-# GhostStorm
-
 <div align="center">
 
-[![CI](https://github.com/devbyteai/ghoststorm/actions/workflows/ci.yml/badge.svg)](https://github.com/devbyteai/ghoststorm/actions/workflows/ci.yml)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Docs](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://devbyteai.github.io/ghoststorm)
+# 👻 GhostStorm
 
-**Undetectable browser automation at scale.**
+[![CI](https://img.shields.io/github/actions/workflow/status/devbyteai/ghoststorm/ci.yml?style=flat-square&label=CI)](https://github.com/devbyteai/ghoststorm/actions)
+[![Stars](https://img.shields.io/github/stars/devbyteai/ghoststorm?style=flat-square)](https://github.com/devbyteai/ghoststorm/stargazers)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11+-blue?style=flat-square)](https://python.org)
+[![Docs](https://img.shields.io/badge/docs-available-brightgreen?style=flat-square)](https://devbyteai.github.io/ghoststorm)
 
-*Traffic generation, view boosting, and engagement automation with enterprise-grade anti-detection.*
+### See any page. Control any browser. Detect nothing.
 
-[Getting Started](#quick-start) · [Documentation](https://devbyteai.github.io/ghoststorm) · [Examples](examples/)
+AI-powered browser automation with vision, local LLMs, and enterprise stealth.
+
+[Quick Start](#-quick-start) • [Features](#-features) • [Docs](https://devbyteai.github.io/ghoststorm) • [Examples](examples/)
 
 </div>
 
 ---
 
-## Why GhostStorm?
+## ✨ Features
 
-Most automation tools get detected instantly. GhostStorm was built from the ground up to be **invisible**.
-
-| Problem | GhostStorm Solution |
-|---------|---------------------|
-| Bot detection | **20+ anti-fingerprinting vectors** - Canvas, WebGL, Audio, Fonts, and more |
-| IP blocking | **47,000+ rotating proxies** from 20+ sources including residential pools |
-| Behavioral analysis | **Human simulation engine** - Bezier mouse curves, natural scrolling, realistic typing |
-| Rate limiting | **Smart throttling** with randomized delays and session management |
-| Captcha walls | **Integrated solving** with 2Captcha and AntiCaptcha support |
-
----
-
-## What Can You Do?
-
-### Traffic & Views
-Generate organic-looking traffic to any website. Each visit uses a unique fingerprint, IP, and behavioral pattern.
-
-### Platform Engagement
-Automate interactions on **TikTok**, **Instagram**, **YouTube**, and **DEXTools** with platform-specific behavior profiles.
-
-### DEXTools Trending
-Push any token to DEXTools trending. Realistic visitor distribution:
-- **60%** passive viewers (view and leave)
-- **30%** light engagement (one interaction)
-- **10%** highly engaged (multiple interactions)
-
-### Flow Recording
-Record browser workflows once, replay infinitely. Each replay takes a **different path** to achieve the same goal - defeating behavioral fingerprinting.
-
-### AI-Powered Control
-Let AI handle complex automation tasks. Supports local models for complete privacy.
+| | |
+|---|---|
+| 🌐 **Universal Automation** | Works on ANY website — not locked to specific platforms |
+| 👁️ **AI Vision** | Sees and understands pages via screenshot analysis |
+| 🤖 **Local LLM** | Ollama integration — 100% private, no API costs |
+| 🛡️ **Undetectable** | 20+ anti-fingerprinting vectors, 0% detection rate |
+| 🔄 **47,000+ Proxies** | Built-in aggregator with automatic rotation |
+| 📹 **Flow Recording** | Record once, replay with variation forever |
+| 🎯 **AI Dev Assistant** | Built-in coding helper that understands the project |
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/devbyteai/ghoststorm.git
-cd ghoststorm
-uv sync --all-extras --dev
-make dev
+git clone https://github.com/devbyteai/ghoststorm.git && cd ghoststorm
+uv sync --all-extras --dev && make dev
 ```
 
-Open **http://localhost:8000** for the web dashboard.
+**Open http://localhost:8000** — that's it.
+
+<details>
+<summary>🐳 Docker</summary>
+
+```bash
+docker compose up -d
+```
+</details>
 
 ---
 
-## Usage Example
+## 🆚 Why GhostStorm?
+
+| Feature | Other Tools | GhostStorm |
+|---------|-------------|------------|
+| Works on any site | ❌ Platform-specific | ✅ **Universal** |
+| Vision AI | ❌ DOM only | ✅ **Screenshot analysis** |
+| Local LLM | ❌ Cloud API required | ✅ **Ollama built-in** |
+| Bot detection | ⚠️ Often detected | ✅ **Undetectable** |
+| Proxy support | ⚠️ Manual setup | ✅ **47K+ built-in** |
+| Human behavior | ❌ Basic delays | ✅ **Bezier curves, natural scroll** |
+
+---
+
+## 🎯 Use Cases
+
+<table>
+<tr>
+<td align="center" width="33%">
+
+### Traffic Generation
+Generate organic-looking visits with unique fingerprints and IPs
+
+</td>
+<td align="center" width="33%">
+
+### DEXTools Trending
+Push tokens to trending with realistic visitor patterns
+
+</td>
+<td align="center" width="33%">
+
+### Platform Engagement
+TikTok, Instagram, YouTube automation with human behavior
+
+</td>
+</tr>
+</table>
+
+---
+
+## 💻 Usage
 
 ```python
 from ghoststorm import Orchestrator, Task
@@ -76,44 +101,62 @@ async def main():
     await engine.start()
 
     await engine.run_task(Task(
-        url="https://example.com",
+        url="https://any-website.com",
         visits=100,
         human_simulation=True
     ))
-
-    await engine.stop()
 ```
 
----
-
-## Key Capabilities
-
-| Capability | Details |
-|------------|---------|
-| **Stealth** | Passes all major bot detection systems |
-| **Scale** | Handle thousands of concurrent sessions |
-| **Fingerprints** | 2,500+ unique device profiles |
-| **Proxies** | Built-in aggregator + premium provider support |
-| **Dashboard** | Real-time monitoring and control panel |
-| **API** | Full REST API with WebSocket updates |
-| **Testing** | 840+ tests for production reliability |
+See more in [`examples/`](examples/)
 
 ---
 
-## Documentation
+## 🤖 AI Assistant
 
-- **[Full Documentation](https://devbyteai.github.io/ghoststorm)** - Complete guides and references
-- **[API Reference](https://devbyteai.github.io/ghoststorm/api)** - Endpoint documentation
-- **[Examples](examples/)** - Working code samples
+Built-in LLM assistant that understands the entire codebase:
+
+- **Chat interface** in the dashboard
+- **File operations** — read, write, search
+- **Command execution** with approval
+- **Local models** via Ollama (Qwen, DeepSeek, Llama)
+
+Perfect for debugging, writing automation scripts, and extending the project.
 
 ---
 
-## License
+## 📈 Star History
 
-MIT License - See [LICENSE](LICENSE) for details.
+<a href="https://star-history.com/#devbyteai/ghoststorm&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=devbyteai/ghoststorm&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=devbyteai/ghoststorm&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=devbyteai/ghoststorm&type=Date" />
+ </picture>
+</a>
+
+---
+
+## 📚 Documentation
+
+| Resource | Link |
+|----------|------|
+| Full Documentation | [devbyteai.github.io/ghoststorm](https://devbyteai.github.io/ghoststorm) |
+| API Reference | [Docs → API](https://devbyteai.github.io/ghoststorm/api) |
+| Examples | [`examples/`](examples/) |
+| Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
+
+---
+
+## 📄 License
+
+MIT — See [LICENSE](LICENSE)
 
 ---
 
 <div align="center">
-<sub>Built by <a href="https://github.com/devbyteai">devbyteai</a></sub>
+
+**[⬆ Back to Top](#-ghoststorm)**
+
+Made by [@devbyteai](https://github.com/devbyteai)
+
 </div>
