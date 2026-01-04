@@ -62,7 +62,7 @@ docker compose up -d
 | Local LLM | ❌ Cloud API required | ✅ **Ollama built-in** |
 | Bot detection | ⚠️ Often detected | ✅ **Undetectable** |
 | Proxy support | ⚠️ Manual setup | ✅ **47K+ built-in** |
-| Human behavior | ❌ Basic delays | ✅ **Bezier curves, natural scroll** |
+| Human behavior | ❌ Basic delays | ✅ **True human behavior** |
 
 ---
 
@@ -70,14 +70,12 @@ docker compose up -d
 
 Browse without exposing anything real:
 
-| Protected | How |
-|-----------|-----|
-| **Real IP** | 47K+ proxies, Tor, residential IPs |
-| **Device Profile** | 2,500+ fingerprints (OS, screen, GPU, fonts) |
-| **Location** | Timezone + geolocation spoofing |
-| **Browser Identity** | Canvas, WebGL, Audio fingerprint randomization |
-| **Network Leaks** | DNS-over-HTTPS, WebRTC blocked, IPv6 disabled |
-| **Behavior Pattern** | Human-like mouse, scroll, typing simulation |
+- **Real IP** — Hidden
+- **Device Profile** — Spoofed
+- **Location** — Masked
+- **Browser Identity** — Randomized
+- **Network Leaks** — Blocked
+- **Behavior Pattern** — Human-like
 
 **Zero trace. Zero detection.**
 
@@ -87,15 +85,13 @@ Browse without exposing anything real:
 
 Not just random behavior — **consistent human personas** that evolve naturally:
 
-| Feature | What It Does |
-|---------|--------------|
-| **User Personas** | Casual, Researcher, Shopper, Scanner, Power User — each with distinct patterns |
-| **Circadian Rhythm** | Behavior changes by time of day (slower at night, peak at 10am) |
-| **Attention States** | Focused → Distracted → Skimming — natural attention drift |
-| **Session Phases** | Start → Active → Winding Down → End — realistic session lifecycle |
-| **Fatigue Simulation** | Gradually slower, more errors over extended sessions |
+- **User Personas** — Distinct behavior profiles
+- **Circadian Rhythm** — Time-aware activity patterns
+- **Attention States** — Natural focus drift
+- **Session Lifecycle** — Realistic engagement arcs
+- **Fatigue Modeling** — Extended session realism
 
-**Why it matters:** Bot detection looks for behavioral inconsistencies. A "user" that's perfectly fast 24/7 gets flagged. The Coherence Engine ensures your automation behaves like a real, tired, distracted human.
+Automation that behaves like a real human.
 
 ---
 
@@ -159,7 +155,7 @@ Built-in LLM assistant that understands the entire codebase:
 - **Chat interface** in the dashboard
 - **File operations** — read, write, search
 - **Command execution** with approval
-- **Local models** via Ollama (Qwen, DeepSeek, Llama)
+- **Local models** via Ollama
 
 Perfect for debugging, writing automation scripts, and extending the project.
 
