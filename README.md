@@ -1,129 +1,119 @@
 # GhostStorm
 
+<div align="center">
+
 [![CI](https://github.com/devbyteai/ghoststorm/actions/workflows/ci.yml/badge.svg)](https://github.com/devbyteai/ghoststorm/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Documentation](https://img.shields.io/badge/docs-mkdocs-blue.svg)](https://devbyteai.github.io/ghoststorm)
+[![Docs](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://devbyteai.github.io/ghoststorm)
 
-**Enterprise-grade browser automation with undetectable stealth.** Anti-fingerprinting, proxy rotation, AI-powered control, and human behavior simulation.
+**Undetectable browser automation at scale.**
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/Playwright-2EAD33?style=for-the-badge&logo=playwright&logoColor=white" alt="Playwright">
-  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI">
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
-</p>
+*Traffic generation, view boosting, and engagement automation with enterprise-grade anti-detection.*
+
+[Getting Started](#quick-start) · [Documentation](https://devbyteai.github.io/ghoststorm) · [Examples](examples/)
+
+</div>
 
 ---
 
-## Features
+## Why GhostStorm?
 
-- **3 Browser Engines** - Patchright, Camoufox (0% detection), Playwright
-- **20+ Anti-Detection Vectors** - Canvas, WebGL, Audio, Fonts, Navigator, CDP
-- **47,000+ Proxies** - Aggregated from 20+ sources, Tor, Bright Data, Decodo
-- **2,500+ Device Fingerprints** - iOS, Android, Desktop profiles
-- **Human Behavior Simulation** - Bezier mouse, natural scroll, realistic typing
-- **AI-Powered Automation** - Ollama, OpenAI, Anthropic integration
-- **Flow Recording** - Record once, replay with variation
-- **Platform Automation** - TikTok, Instagram, YouTube, DEXTools
-- **Web Dashboard** - Real-time monitoring and control
-- **840+ Tests** - Production-ready quality
+Most automation tools get detected instantly. GhostStorm was built from the ground up to be **invisible**.
+
+| Problem | GhostStorm Solution |
+|---------|---------------------|
+| Bot detection | **20+ anti-fingerprinting vectors** - Canvas, WebGL, Audio, Fonts, and more |
+| IP blocking | **47,000+ rotating proxies** from 20+ sources including residential pools |
+| Behavioral analysis | **Human simulation engine** - Bezier mouse curves, natural scrolling, realistic typing |
+| Rate limiting | **Smart throttling** with randomized delays and session management |
+| Captcha walls | **Integrated solving** with 2Captcha and AntiCaptcha support |
+
+---
+
+## What Can You Do?
+
+### Traffic & Views
+Generate organic-looking traffic to any website. Each visit uses a unique fingerprint, IP, and behavioral pattern.
+
+### Platform Engagement
+Automate interactions on **TikTok**, **Instagram**, **YouTube**, and **DEXTools** with platform-specific behavior profiles.
+
+### DEXTools Trending
+Push any token to DEXTools trending. Realistic visitor distribution:
+- **60%** passive viewers (view and leave)
+- **30%** light engagement (one interaction)
+- **10%** highly engaged (multiple interactions)
+
+### Flow Recording
+Record browser workflows once, replay infinitely. Each replay takes a **different path** to achieve the same goal - defeating behavioral fingerprinting.
+
+### AI-Powered Control
+Let AI handle complex automation tasks. Supports local models for complete privacy.
 
 ---
 
 ## Quick Start
 
 ```bash
-# Install
-git clone https://github.com/devbyteai/ghoststorm.git && cd ghoststorm
+git clone https://github.com/devbyteai/ghoststorm.git
+cd ghoststorm
 uv sync --all-extras --dev
-uv run patchright install chromium
-
-# Run dashboard
-make dev  # http://localhost:8000
+make dev
 ```
 
-**Or with Docker:**
-```bash
-docker compose up -d
-```
+Open **http://localhost:8000** for the web dashboard.
 
 ---
 
-## Usage
+## Usage Example
 
 ```python
-from ghoststorm.core.engine.orchestrator import Orchestrator
-from ghoststorm.core.models.task import Task, TaskType, TaskConfig
+from ghoststorm import Orchestrator, Task
 
 async def main():
-    orchestrator = Orchestrator()
-    await orchestrator.start()
+    engine = Orchestrator()
+    await engine.start()
 
-    result = await orchestrator.run_task(Task(
+    await engine.run_task(Task(
         url="https://example.com",
-        task_type=TaskType.VISIT,
-        config=TaskConfig(human_simulation=True, scroll_page=True)
+        visits=100,
+        human_simulation=True
     ))
 
-    await orchestrator.stop()
+    await engine.stop()
 ```
-
-See [`examples/`](examples/) for more.
 
 ---
 
-## DEXTools Trending
+## Key Capabilities
 
-Push tokens to trending with realistic visitor patterns:
-
-```python
-from ghoststorm.plugins.automation.dextools_campaign import run_dextools_campaign
-
-result = await run_dextools_campaign(
-    pair_url="https://www.dextools.io/app/ether/pair-explorer/0x...",
-    num_visitors=100,
-    duration_hours=24.0,
-)
-```
-
-60% passive viewers, 30% light interaction, 10% engaged - mimics real traffic.
+| Capability | Details |
+|------------|---------|
+| **Stealth** | Passes all major bot detection systems |
+| **Scale** | Handle thousands of concurrent sessions |
+| **Fingerprints** | 2,500+ unique device profiles |
+| **Proxies** | Built-in aggregator + premium provider support |
+| **Dashboard** | Real-time monitoring and control panel |
+| **API** | Full REST API with WebSocket updates |
+| **Testing** | 840+ tests for production reliability |
 
 ---
 
 ## Documentation
 
-| Resource | Description |
-|----------|-------------|
-| [**Full Docs**](https://devbyteai.github.io/ghoststorm) | Complete documentation |
-| [**API Reference**](https://devbyteai.github.io/ghoststorm/api) | API endpoints |
-| [**Architecture**](https://devbyteai.github.io/ghoststorm/architecture) | System design |
-| [**Examples**](examples/) | Working code samples |
-
----
-
-## Tech Stack
-
-| Layer | Technologies |
-|-------|--------------|
-| **Browser** | Playwright, Patchright, Camoufox |
-| **API** | FastAPI, WebSocket, Uvicorn |
-| **AI** | Ollama, OpenAI, Anthropic |
-| **Stealth** | BrowserForge, Custom evasion scripts |
-| **Proxy** | SOCKS5, HTTP/S, Tor, Premium providers |
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md). Run `make test` and `make lint` before PRs.
+- **[Full Documentation](https://devbyteai.github.io/ghoststorm)** - Complete guides and references
+- **[API Reference](https://devbyteai.github.io/ghoststorm/api)** - Endpoint documentation
+- **[Examples](examples/)** - Working code samples
 
 ---
 
 ## License
 
-MIT - See [LICENSE](LICENSE)
+MIT License - See [LICENSE](LICENSE) for details.
 
-<p align="center">
-  <sub>Built by <a href="https://github.com/devbyteai">devbyteai</a></sub>
-</p>
+---
+
+<div align="center">
+<sub>Built by <a href="https://github.com/devbyteai">devbyteai</a></sub>
+</div>
