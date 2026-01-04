@@ -130,7 +130,7 @@ class Proxy:
         elif len(parts) == 4:
             host, port, username, password = parts
         elif len(parts) == 5:
-            # type:host:port:user:pass (legacy format)
+            # Format: proto:host:port:user:pass (legacy)
             proxy_type = ProxyType.from_string(parts[0])
             host, port, username, password = parts[1], parts[2], parts[3], parts[4]
         else:

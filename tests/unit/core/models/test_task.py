@@ -34,8 +34,8 @@ class TestTaskType:
         assert TaskType.CUSTOM.value == "custom"
 
     def test_task_type_count(self):
-        """Test that TaskType has exactly 6 values."""
-        assert len(TaskType) == 6
+        """Test that TaskType has exactly 7 values."""
+        assert len(TaskType) == 7
 
     def test_task_type_is_str_enum(self):
         """Test that TaskType inherits from str for easy serialization."""

@@ -565,7 +565,7 @@ class TestDEXToolsConfigSchema:
 
         assert config.pair_url == ""
         assert config.click_social_links is True
-        assert config.click_chart_tabs is True
+        assert config.click_chart_tabs is False  # Default is False for safer automation
         assert config.dwell_time_min == 30.0
         assert config.dwell_time_max == 120.0
 

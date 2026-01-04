@@ -40,7 +40,7 @@ PLATFORM_PATTERNS: dict[str, list[str]] = {
         r"youtube\.com/channel/([\w-]+)",
     ],
     "dextools": [
-        r"dextools\.io/app/[\w-]+/[\w-]+/pair-explorer/([\w]+)",
+        r"dextools\.io/app/[\w-]+/pair-explorer/(0x[\w]+)",
     ],
 }
 
