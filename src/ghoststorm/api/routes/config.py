@@ -236,3 +236,182 @@ async def reset_config() -> dict[str, str]:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to reset configuration: {str(e)}",
         )
+
+
+# =============================================================================
+# DEXTools Specific Endpoints
+# =============================================================================
+
+
+class DEXToolsSelectorTestRequest(BaseModel):
+    """Request for DEXTools selector test."""
+
+    pair_url: str = "https://www.dextools.io/app/en/ether/pair-explorer/0xdac17f958d2ee523a2206206994597c13d831ec7"
+    browser_engine: str = "patchright"
+    headless: bool = True
+    timeout_s: float = 30.0
+
+
+class DEXToolsSelectorTestResponse(BaseModel):
+    """Response from DEXTools selector test."""
+
+    status: str  # ready, partial, broken, error
+    page_loads: bool
+    chart_visible: bool
+    social_links_found: int
+    tabs_found: int
+    search_found: bool
+    errors: list[str]
+    recommendations: list[str]
+
+
+@router.post("/dextools/test-selectors", response_model=DEXToolsSelectorTestResponse)
+async def test_dextools_selectors(
+    request: DEXToolsSelectorTestRequest,
+) -> DEXToolsSelectorTestResponse:
+    """Test DEXTools selectors against current UI.
+
+    Use this to verify selectors still work after DEXTools updates their UI.
+    Returns status and recommendations for fixing broken selectors.
+    """
+    try:
+        from ghoststorm.plugins.automation.dextools import (
+            DEXToolsAutomation,
+            DEXToolsConfig,
+        )
+
+        # Try to launch browser and test
+        try:
+            from patchright.async_api import async_playwright
+        except ImportError:
+            try:
+                from playwright.async_api import async_playwright
+            except ImportError:
+                return DEXToolsSelectorTestResponse(
+                    status="error",
+                    page_loads=False,
+                    chart_visible=False,
+                    social_links_found=0,
+                    tabs_found=0,
+                    search_found=False,
+                    errors=["No browser engine available (patchright or playwright required)"],
+                    recommendations=["Install patchright: pip install patchright"],
+                )
+
+        automation = DEXToolsAutomation(DEXToolsConfig())
+
+        async with async_playwright() as pw:
+            browser = await pw.chromium.launch(headless=request.headless)
+            context = await browser.new_context()
+            page = await context.new_page()
+
+            try:
+                results = await automation.test_selectors(page, request.pair_url)
+            finally:
+                await page.close()
+                await context.close()
+                await browser.close()
+
+        # Generate recommendations
+        recommendations = []
+        if not results.get("page_loads"):
+            recommendations.append("Page failed to load - check if DEXTools is accessible")
+        if not results.get("chart_visible"):
+            recommendations.append("Chart not found - selector may need update")
+        if results.get("social_links_found", 0) < 2:
+            recommendations.append("Few social links found - some tokens may not have all links")
+        if results.get("tabs_found", 0) == 0:
+            recommendations.append("No tabs found - tab selector may need update")
+
+        return DEXToolsSelectorTestResponse(
+            status=results.get("status", "unknown"),
+            page_loads=results.get("page_loads", False),
+            chart_visible=results.get("chart_visible", False),
+            social_links_found=results.get("social_links_found", 0),
+            tabs_found=results.get("tabs_found", 0),
+            search_found=results.get("search_found", False),
+            errors=results.get("errors", []),
+            recommendations=recommendations,
+        )
+
+    except Exception as e:
+        logger.error("DEXTools selector test failed", error=str(e))
+        return DEXToolsSelectorTestResponse(
+            status="error",
+            page_loads=False,
+            chart_visible=False,
+            social_links_found=0,
+            tabs_found=0,
+            search_found=False,
+            errors=[str(e)],
+            recommendations=["Check browser installation and network connectivity"],
+        )
+
+
+@router.get("/dextools/selectors")
+async def get_dextools_selectors() -> dict[str, Any]:
+    """Get current DEXTools selectors.
+
+    Returns the CSS/XPath selectors used for DEXTools automation.
+    Useful for debugging or manual updates.
+    """
+    from ghoststorm.plugins.automation.dextools import DEXToolsSelectors
+
+    selectors = DEXToolsSelectors()
+    return {
+        "social_links": {
+            "container": selectors.social_links_container,
+            "twitter": selectors.social_link_twitter,
+            "telegram": selectors.social_link_telegram,
+            "discord": selectors.social_link_discord,
+            "website": selectors.social_link_website,
+        },
+        "xpath_fallbacks": {
+            "social_link_1": selectors.social_link_1_xpath,
+            "social_link_2": selectors.social_link_2_xpath,
+            "social_link_3": selectors.social_link_3_xpath,
+            "social_link_4": selectors.social_link_4_xpath,
+        },
+        "chart": {
+            "container": selectors.chart_container,
+            "tabs": selectors.chart_tabs,
+        },
+        "ui_elements": {
+            "tab_buttons": selectors.tab_buttons,
+            "info_button": selectors.info_button,
+            "modal_container": selectors.modal_container,
+            "modal_close": selectors.modal_close,
+            "search_input": selectors.search_input,
+            "search_results": selectors.search_results,
+            "favorite_button": selectors.favorite_button,
+        },
+        "update_instructions": (
+            "To update selectors: "
+            "1. Open DEXTools pair page in browser, "
+            "2. Right-click element → Inspect, "
+            "3. Update selectors in src/ghoststorm/plugins/automation/dextools.py"
+        ),
+    }
+
+
+@router.get("/dextools/behavior-weights")
+async def get_dextools_behavior_weights() -> dict[str, Any]:
+    """Get DEXTools visitor behavior distribution weights.
+
+    Shows how visitors are distributed across behavior types in 'realistic' mode.
+    """
+    from ghoststorm.plugins.automation.dextools import BEHAVIOR_WEIGHTS, VisitorBehavior
+
+    return {
+        "mode": "realistic",
+        "description": "Distribution of visitor behavior types",
+        "weights": {
+            behavior.value: weight
+            for behavior, weight in BEHAVIOR_WEIGHTS.items()
+        },
+        "explanations": {
+            "passive": "60% - View page, light scroll, leave (most common real user behavior)",
+            "light": "30% - View + 1 interaction (social click or tab)",
+            "engaged": "10% - Multiple interactions (rare but valuable for trending)",
+        },
+    }

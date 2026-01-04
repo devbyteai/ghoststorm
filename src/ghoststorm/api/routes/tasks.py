@@ -535,6 +535,40 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
                     automation = YouTubeAutomation(config=yt_config)
                     result = await automation.run(page, url=url)
 
+                elif platform == "dextools":
+                    from ghoststorm.plugins.automation.dextools import (
+                        DEXToolsAutomation,
+                        DEXToolsConfig,
+                    )
+
+                    dex_config = DEXToolsConfig(
+                        pair_url=url,
+                        behavior_mode=config.get("behavior_mode", "realistic"),
+                        dwell_time_min=config.get("dwell_time_min", 30.0),
+                        dwell_time_max=config.get("dwell_time_max", 120.0),
+                        enable_natural_scroll=config.get("enable_natural_scroll", True),
+                        enable_chart_hover=config.get("enable_chart_hover", True),
+                        enable_mouse_movement=config.get("enable_mouse_movement", True),
+                        enable_social_clicks=config.get("enable_social_clicks", True),
+                        enable_tab_clicks=config.get("enable_tab_clicks", False),
+                        enable_favorite=config.get("enable_favorite", False),
+                        min_delay=config.get("min_delay", 2.0),
+                        max_delay=config.get("max_delay", 6.0),
+                    )
+
+                    automation = DEXToolsAutomation(config=dex_config)
+                    visit_result = await automation.run_natural_visit(page, url=url)
+
+                    result = {
+                        "success": visit_result.success,
+                        "behavior": visit_result.behavior.value,
+                        "dwell_time": visit_result.dwell_time_s,
+                        "social_clicks": visit_result.social_clicks,
+                        "tab_clicks": visit_result.tab_clicks,
+                        "actions": visit_result.actions_performed,
+                        "errors": visit_result.errors,
+                    }
+
                 else:
                     # Generic URL visit
                     await page.goto(url)

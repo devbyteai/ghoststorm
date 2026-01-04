@@ -200,8 +200,12 @@ YOUTUBE_URLS = [
 ]
 
 DEXTOOLS_URLS = [
-    "https://www.dextools.io/app/en/ether/pair-explorer/0x123",
-    "https://www.dextools.io/app/en/solana/pair-explorer/abc",
+    "https://www.dextools.io/app/en/ether/pair-explorer/0xdac17f958d2ee523a2206206994597c13d831ec7",
+    "https://www.dextools.io/app/en/solana/pair-explorer/abc123def456",
+    "https://www.dextools.io/app/en/bsc/pair-explorer/0x456789abc",
+    "https://www.dextools.io/app/en/polygon/pair-explorer/0xpoly123",
+    "https://www.dextools.io/app/en/arbitrum/pair-explorer/0xarb789",
+    "https://www.dextools.io/app/en/base/pair-explorer/0xbase456",
 ]
 
 
@@ -227,3 +231,46 @@ def youtube_url(request: pytest.FixtureRequest) -> str:
 def dextools_url(request: pytest.FixtureRequest) -> str:
     """Parametrized DEXTools URLs for testing."""
     return request.param
+
+
+@pytest.fixture
+def sample_dextools_task_data() -> dict[str, Any]:
+    """Sample DEXTools task creation data."""
+    return {
+        "url": "https://www.dextools.io/app/en/ether/pair-explorer/0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "platform": "dextools",
+        "workers": 1,
+        "repeat": 1,
+        "config": {
+            "mode": "single",
+            "behavior_mode": "realistic",
+            "dwell_time_min": 30.0,
+            "dwell_time_max": 90.0,
+            "enable_natural_scroll": True,
+            "enable_chart_hover": True,
+            "enable_mouse_movement": True,
+            "enable_social_clicks": True,
+            "enable_tab_clicks": False,
+        },
+    }
+
+
+@pytest.fixture
+def sample_dextools_campaign_data() -> dict[str, Any]:
+    """Sample DEXTools campaign task data."""
+    return {
+        "url": "https://www.dextools.io/app/en/ether/pair-explorer/0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "platform": "dextools",
+        "workers": 5,
+        "repeat": 100,
+        "config": {
+            "mode": "campaign",
+            "num_visitors": 100,
+            "duration_hours": 24.0,
+            "max_concurrent": 5,
+            "distribution_mode": "natural",
+            "behavior_mode": "realistic",
+            "dwell_time_min": 30.0,
+            "dwell_time_max": 120.0,
+        },
+    }

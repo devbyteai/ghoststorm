@@ -286,6 +286,48 @@ def youtube_config():
     )
 
 
+@pytest.fixture
+def dextools_config():
+    """Create test DEXTools configuration."""
+    from ghoststorm.plugins.automation.dextools import DEXToolsConfig
+
+    return DEXToolsConfig(
+        pair_url="https://www.dextools.io/app/en/ether/pair-explorer/0xtest",
+        behavior_mode="realistic",
+        dwell_time_min=5.0,  # Fast for tests
+        dwell_time_max=10.0,
+        enable_natural_scroll=True,
+        enable_chart_hover=True,
+        enable_mouse_movement=False,  # Disable for faster tests
+        enable_social_clicks=False,
+    )
+
+
+@pytest.fixture
+def dextools_automation(dextools_config):
+    """Create test DEXTools automation instance."""
+    from ghoststorm.plugins.automation.dextools import DEXToolsAutomation
+
+    return DEXToolsAutomation(config=dextools_config)
+
+
+@pytest.fixture
+def dextools_campaign_config():
+    """Create test DEXTools campaign configuration."""
+    from ghoststorm.plugins.automation.dextools_campaign import CampaignConfig
+
+    return CampaignConfig(
+        pair_url="https://www.dextools.io/app/en/ether/pair-explorer/0xtest",
+        num_visitors=10,  # Small for tests
+        duration_hours=0.1,  # Very short for tests
+        max_concurrent=2,
+        distribution_mode="even",
+        behavior_mode="realistic",
+        dwell_time_min=1.0,
+        dwell_time_max=3.0,
+    )
+
+
 # ============================================================================
 # PYTEST FIXTURES - BEHAVIOR COMPONENTS
 # ============================================================================

@@ -279,9 +279,117 @@ Three modes for AI-controlled browsing:
 | **TikTok** | Video watching, profile visits, bio clicks, variable watch times |
 | **Instagram** | Reels, stories, posts, profile automation with in-app browser simulation |
 | **YouTube** | Videos, Shorts, channels, description clicks |
-| **DEXTools** | Pair explorer, social link clicking, chart tabs |
+| **DEXTools** | Trending campaigns, pair explorer, social clicking, chart interaction |
 | **Zefoy** | TikTok view boosting with OCR captcha solving |
 | **Generic** | Configurable automation for any website |
+
+---
+
+## DEXTools Trending Campaign
+
+Push any token to DEXTools trending with realistic visitor simulation. Natural human behavior patterns prevent detection while maintaining high view velocity.
+
+### Behavior Distribution
+
+| Behavior | Weight | Actions |
+|----------|--------|---------|
+| **Passive** | 60% | View page, hover chart, leave |
+| **Light** | 30% | View + 1 interaction (social click or tab) |
+| **Engaged** | 10% | Multiple social clicks, tab switches, extended dwell |
+
+### Visit Distribution Modes
+
+| Mode | Pattern |
+|------|---------|
+| **Natural** | Exponential gaps simulating real traffic |
+| **Even** | Uniform distribution over duration |
+| **Burst** | Clustered activity with quiet periods |
+
+### Quick Start
+
+```python
+from ghoststorm.plugins.automation.dextools_campaign import (
+    run_dextools_campaign,
+    CampaignConfig,
+)
+
+# Simple usage
+result = await run_dextools_campaign(
+    pair_url="https://www.dextools.io/app/ether/pair-explorer/0x...",
+    num_visitors=100,
+    duration_hours=24.0,
+    proxy_provider=my_proxy_provider,
+    browser_launcher=playwright.chromium,
+)
+
+print(f"Success rate: {result.stats.success_rate * 100}%")
+print(f"Avg dwell time: {result.stats.avg_dwell_time_s}s")
+```
+
+### Campaign Configuration
+
+```python
+config = CampaignConfig(
+    pair_url="https://www.dextools.io/app/ether/pair-explorer/0x...",
+
+    # Scale
+    num_visitors=100,
+    duration_hours=24.0,
+
+    # Concurrency
+    max_concurrent=5,
+    min_delay_between_visitors_s=10.0,
+    max_delay_between_visitors_s=60.0,
+
+    # Distribution
+    distribution_mode="natural",  # natural, even, burst
+
+    # Behavior
+    behavior_mode="realistic",    # realistic, passive, light, engaged
+    dwell_time_min=30.0,
+    dwell_time_max=120.0,
+
+    # Browser
+    headless=True,
+    browser_engine="patchright",
+)
+```
+
+### Human-Like Features
+
+- **Bezier curve mouse movement** with tremor simulation
+- **Natural scrolling** with momentum and reading pauses
+- **Chart hovering** at random positions
+- **Variable dwell times** based on behavior profile
+- **Social link clicking** opens and closes tabs naturally
+- **Tab switching** with realistic delays
+- **Micro-interactions** during idle periods
+
+### Real-Time Monitoring
+
+```python
+campaign = DEXToolsTrendingCampaign(config, proxy_provider, browser_launcher)
+
+# Progress callback
+def on_progress(stats):
+    print(f"Completed: {stats.completed_visitors}/{stats.total_visitors}")
+    print(f"Success rate: {stats.success_rate * 100}%")
+
+campaign.on_progress(on_progress)
+await campaign.start()
+```
+
+### Campaign Stats
+
+| Metric | Description |
+|--------|-------------|
+| `completed_visitors` | Successfully completed visits |
+| `failed_visitors` | Failed visits |
+| `success_rate` | Completion percentage |
+| `passive/light/engaged_count` | Behavior distribution |
+| `total_social_clicks` | Social links clicked |
+| `total_tab_clicks` | Chart tabs clicked |
+| `avg_dwell_time_s` | Average time on page |
 
 ---
 

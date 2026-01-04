@@ -40,7 +40,7 @@ PLATFORM_PATTERNS: dict[str, list[str]] = {
         r"youtube\.com/channel/([\w-]+)",
     ],
     "dextools": [
-        r"dextools\.io/app/[\w]+/pair-explorer/(0x[\w]+)",
+        r"dextools\.io/app/[\w-]+/[\w-]+/pair-explorer/([\w]+)",
     ],
 }
 
@@ -237,10 +237,37 @@ class DEXToolsConfigSchema(BaseModel):
     """DEXTools automation configuration."""
 
     pair_url: str = Field("", description="DEXTools pair URL")
-    click_social_links: bool = Field(True, description="Click social links")
-    click_chart_tabs: bool = Field(True, description="Click chart tabs")
-    dwell_time_min: float = Field(30.0, ge=1)
-    dwell_time_max: float = Field(120.0, ge=1)
+
+    # === Campaign Settings ===
+    mode: Literal["single", "campaign"] = Field(
+        "single", description="Visit mode: single visit or trending campaign"
+    )
+    num_visitors: int = Field(100, ge=1, le=10000, description="Visitors for campaign mode")
+    duration_hours: float = Field(24.0, ge=0.5, le=168, description="Campaign duration (hours)")
+    max_concurrent: int = Field(5, ge=1, le=50, description="Max concurrent visitors")
+    distribution_mode: Literal["natural", "even", "burst"] = Field(
+        "natural", description="How to distribute visits over time"
+    )
+
+    # === Behavior Settings ===
+    behavior_mode: Literal["realistic", "passive", "light", "engaged", "custom"] = Field(
+        "realistic",
+        description="realistic (60% passive, 30% light, 10% engaged), or force specific behavior"
+    )
+    dwell_time_min: float = Field(30.0, ge=1, description="Min time on page (seconds)")
+    dwell_time_max: float = Field(120.0, ge=1, description="Max time on page (seconds)")
+
+    # === Action Settings ===
+    enable_natural_scroll: bool = Field(True, description="Natural scroll behavior")
+    enable_chart_hover: bool = Field(True, description="Hover over price chart")
+    enable_mouse_movement: bool = Field(True, description="Bezier curve mouse movement")
+    enable_social_clicks: bool = Field(True, description="Click social links (Twitter, Telegram)")
+    enable_tab_clicks: bool = Field(False, description="Click chart tabs")
+    enable_favorite: bool = Field(False, description="Click favorite/star button")
+
+    # === Legacy Settings (backward compat) ===
+    click_social_links: bool = Field(True, description="[Deprecated] Use enable_social_clicks")
+    click_chart_tabs: bool = Field(False, description="[Deprecated] Use enable_tab_clicks")
 
 
 class GenericConfigSchema(BaseModel):

@@ -10,7 +10,23 @@ from ghoststorm.plugins.automation.base import (
     VideoWatchOutcome,
     WatchResult,
 )
-from ghoststorm.plugins.automation.dextools import DEXToolsAutomation
+from ghoststorm.plugins.automation.dextools import (
+    BEHAVIOR_WEIGHTS,
+    DEXToolsAction,
+    DEXToolsAutomation,
+    DEXToolsConfig,
+    DEXToolsSelectors,
+    VisitResult,
+    VisitorBehavior,
+)
+from ghoststorm.plugins.automation.dextools_campaign import (
+    CampaignConfig,
+    CampaignResult,
+    CampaignStats,
+    CampaignStatus,
+    DEXToolsTrendingCampaign,
+    run_dextools_campaign,
+)
 from ghoststorm.plugins.automation.instagram import (
     InstagramAction,
     InstagramAutomation,
@@ -51,6 +67,19 @@ from ghoststorm.plugins.automation.zefoy import (
 __all__ = [
     # DEXTools
     "DEXToolsAutomation",
+    "DEXToolsConfig",
+    "DEXToolsSelectors",
+    "DEXToolsAction",
+    "VisitorBehavior",
+    "VisitResult",
+    "BEHAVIOR_WEIGHTS",
+    # DEXTools Campaign
+    "DEXToolsTrendingCampaign",
+    "CampaignConfig",
+    "CampaignResult",
+    "CampaignStats",
+    "CampaignStatus",
+    "run_dextools_campaign",
     # Base classes
     "SocialMediaAutomation",
     "SocialPlatform",
