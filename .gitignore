@@ -55,3 +55,4 @@ output/
 
 # Development scripts (contain local paths)
 scripts/
+site/
