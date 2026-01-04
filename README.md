@@ -25,11 +25,11 @@ AI-powered browser automation with vision, local LLMs, and enterprise stealth.
 | 🌐 **Universal Automation** | Works on ANY website — not locked to specific platforms |
 | 👁️ **AI Vision** | Sees and understands pages via screenshot analysis |
 | 🔒 **Total Privacy** | Hide your real IP, device, location — browse like a ghost |
+| 🧠 **Identity Coherence** | Consistent personas with circadian rhythms and fatigue simulation |
 | 🤖 **Local LLM** | Ollama integration — 100% private, no API costs |
 | 🛡️ **Undetectable** | 20+ anti-fingerprinting vectors, 0% detection rate |
 | 🔄 **47,000+ Proxies** | Built-in aggregator with automatic rotation |
 | 📹 **Flow Recording** | Record once, replay with variation forever |
-| 🎯 **AI Dev Assistant** | Built-in coding helper that understands the project |
 
 ---
 
@@ -80,6 +80,22 @@ Browse without exposing anything real:
 | **Behavior Pattern** | Human-like mouse, scroll, typing simulation |
 
 **Zero trace. Zero detection.**
+
+---
+
+## 🧠 Identity Coherence Engine
+
+Not just random behavior — **consistent human personas** that evolve naturally:
+
+| Feature | What It Does |
+|---------|--------------|
+| **User Personas** | Casual, Researcher, Shopper, Scanner, Power User — each with distinct patterns |
+| **Circadian Rhythm** | Behavior changes by time of day (slower at night, peak at 10am) |
+| **Attention States** | Focused → Distracted → Skimming — natural attention drift |
+| **Session Phases** | Start → Active → Winding Down → End — realistic session lifecycle |
+| **Fatigue Simulation** | Gradually slower, more errors over extended sessions |
+
+**Why it matters:** Bot detection looks for behavioral inconsistencies. A "user" that's perfectly fast 24/7 gets flagged. The Coherence Engine ensures your automation behaves like a real, tired, distracted human.
 
 ---
 
