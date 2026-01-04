@@ -22,10 +22,12 @@ import math
 import random
 from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = structlog.get_logger(__name__)
 
@@ -78,8 +80,7 @@ class Trajectory:
         if len(self.points) < 2:
             return 0.0
         return sum(
-            self.points[i].distance_to(self.points[i + 1])
-            for i in range(len(self.points) - 1)
+            self.points[i].distance_to(self.points[i + 1]) for i in range(len(self.points) - 1)
         )
 
 
@@ -359,7 +360,7 @@ class MLMouseGenerator:
 
             # Calculate time to next point
             if i < num_points - 1:
-                next_t_param = (i + 1) / (num_points - 1)
+                (i + 1) / (num_points - 1)
                 velocity = slm.velocity(t_param * duration / 1000)
                 if velocity > 0:
                     dt = (duration / num_points) * (1 + 0.5 / velocity)

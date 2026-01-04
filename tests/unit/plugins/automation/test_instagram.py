@@ -6,8 +6,7 @@ ghoststorm.plugins.automation.instagram
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -18,7 +17,6 @@ from ghoststorm.plugins.automation.base import (
     StoryViewResult,
     SwipeResult,
     VideoWatchOutcome,
-    WatchResult,
 )
 from ghoststorm.plugins.automation.instagram import (
     InstagramAction,
@@ -27,7 +25,6 @@ from ghoststorm.plugins.automation.instagram import (
     InstagramSelectors,
     LinkClickResult,
 )
-
 
 # ============================================================================
 # InstagramConfig DATACLASS TESTS
@@ -557,8 +554,7 @@ class TestClickStoryLink:
         # Link sticker exists with href
         mock_page.set_locator_count(automation.selectors.story_link_sticker, 1)
         mock_page.set_locator_href(
-            automation.selectors.story_link_sticker,
-            "https://example.com/promo"
+            automation.selectors.story_link_sticker, "https://example.com/promo"
         )
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
@@ -593,8 +589,7 @@ class TestClickBioLink:
         # Bio link exists
         mock_page.set_locator_count(automation.selectors.profile_bio_link, 1)
         mock_page.set_locator_href(
-            automation.selectors.profile_bio_link,
-            "https://linktr.ee/testuser"
+            automation.selectors.profile_bio_link, "https://linktr.ee/testuser"
         )
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
@@ -609,8 +604,7 @@ class TestClickBioLink:
         # Bio link exists and will be clicked
         mock_page.set_locator_count(automation.selectors.profile_bio_link, 1)
         mock_page.set_locator_href(
-            automation.selectors.profile_bio_link,
-            "https://linktr.ee/testuser"
+            automation.selectors.profile_bio_link, "https://linktr.ee/testuser"
         )
 
         assert automation._bio_clicks == 0
@@ -675,9 +669,15 @@ class TestSimulateReelsSession:
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
             with patch.object(automation.watch_behavior, "generate_session_length", return_value=2):
-                with patch.object(automation.watch_behavior, "should_take_break", return_value=False):
-                    with patch.object(automation.watch_behavior, "should_visit_profile", return_value=False):
-                        with patch.object(automation.watch_behavior, "should_scroll_back", return_value=False):
+                with patch.object(
+                    automation.watch_behavior, "should_take_break", return_value=False
+                ):
+                    with patch.object(
+                        automation.watch_behavior, "should_visit_profile", return_value=False
+                    ):
+                        with patch.object(
+                            automation.watch_behavior, "should_scroll_back", return_value=False
+                        ):
                             result = await automation.simulate_reels_session(
                                 mock_page,
                                 reels_to_watch=2,
@@ -695,9 +695,15 @@ class TestSimulateReelsSession:
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
             with patch.object(automation.watch_behavior, "generate_session_length", return_value=1):
-                with patch.object(automation.watch_behavior, "should_take_break", return_value=False):
-                    with patch.object(automation.watch_behavior, "should_visit_profile", return_value=False):
-                        with patch.object(automation.watch_behavior, "should_scroll_back", return_value=False):
+                with patch.object(
+                    automation.watch_behavior, "should_take_break", return_value=False
+                ):
+                    with patch.object(
+                        automation.watch_behavior, "should_visit_profile", return_value=False
+                    ):
+                        with patch.object(
+                            automation.watch_behavior, "should_scroll_back", return_value=False
+                        ):
                             result = await automation.simulate_reels_session(
                                 mock_page,
                                 target_profile="targetuser",
@@ -712,9 +718,15 @@ class TestSimulateReelsSession:
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
             with patch.object(automation.watch_behavior, "generate_session_length", return_value=1):
-                with patch.object(automation.watch_behavior, "should_take_break", return_value=False):
-                    with patch.object(automation.watch_behavior, "should_visit_profile", return_value=False):
-                        with patch.object(automation.watch_behavior, "should_scroll_back", return_value=False):
+                with patch.object(
+                    automation.watch_behavior, "should_take_break", return_value=False
+                ):
+                    with patch.object(
+                        automation.watch_behavior, "should_visit_profile", return_value=False
+                    ):
+                        with patch.object(
+                            automation.watch_behavior, "should_scroll_back", return_value=False
+                        ):
                             result = await automation.simulate_reels_session(
                                 mock_page,
                                 reels_to_watch=1,

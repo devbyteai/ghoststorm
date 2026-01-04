@@ -142,9 +142,7 @@ class Proxy(Base):
     password = Column(String(255), nullable=True)
 
     # Unique constraint on host:port:protocol
-    __table_args__ = (
-        UniqueConstraint("host", "port", "protocol", name="uq_proxy_endpoint"),
-    )
+    __table_args__ = (UniqueConstraint("host", "port", "protocol", name="uq_proxy_endpoint"),)
 
     # Metadata
     country = Column(String(2), nullable=True)  # ISO country code
@@ -304,9 +302,7 @@ class MetricSample(Base):
     timestamp = Column(DateTime, default=utc_now, index=True)
 
     # Indexes
-    __table_args__ = (
-        Index("idx_metrics_name_time", "name", "timestamp"),
-    )
+    __table_args__ = (Index("idx_metrics_name_time", "name", "timestamp"),)
 
 
 class EventLog(Base):
@@ -333,9 +329,7 @@ class EventLog(Base):
     timestamp = Column(DateTime, default=utc_now, index=True)
 
     # Indexes
-    __table_args__ = (
-        Index("idx_events_type_time", "event_type", "timestamp"),
-    )
+    __table_args__ = (Index("idx_events_type_time", "event_type", "timestamp"),)
 
 
 class CaptchaResult(Base):

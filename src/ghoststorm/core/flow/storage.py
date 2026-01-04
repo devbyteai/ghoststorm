@@ -8,7 +8,7 @@ from typing import Any
 
 import structlog
 
-from ghoststorm.core.models.flow import RecordedFlow, FlowStatus
+from ghoststorm.core.models.flow import FlowStatus, RecordedFlow
 
 logger = structlog.get_logger(__name__)
 
@@ -76,7 +76,7 @@ class FlowStorage:
                 logger.warning("Flow not found", flow_id=flow_id)
                 return None
 
-            with open(flow_path, "r", encoding="utf-8") as f:
+            with open(flow_path, encoding="utf-8") as f:
                 flow_data = json.load(f)
 
             flow = RecordedFlow.from_dict(flow_data)
@@ -130,7 +130,7 @@ class FlowStorage:
         try:
             for flow_file in self.storage_dir.glob("*.json"):
                 try:
-                    with open(flow_file, "r", encoding="utf-8") as f:
+                    with open(flow_file, encoding="utf-8") as f:
                         flow_data = json.load(f)
 
                     flow = RecordedFlow.from_dict(flow_data)

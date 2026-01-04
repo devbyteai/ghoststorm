@@ -2,24 +2,22 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from ghoststorm.plugins.automation.base import (
+    BioClickResult,
+    SocialPlatform,
+    VideoWatchOutcome,
+)
 from ghoststorm.plugins.automation.youtube import (
     YouTubeAction,
     YouTubeAutomation,
     YouTubeConfig,
     YouTubeSelectors,
 )
-from ghoststorm.plugins.automation.base import (
-    BioClickResult,
-    SocialPlatform,
-    VideoWatchOutcome,
-)
-
 
 # ============================================================================
 # Concrete Subclass - YouTubeAutomation is abstract (missing click_bio_link)
@@ -150,7 +148,9 @@ class TestYouTubeSelectors:
         # Engagement button selectors
         assert selectors.like_button == "#segmented-like-button button"
         assert selectors.dislike_button == "#segmented-dislike-button button"
-        assert selectors.share_button == "#top-level-buttons-computed ytd-button-renderer:nth-child(3)"
+        assert (
+            selectors.share_button == "#top-level-buttons-computed ytd-button-renderer:nth-child(3)"
+        )
         assert selectors.subscribe_button == "#subscribe-button button"
 
         # Description and info selectors
@@ -273,9 +273,7 @@ class TestExtractVideoId:
         """Test extracting video ID from watch URL with hash fragment."""
         automation = ConcreteYouTubeAutomation()
 
-        video_id = automation._extract_video_id(
-            "https://www.youtube.com/watch?v=xyz789#t=30"
-        )
+        video_id = automation._extract_video_id("https://www.youtube.com/watch?v=xyz789#t=30")
         assert video_id == "xyz789"
 
     def test_extract_video_id_shorts_url(self):
@@ -440,7 +438,7 @@ class TestWatchShort:
 
         mock_page.set_locator_duration("video", 45.0)
 
-        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        with patch("asyncio.sleep", new_callable=AsyncMock):
             with patch.object(automation.watch_behavior, "generate_watch_duration") as mock_gen:
                 mock_gen.return_value = (25.0, "partial")
 
@@ -518,8 +516,12 @@ class TestClickDescriptionLink:
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
             with patch.object(automation.inapp_behavior, "generate_dwell_time", return_value=20.0):
-                with patch.object(automation.inapp_behavior, "generate_scroll_pattern", return_value=[]):
-                    with patch.object(automation.inapp_behavior, "should_return_to_app", return_value=True):
+                with patch.object(
+                    automation.inapp_behavior, "generate_scroll_pattern", return_value=[]
+                ):
+                    with patch.object(
+                        automation.inapp_behavior, "should_return_to_app", return_value=True
+                    ):
                         result = await automation.click_description_link(mock_page)
 
         assert result.success is True
@@ -556,8 +558,12 @@ class TestClickDescriptionLink:
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
             with patch.object(automation.inapp_behavior, "generate_dwell_time", return_value=10.0):
-                with patch.object(automation.inapp_behavior, "generate_scroll_pattern", return_value=[]):
-                    with patch.object(automation.inapp_behavior, "should_return_to_app", return_value=True):
+                with patch.object(
+                    automation.inapp_behavior, "generate_scroll_pattern", return_value=[]
+                ):
+                    with patch.object(
+                        automation.inapp_behavior, "should_return_to_app", return_value=True
+                    ):
                         await automation.click_description_link(mock_page)
 
         assert automation._description_clicks == initial_count + 1
@@ -623,21 +629,21 @@ class TestWatchDirectVideo:
         video_url = "https://youtube.com/watch?v=test123"
         mock_page.set_locator_duration("video", 120.0)
 
-        with patch("asyncio.sleep", new_callable=AsyncMock):
-            with patch(
-                "ghoststorm.plugins.automation.youtube.get_view_tracker"
-            ) as mock_tracker:
-                tracker_instance = MagicMock()
-                tracker_instance.can_view.return_value = (True, None)
-                tracker_instance.get_minimum_watch_time.return_value = 30.0
-                tracker_instance.record_view.return_value = True
-                mock_tracker.return_value = tracker_instance
+        with (
+            patch("asyncio.sleep", new_callable=AsyncMock),
+            patch("ghoststorm.plugins.automation.youtube.get_view_tracker") as mock_tracker,
+        ):
+            tracker_instance = MagicMock()
+            tracker_instance.can_view.return_value = (True, None)
+            tracker_instance.get_minimum_watch_time.return_value = 30.0
+            tracker_instance.record_view.return_value = True
+            mock_tracker.return_value = tracker_instance
 
-                result = await automation.watch_direct_video(
-                    mock_page,
-                    video_url=video_url,
-                    watch_duration=35.0,
-                )
+            result = await automation.watch_direct_video(
+                mock_page,
+                video_url=video_url,
+                watch_duration=35.0,
+            )
 
         assert result.success is True
         assert result.watch_duration == 35.0
@@ -650,9 +656,7 @@ class TestWatchDirectVideo:
 
         video_url = "https://youtube.com/watch?v=limited123"
 
-        with patch(
-            "ghoststorm.plugins.automation.youtube.get_view_tracker"
-        ) as mock_tracker:
+        with patch("ghoststorm.plugins.automation.youtube.get_view_tracker") as mock_tracker:
             tracker_instance = MagicMock()
             tracker_instance.can_view.return_value = (False, "Rate limit exceeded")
             mock_tracker.return_value = tracker_instance
@@ -673,25 +677,25 @@ class TestWatchDirectVideo:
         video_url = "https://youtube.com/watch?v=unique_id_123"
         mock_page.set_locator_duration("video", 60.0)
 
-        with patch("asyncio.sleep", new_callable=AsyncMock):
-            with patch(
-                "ghoststorm.plugins.automation.youtube.get_view_tracker"
-            ) as mock_tracker:
-                tracker_instance = MagicMock()
-                tracker_instance.can_view.return_value = (True, None)
-                tracker_instance.get_minimum_watch_time.return_value = 30.0
-                tracker_instance.record_view.return_value = True
-                mock_tracker.return_value = tracker_instance
+        with (
+            patch("asyncio.sleep", new_callable=AsyncMock),
+            patch("ghoststorm.plugins.automation.youtube.get_view_tracker") as mock_tracker,
+        ):
+            tracker_instance = MagicMock()
+            tracker_instance.can_view.return_value = (True, None)
+            tracker_instance.get_minimum_watch_time.return_value = 30.0
+            tracker_instance.record_view.return_value = True
+            mock_tracker.return_value = tracker_instance
 
-                await automation.watch_direct_video(
-                    mock_page,
-                    video_url=video_url,
-                    watch_duration=35.0,
-                )
+            await automation.watch_direct_video(
+                mock_page,
+                video_url=video_url,
+                watch_duration=35.0,
+            )
 
-                # Verify video_id was passed correctly
-                call_args = tracker_instance.can_view.call_args
-                assert call_args[1]["video_id"] == "unique_id_123"
+            # Verify video_id was passed correctly
+            call_args = tracker_instance.can_view.call_args
+            assert call_args[1]["video_id"] == "unique_id_123"
 
 
 # ============================================================================
@@ -793,26 +797,28 @@ class TestSimulateShortsSession:
                 return True
             return False
 
-        with patch("asyncio.sleep", new_callable=AsyncMock):
-            with patch.object(
+        with (
+            patch("asyncio.sleep", new_callable=AsyncMock),
+            patch.object(
                 automation.watch_behavior,
                 "should_take_break",
                 side_effect=should_take_break_side_effect,
-            ):
-                with patch.object(
-                    automation.watch_behavior,
-                    "generate_break_duration",
-                    return_value=5.0,
-                ):
-                    with patch.object(automation, "watch_short") as mock_watch:
-                        mock_watch.return_value = MagicMock(success=True, error=None)
-                        with patch.object(automation, "swipe_to_next") as mock_swipe:
-                            mock_swipe.return_value = MagicMock(success=True, error=None)
+            ),
+            patch.object(
+                automation.watch_behavior,
+                "generate_break_duration",
+                return_value=5.0,
+            ),
+            patch.object(automation, "watch_short") as mock_watch,
+        ):
+            mock_watch.return_value = MagicMock(success=True, error=None)
+            with patch.object(automation, "swipe_to_next") as mock_swipe:
+                mock_swipe.return_value = MagicMock(success=True, error=None)
 
-                            result = await automation.simulate_shorts_session(
-                                mock_page,
-                                shorts_to_watch=3,
-                            )
+                result = await automation.simulate_shorts_session(
+                    mock_page,
+                    shorts_to_watch=3,
+                )
 
         # Session should complete
         assert result.platform == SocialPlatform.YOUTUBE

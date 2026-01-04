@@ -5,9 +5,12 @@ Tests the DEXTools configuration and task API endpoints.
 
 from __future__ import annotations
 
-import pytest
-from fastapi.testclient import TestClient
+from typing import TYPE_CHECKING
 
+import pytest
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 # ============================================================================
 # DEXToolsConfigAPI TESTS
@@ -137,7 +140,7 @@ class TestDEXToolsTaskAPI:
         """Platform should be auto-detected from DEXTools URL."""
         response = api_test_client.post(
             "/api/tasks/detect",
-            json={"url": "https://www.dextools.io/app/en/ether/pair-explorer/0x123abc"}
+            json={"url": "https://www.dextools.io/app/en/ether/pair-explorer/0x123abc"},
         )
 
         assert response.status_code == 200
@@ -147,17 +150,17 @@ class TestDEXToolsTaskAPI:
         assert data["detected"] is True
         assert "pair_address" in data["metadata"]
 
-    @pytest.mark.parametrize("url", [
-        "https://www.dextools.io/app/en/ether/pair-explorer/0xdac17f958d2ee523a2206206994597c13d831ec7",
-        "https://www.dextools.io/app/en/solana/pair-explorer/abc123def",
-        "https://www.dextools.io/app/en/bsc/pair-explorer/0x456",
-    ])
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "https://www.dextools.io/app/en/ether/pair-explorer/0xdac17f958d2ee523a2206206994597c13d831ec7",
+            "https://www.dextools.io/app/en/solana/pair-explorer/abc123def",
+            "https://www.dextools.io/app/en/bsc/pair-explorer/0x456",
+        ],
+    )
     def test_dextools_url_patterns(self, api_test_client: TestClient, url: str):
         """Various DEXTools URL patterns should be detected."""
-        response = api_test_client.post(
-            "/api/tasks/detect",
-            json={"url": url}
-        )
+        response = api_test_client.post("/api/tasks/detect", json={"url": url})
 
         assert response.status_code == 200
         assert response.json()["platform"] == "dextools"
@@ -170,7 +173,7 @@ class TestDEXToolsTaskAPI:
                 "url": "https://www.dextools.io/app/en/ether/pair-explorer/0x123",
                 "workers": 1,
                 "repeat": 1,
-            }
+            },
         )
 
         assert response.status_code == 200
@@ -195,8 +198,8 @@ class TestDEXToolsTaskAPI:
                     "enable_natural_scroll": True,
                     "enable_chart_hover": True,
                     "enable_social_clicks": True,
-                }
-            }
+                },
+            },
         )
 
         assert response.status_code == 200
@@ -218,8 +221,8 @@ class TestDEXToolsTaskAPI:
                     "num_visitors": 100,
                     "duration_hours": 12.0,
                     "behavior_mode": "realistic",
-                }
-            }
+                },
+            },
         )
 
         assert response.status_code == 200
@@ -252,7 +255,7 @@ class TestDEXToolsSelectorTest:
                 "pair_url": "https://www.dextools.io/app/en/ether/pair-explorer/0xdac17f958d2ee523a2206206994597c13d831ec7",
                 "headless": True,
                 "timeout_s": 10.0,
-            }
+            },
         )
 
         # Accept 200 (success) or proper error response
@@ -283,7 +286,7 @@ class TestDEXToolsAPIIntegration:
         # Step 1: Detect platform
         detect_response = api_test_client.post(
             "/api/tasks/detect",
-            json={"url": "https://www.dextools.io/app/en/ether/pair-explorer/0x123"}
+            json={"url": "https://www.dextools.io/app/en/ether/pair-explorer/0x123"},
         )
         assert detect_response.status_code == 200
         assert detect_response.json()["platform"] == "dextools"
@@ -298,7 +301,7 @@ class TestDEXToolsAPIIntegration:
             json={
                 "url": "https://www.dextools.io/app/en/ether/pair-explorer/0x123",
                 "workers": 1,
-            }
+            },
         )
         assert create_response.status_code == 200
         task_id = create_response.json()["task_id"]

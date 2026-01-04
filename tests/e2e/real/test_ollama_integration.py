@@ -6,8 +6,12 @@ Run with: pytest tests/e2e/real/ --run-real -v
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.real
@@ -284,7 +288,7 @@ class TestOllamaUsage:
     def test_usage_after_completion(self, api_test_client: TestClient, real_ollama_url: str):
         """Test usage is tracked after completion."""
         # Get initial usage
-        initial = api_test_client.get("/api/llm/usage").json()
+        api_test_client.get("/api/llm/usage").json()
 
         # Make a completion
         api_test_client.post(

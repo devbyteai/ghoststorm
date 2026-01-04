@@ -110,7 +110,13 @@ class PageDetector:
     # Goal keywords by page type
     GOAL_KEYWORDS = {
         "login": ["dashboard", "welcome", "account", "profile", "home", "logged in"],
-        "registration": ["verify", "confirmation", "success", "check your email", "account created"],
+        "registration": [
+            "verify",
+            "confirmation",
+            "success",
+            "check your email",
+            "account created",
+        ],
         "contact": ["thank you", "message sent", "we will contact", "received", "submitted"],
         "social": ["followers", "views", "likes", "hearts", "shares", "comments", "success"],
         "captcha": ["success", "verified", "continue", "proceed"],
@@ -209,7 +215,7 @@ class PageDetector:
                         try:
                             if await elem.is_visible():
                                 # Get element info
-                                tag = await elem.evaluate("el => el.tagName.toLowerCase()")
+                                await elem.evaluate("el => el.tagName.toLowerCase()")
                                 text = ""
                                 try:
                                     text = await elem.inner_text()
@@ -227,13 +233,15 @@ class PageDetector:
                                     except Exception:
                                         pass
 
-                                detected.append(DetectedElement(
-                                    type=element_type,
-                                    selector=selector,
-                                    text=text,
-                                    confidence=base_confidence,
-                                    attributes=attrs,
-                                ))
+                                detected.append(
+                                    DetectedElement(
+                                        type=element_type,
+                                        selector=selector,
+                                        text=text,
+                                        confidence=base_confidence,
+                                        attributes=attrs,
+                                    )
+                                )
                                 break  # Found one for this selector
 
                         except Exception:
@@ -293,50 +301,60 @@ class PageDetector:
             # Look for username/email and password fields
             for elem in elements:
                 if elem.type in ("username", "email"):
-                    actions.append({
-                        "type": "fill",
-                        "name": f"Fill {elem.type}",
-                        "selectors": [elem.selector],
-                        "value": "",  # User needs to fill this
-                    })
+                    actions.append(
+                        {
+                            "type": "fill",
+                            "name": f"Fill {elem.type}",
+                            "selectors": [elem.selector],
+                            "value": "",  # User needs to fill this
+                        }
+                    )
                 elif elem.type == "password":
-                    actions.append({
-                        "type": "fill",
-                        "name": "Fill password",
-                        "selectors": [elem.selector],
-                        "value": "",
-                    })
+                    actions.append(
+                        {
+                            "type": "fill",
+                            "name": "Fill password",
+                            "selectors": [elem.selector],
+                            "value": "",
+                        }
+                    )
 
             # Add submit action
             for elem in elements:
                 if elem.type == "submit":
-                    actions.append({
-                        "type": "click",
-                        "name": "Submit form",
-                        "selectors": [elem.selector],
-                    })
+                    actions.append(
+                        {
+                            "type": "click",
+                            "name": "Submit form",
+                            "selectors": [elem.selector],
+                        }
+                    )
                     break
 
         elif page_type == "social":
             # Look for search/URL input
             for elem in elements:
                 if elem.type == "search_input":
-                    actions.append({
-                        "type": "fill",
-                        "name": "Enter URL",
-                        "selectors": [elem.selector],
-                        "value": "",
-                    })
+                    actions.append(
+                        {
+                            "type": "fill",
+                            "name": "Enter URL",
+                            "selectors": [elem.selector],
+                            "value": "",
+                        }
+                    )
                     break
 
             # Add submit
             for elem in elements:
                 if elem.type == "submit":
-                    actions.append({
-                        "type": "click",
-                        "name": "Submit",
-                        "selectors": [elem.selector],
-                    })
+                    actions.append(
+                        {
+                            "type": "click",
+                            "name": "Submit",
+                            "selectors": [elem.selector],
+                        }
+                    )
                     break
 
         return actions

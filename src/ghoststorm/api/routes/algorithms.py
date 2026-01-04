@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import json
 import hashlib
-import time
+import json
 import re
 from datetime import datetime
 from pathlib import Path
@@ -91,7 +90,7 @@ ALGORITHMS = {
         "docs_url": "https://developers.facebook.com/docs/instagram-api/",
         "can_fetch": False,
         "requires_js": False,
-        "example_code": '''# Instagram Graph API Authentication
+        "example_code": """# Instagram Graph API Authentication
 # No signature needed - just Bearer token
 
 import requests
@@ -116,7 +115,7 @@ headers = {
 response = requests.get(
     "https://graph.instagram.com/me/media",
     headers=headers
-)''',
+)""",
     },
     "youtube_api": {
         "name": "YouTube Data API v3",
@@ -129,7 +128,7 @@ response = requests.get(
         "docs_url": "https://developers.google.com/youtube/v3",
         "can_fetch": False,
         "requires_js": False,
-        "example_code": '''# YouTube Data API v3 Authentication
+        "example_code": """# YouTube Data API v3 Authentication
 # Two methods: API Key (public data) or OAuth 2.0 (user actions)
 
 import requests
@@ -157,7 +156,7 @@ response = requests.post(
 )
 
 # Quota: 10,000 units/day
-# Search = 100 units, Video info = 1 unit''',
+# Search = 100 units, Video info = 1 unit""",
     },
     "twitter_api": {
         "name": "Twitter/X API v2",
@@ -170,7 +169,7 @@ response = requests.post(
         "docs_url": "https://developer.twitter.com/en/docs/twitter-api",
         "can_fetch": False,
         "requires_js": False,
-        "example_code": '''# Twitter/X API v2 Authentication
+        "example_code": """# Twitter/X API v2 Authentication
 # Two methods: App-only (read) or User context (write)
 
 import requests
@@ -199,7 +198,7 @@ response = requests.get(
 # Requires user login flow with PKCE challenge
 # See: https://developer.twitter.com/en/docs/authentication/oauth-2-0/authorization-code
 
-# Rate limits: Basic=500K tweets/mo, Pro=1M tweets/mo''',
+# Rate limits: Basic=500K tweets/mo, Pro=1M tweets/mo""",
     },
     "facebook_api": {
         "name": "Facebook Graph API",
@@ -212,7 +211,7 @@ response = requests.get(
         "docs_url": "https://developers.facebook.com/docs/graph-api/",
         "can_fetch": False,
         "requires_js": False,
-        "example_code": '''# Facebook Graph API Authentication
+        "example_code": """# Facebook Graph API Authentication
 # Uses OAuth 2.0 with Facebook Login
 
 import requests
@@ -244,7 +243,7 @@ long_lived = requests.get(
 
 # 4. Make API requests
 headers = {"Authorization": f"Bearer {access_token}"}
-response = requests.get("https://graph.facebook.com/v18.0/me", headers=headers)''',
+response = requests.get("https://graph.facebook.com/v18.0/me", headers=headers)""",
     },
     "spotify_api": {
         "name": "Spotify Web API",
@@ -257,7 +256,7 @@ response = requests.get("https://graph.facebook.com/v18.0/me", headers=headers)'
         "docs_url": "https://developer.spotify.com/documentation/web-api",
         "can_fetch": False,
         "requires_js": False,
-        "example_code": '''# Spotify Web API Authentication
+        "example_code": """# Spotify Web API Authentication
 # Two methods: Client Credentials (public) or Auth Code (user data)
 
 import requests
@@ -284,7 +283,7 @@ headers = {"Authorization": f"Bearer {access_token}"}
 response = requests.get(
     "https://api.spotify.com/v1/tracks/TRACK_ID",
     headers=headers
-)''',
+)""",
     },
     "twitch_api": {
         "name": "Twitch Helix API",
@@ -297,7 +296,7 @@ response = requests.get(
         "docs_url": "https://dev.twitch.tv/docs/api/",
         "can_fetch": False,
         "requires_js": False,
-        "example_code": '''# Twitch Helix API Authentication
+        "example_code": """# Twitch Helix API Authentication
 # IMPORTANT: Client-Id header is ALWAYS required
 
 import requests
@@ -328,7 +327,7 @@ response = requests.get(
 )
 
 # For user actions, use OAuth Authorization Code flow
-# Redirect to: https://id.twitch.tv/oauth2/authorize?client_id={ID}&redirect_uri={URI}&response_type=code&scope=user:read:email''',
+# Redirect to: https://id.twitch.tv/oauth2/authorize?client_id={ID}&redirect_uri={URI}&response_type=code&scope=user:read:email""",
     },
 }
 
@@ -486,7 +485,9 @@ async def fetch_from_github(name: str) -> dict:
             }
 
     except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=e.response.status_code, detail=f"GitHub error: {e.response.status_code}")
+        raise HTTPException(
+            status_code=e.response.status_code, detail=f"GitHub error: {e.response.status_code}"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -505,9 +506,12 @@ async def fetch_from_cdn(name: str) -> dict:
     try:
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             # Fetch the page
-            response = await client.get(cdn_source, headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-            })
+            response = await client.get(
+                cdn_source,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                },
+            )
             response.raise_for_status()
 
             html = response.text
@@ -527,13 +531,20 @@ async def fetch_from_cdn(name: str) -> dict:
             signature_code = ""
             for js_url in js_urls[:10]:  # Limit to first 10 scripts
                 try:
-                    js_response = await client.get(js_url, headers={
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-                    })
+                    js_response = await client.get(
+                        js_url,
+                        headers={
+                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                        },
+                    )
                     js_code = js_response.text
 
                     # Check if this script contains signature logic
-                    if "frontierSign" in js_code or "x-bogus" in js_code.lower() or "acrawler" in js_code:
+                    if (
+                        "frontierSign" in js_code
+                        or "x-bogus" in js_code.lower()
+                        or "acrawler" in js_code
+                    ):
                         signature_code += f"\n// Source: {js_url}\n"
                         signature_code += js_code[:50000]  # Limit size
                         break
@@ -567,13 +578,13 @@ async def fetch_from_cdn(name: str) -> dict:
             # Check if matches GitHub hash
             github_hash = metadata[name].get("github_hash")
             if github_hash:
-                metadata[name]["verified"] = (github_hash == code_hash)
+                metadata[name]["verified"] = github_hash == code_hash
 
             save_metadata(metadata)
 
             return {
                 "success": True,
-                "message": f"Fetched from CDN",
+                "message": "Fetched from CDN",
                 "hash": code_hash,
                 "size": len(signature_code),
                 "verified": metadata[name].get("verified", False),
@@ -683,7 +694,7 @@ async def refresh_all_algorithms() -> dict:
                 updated += 1
 
         except Exception as e:
-            errors.append(f"{name}: {str(e)}")
+            errors.append(f"{name}: {e!s}")
 
     return {
         "updated": updated,

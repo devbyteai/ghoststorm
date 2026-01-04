@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import random
 import time
 from dataclasses import dataclass, field
@@ -269,10 +270,8 @@ class OrganicBrowsingBehavior:
             if random.random() < self.config.scroll_probability:
                 scroll_amount = random.randint(100, 400)
                 direction = random.choice([1, -1])
-                try:
+                with contextlib.suppress(Exception):
                     await page.evaluate(f"window.scrollBy(0, {scroll_amount * direction})")
-                except Exception:
-                    pass
 
             # Wait a bit
             await asyncio.sleep(random.uniform(0.5, 2.0))
@@ -342,10 +341,8 @@ class OrganicBrowsingBehavior:
                     result.links_clicked += 1
 
                     # Wait for page load
-                    try:
+                    with contextlib.suppress(Exception):
                         await page.wait_for_load_state("domcontentloaded", timeout=10000)
-                    except Exception:
-                        pass
                 else:
                     result.errors.append(f"Failed to click: {next_url}")
 

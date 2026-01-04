@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any
 
 import structlog
 
-from ghoststorm.core.events.bus import Event
 from ghoststorm.core.events.types import EventType
 from ghoststorm.core.watchdog.base import BaseWatchdog
 from ghoststorm.core.watchdog.models import (
@@ -20,7 +19,7 @@ from ghoststorm.core.watchdog.models import (
 )
 
 if TYPE_CHECKING:
-    from ghoststorm.core.events.bus import AsyncEventBus
+    from ghoststorm.core.events.bus import AsyncEventBus, Event
 
 logger = structlog.get_logger(__name__)
 

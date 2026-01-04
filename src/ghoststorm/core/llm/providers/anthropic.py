@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING, Any
 
 import structlog
@@ -19,6 +18,8 @@ from ghoststorm.core.llm.vision import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     pass
 
 logger = structlog.get_logger(__name__)
@@ -231,8 +232,7 @@ class AnthropicProvider(BaseLLM, BaseVisionProvider):
         """
         if not self.supports_vision:
             raise ValueError(
-                f"Model {self.config.model} does not support vision. "
-                f"Use a Claude 3+ model."
+                f"Model {self.config.model} does not support vision. Use a Claude 3+ model."
             )
 
         client = self._get_client()
@@ -323,23 +323,25 @@ class AnthropicProvider(BaseLLM, BaseVisionProvider):
                 system_content = msg.content
             elif i == len(messages) - 1 and msg.role == MessageRole.USER:
                 # Add image to last user message
-                anthropic_messages.append({
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": media_type,
-                                "data": image_base64,
+                anthropic_messages.append(
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": media_type,
+                                    "data": image_base64,
+                                },
                             },
-                        },
-                        {
-                            "type": "text",
-                            "text": msg.content,
-                        },
-                    ],
-                })
+                            {
+                                "type": "text",
+                                "text": msg.content,
+                            },
+                        ],
+                    }
+                )
             else:
                 anthropic_messages.append(msg.to_anthropic())
 
@@ -402,11 +404,11 @@ class AnthropicProvider(BaseLLM, BaseVisionProvider):
             data = json.loads(content)
 
             coords = None
-            if "coordinates" in data and data["coordinates"]:
+            if data.get("coordinates"):
                 coords = tuple(data["coordinates"][:2])
-            elif "suggested_action" in data and data["suggested_action"]:
+            elif data.get("suggested_action"):
                 action = data["suggested_action"]
-                if "coordinates" in action and action["coordinates"]:
+                if action.get("coordinates"):
                     coords = tuple(action["coordinates"][:2])
 
             return VisionAnalysis(

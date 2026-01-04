@@ -146,6 +146,27 @@ ignore = [
     "E501",   # line too long (handled by formatter)
     "B008",   # do not perform function calls in argument defaults
     "B905",   # zip without strict=
+    "ARG001", # unused function argument (intentional for callbacks/interfaces)
+    "ARG002", # unused method argument (intentional for callbacks/interfaces)
+    "ARG005", # unused lambda argument
+    "SIM117", # multiple with statements (readability preference)
+    "SIM105", # use contextlib.suppress (readability preference)
+    "SIM102", # collapsible if (readability preference)
+    "PTH123", # use Path.open() (style preference)
+    "RUF012", # mutable class attributes (intentional for defaults)
+    "B904",   # raise from within except (not always needed)
+    "B027",   # empty method in abstract class (intentional)
+    "RUF001", # ambiguous unicode (intentional strings)
+    "RUF003", # ambiguous comment (intentional)
+    "RUF006", # dangling asyncio task
+    "RUF059", # unused unpacked variable
+    "E722",   # bare except (sometimes needed)
+    "E741",   # ambiguous variable name
+    "E402",   # module level import not at top
+    "PTH111", # os.path.expanduser
+    "SIM108", # ternary operator
+    "SIM113", # enumerate instead of manual counter
+    "F401",   # unused import (sometimes intentional re-exports)
 ]
 
 [tool.ruff.lint.isort]

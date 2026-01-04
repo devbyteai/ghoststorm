@@ -150,9 +150,7 @@ WATCH_DEVICES: list[AppleDevice] = [
 ]
 
 # Combined list of all devices
-ALL_APPLE_DEVICES: list[AppleDevice] = (
-    IPHONE_DEVICES + IPOD_DEVICES + IPAD_DEVICES + WATCH_DEVICES
-)
+ALL_APPLE_DEVICES: list[AppleDevice] = IPHONE_DEVICES + IPOD_DEVICES + IPAD_DEVICES + WATCH_DEVICES
 
 # Character banks for string generation
 CHAR_BANKS = {
@@ -210,10 +208,7 @@ class IosSpoofer:
         if amount <= 1:
             return "".join(random.choice(chars) for _ in range(length))
 
-        return [
-            "".join(random.choice(chars) for _ in range(length))
-            for _ in range(amount)
-        ]
+        return ["".join(random.choice(chars) for _ in range(length)) for _ in range(amount)]
 
     @staticmethod
     def generate_pattern(
@@ -240,8 +235,7 @@ class IosSpoofer:
 
         def generate_one() -> str:
             segments = [
-                "".join(random.choice(chars) for _ in range(seg_len))
-                for seg_len in pattern
+                "".join(random.choice(chars) for _ in range(seg_len)) for seg_len in pattern
             ]
             return separator.join(segments)
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
+import contextlib
 from typing import Any
 
 import structlog
@@ -60,10 +60,8 @@ async def list_flows(
     # Parse status filter
     status_filter = None
     if status:
-        try:
+        with contextlib.suppress(ValueError):
             status_filter = FlowStatus(status)
-        except ValueError:
-            pass
 
     # Parse tags filter
     tags = [tag] if tag else None
@@ -315,7 +313,9 @@ async def start_recording(request: RecordingStartRequest) -> RecordingStartRespo
         )
 
         stealth_msg = ""
-        if stealth_config and (stealth_config.get("use_proxy") or stealth_config.get("use_fingerprint")):
+        if stealth_config and (
+            stealth_config.get("use_proxy") or stealth_config.get("use_fingerprint")
+        ):
             stealth_msg = " with stealth mode"
 
         return RecordingStartResponse(
@@ -454,8 +454,7 @@ async def execute_flow(
 
     if flow.status != FlowStatus.READY:
         raise HTTPException(
-            status_code=400,
-            detail=f"Flow is not ready (status: {flow.status.value})"
+            status_code=400, detail=f"Flow is not ready (status: {flow.status.value})"
         )
 
     # Create execution config
@@ -482,6 +481,7 @@ async def execute_flow(
 
     # Generate execution ID (we don't have it yet since it's async)
     from uuid import uuid4
+
     execution_id = str(uuid4())
 
     return FlowExecutionResponse(

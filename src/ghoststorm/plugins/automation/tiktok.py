@@ -16,7 +16,7 @@ import random
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -37,10 +37,12 @@ from ghoststorm.plugins.automation.social_media_behavior import (
 from ghoststorm.plugins.automation.view_tracking import (
     get_view_tracker,
 )
-from ghoststorm.plugins.behavior.coherence_engine import (
-    CoherenceEngine,
-)
-from ghoststorm.plugins.network.rate_limiter import RateLimiter
+
+if TYPE_CHECKING:
+    from ghoststorm.plugins.behavior.coherence_engine import (
+        CoherenceEngine,
+    )
+    from ghoststorm.plugins.network.rate_limiter import RateLimiter
 
 logger = structlog.get_logger(__name__)
 
@@ -247,10 +249,12 @@ class TikTokAutomation(SocialMediaAutomation):
             await page.add_init_script(TIKTOK_JS_BRIDGE)
 
             # Set mobile viewport
-            await page.set_viewport_size({
-                "width": self.config.viewport_width,
-                "height": self.config.viewport_height,
-            })
+            await page.set_viewport_size(
+                {
+                    "width": self.config.viewport_width,
+                    "height": self.config.viewport_height,
+                }
+            )
 
             logger.info(
                 "[TIKTOK_SETUP] Context configured successfully",
@@ -303,9 +307,7 @@ class TikTokAutomation(SocialMediaAutomation):
 
             # Apply coherence modifiers
             if self._session_state:
-                modifiers = self.coherence_engine.get_behavior_modifiers(
-                    self._session_state
-                )
+                modifiers = self.coherence_engine.get_behavior_modifiers(self._session_state)
                 watch_time *= modifiers.get("dwell_time_factor", 1.0)
 
             logger.info(
@@ -320,9 +322,7 @@ class TikTokAutomation(SocialMediaAutomation):
             await asyncio.sleep(watch_time)
 
             # Calculate completion rate
-            completion_rate = (
-                watch_time / video_duration if video_duration else 1.0
-            )
+            completion_rate = watch_time / video_duration if video_duration else 1.0
 
             # Determine outcome
             outcome = self._determine_watch_outcome(watch_time, video_duration)
@@ -457,9 +457,7 @@ class TikTokAutomation(SocialMediaAutomation):
                 self._profiles_visited += 1
 
                 if self._session_state:
-                    self.coherence_engine.record_action(
-                        self._session_state, "navigate", page.url
-                    )
+                    self.coherence_engine.record_action(self._session_state, "navigate", page.url)
 
                 logger.info(
                     "[TIKTOK_PROFILE] Profile visit successful",
@@ -572,9 +570,7 @@ class TikTokAutomation(SocialMediaAutomation):
                 await self._random_delay(1.0, 2.0)
 
                 if self._session_state:
-                    self.coherence_engine.record_action(
-                        self._session_state, "click", target_url
-                    )
+                    self.coherence_engine.record_action(self._session_state, "click", target_url)
 
                 logger.info(
                     "[TIKTOK_BIO_CLICK] Bio link click completed successfully",
@@ -632,6 +628,7 @@ class TikTokAutomation(SocialMediaAutomation):
         else:
             # Fallback - use hash of URL
             import hashlib
+
             video_id = hashlib.md5(url.encode()).hexdigest()[:16]
 
         return video_id
@@ -710,7 +707,7 @@ class TikTokAutomation(SocialMediaAutomation):
 
             # Generate watch duration based on behavior model
             if watch_duration is None:
-                watch_time, outcome_str = self.watch_behavior.generate_watch_duration(
+                watch_time, _outcome_str = self.watch_behavior.generate_watch_duration(
                     video_duration=video_duration,
                     content_interest=random.uniform(0.5, 0.9),  # Higher interest for target videos
                 )
@@ -719,13 +716,10 @@ class TikTokAutomation(SocialMediaAutomation):
                 watch_time = max(watch_time, min_watch + random.uniform(0.5, 2.0))
             else:
                 watch_time = watch_duration
-                outcome_str = "full"
 
             # Apply coherence modifiers
             if self._session_state:
-                modifiers = self.coherence_engine.get_behavior_modifiers(
-                    self._session_state
-                )
+                modifiers = self.coherence_engine.get_behavior_modifiers(self._session_state)
                 watch_time *= modifiers.get("dwell_time_factor", 1.0)
 
             logger.info(
@@ -940,9 +934,7 @@ class TikTokAutomation(SocialMediaAutomation):
                     await asyncio.sleep(break_duration)
 
                     if self._session_state:
-                        self.coherence_engine.record_break(
-                            self._session_state, break_duration
-                        )
+                        self.coherence_engine.record_break(self._session_state, break_duration)
 
                 # Watch current video
                 watch_result = await self.watch_video(page)
@@ -1011,7 +1003,8 @@ class TikTokAutomation(SocialMediaAutomation):
         successful_watches = sum(1 for w in watch_results if w.success)
         avg_watch_time = (
             sum(w.watch_duration for w in watch_results) / len(watch_results)
-            if watch_results else 0
+            if watch_results
+            else 0
         )
 
         logger.info(
@@ -1074,7 +1067,7 @@ class TikTokAutomation(SocialMediaAutomation):
         # Setup context
         await self._setup_context(page)
         start_time = datetime.now(UTC)
-        session = self._create_session()
+        self._create_session()
 
         # PRIORITY 1: If target video URLs are configured, watch them directly
         if self.config.target_video_urls:

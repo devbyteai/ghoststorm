@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     from ghoststorm.core.models.proxy import Proxy, ProxyHealth, RotationStrategy
 
 

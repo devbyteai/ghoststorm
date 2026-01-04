@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import random
 import re
 import time
-from dataclasses import dataclass, field
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -20,7 +20,7 @@ from pydantic import BaseModel
 router = APIRouter()
 
 DATA_DIR = Path(__file__).parent.parent.parent.parent.parent / "data"
-PROXY_PATTERN = re.compile(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d{1,5})')
+PROXY_PATTERN = re.compile(r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d{1,5})")
 
 # Randomized headers to prevent fingerprinting during proxy scraping
 SCRAPER_USER_AGENTS = [
@@ -47,6 +47,7 @@ def _get_random_scraper_headers() -> dict[str, str]:
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": random.choice(SCRAPER_ACCEPT_LANGUAGES),
     }
+
 
 # Job tracking for scrape and test operations
 _jobs: dict[str, dict[str, Any]] = {}
@@ -95,10 +96,7 @@ def is_valid_proxy(proxy: str) -> bool:
         if first == 192 and second == 168:
             return False
         # 224-255.x.x.x - Multicast/Reserved
-        if first >= 224:
-            return False
-
-        return True
+        return not first >= 224
     except Exception:
         return False
 
@@ -112,112 +110,453 @@ def filter_valid_proxies(proxies: set[str]) -> set[str]:
 
 PROXY_SOURCES = [
     # ===== FREE-PROXY-LIST.NET FAMILY (HTML Table Scraping) =====
-    {"id": "freeproxylist", "name": "Free-Proxy-List.net", "url": "https://free-proxy-list.net/", "type": "html_table"},
-    {"id": "sslproxies", "name": "SSL Proxies", "url": "https://www.sslproxies.org/", "type": "html_table"},
-    {"id": "usproxyorg", "name": "US-Proxy.org", "url": "https://www.us-proxy.org/", "type": "html_table"},
-    {"id": "ukproxyorg", "name": "UK-Proxy.org", "url": "https://free-proxy-list.net/uk-proxy.html", "type": "html_table"},
-    {"id": "anonproxylist", "name": "Anonymous Proxy List", "url": "https://free-proxy-list.net/anonymous-proxy.html", "type": "html_table"},
-    {"id": "socks_proxy", "name": "SOCKS-Proxy.net", "url": "https://www.socks-proxy.net/", "type": "html_table"},
-
+    {
+        "id": "freeproxylist",
+        "name": "Free-Proxy-List.net",
+        "url": "https://free-proxy-list.net/",
+        "type": "html_table",
+    },
+    {
+        "id": "sslproxies",
+        "name": "SSL Proxies",
+        "url": "https://www.sslproxies.org/",
+        "type": "html_table",
+    },
+    {
+        "id": "usproxyorg",
+        "name": "US-Proxy.org",
+        "url": "https://www.us-proxy.org/",
+        "type": "html_table",
+    },
+    {
+        "id": "ukproxyorg",
+        "name": "UK-Proxy.org",
+        "url": "https://free-proxy-list.net/uk-proxy.html",
+        "type": "html_table",
+    },
+    {
+        "id": "anonproxylist",
+        "name": "Anonymous Proxy List",
+        "url": "https://free-proxy-list.net/anonymous-proxy.html",
+        "type": "html_table",
+    },
+    {
+        "id": "socks_proxy",
+        "name": "SOCKS-Proxy.net",
+        "url": "https://www.socks-proxy.net/",
+        "type": "html_table",
+    },
     # ===== PROXYNOVA (JS-obfuscated scraping) =====
-    {"id": "proxynova", "name": "ProxyNova", "url": "https://www.proxynova.com/proxy-server-list/", "type": "proxynova"},
-    {"id": "proxynova_us", "name": "ProxyNova US", "url": "https://www.proxynova.com/proxy-server-list/country-us/", "type": "proxynova"},
-    {"id": "proxynova_uk", "name": "ProxyNova UK", "url": "https://www.proxynova.com/proxy-server-list/country-gb/", "type": "proxynova"},
-    {"id": "proxynova_de", "name": "ProxyNova Germany", "url": "https://www.proxynova.com/proxy-server-list/country-de/", "type": "proxynova"},
-    {"id": "proxynova_fr", "name": "ProxyNova France", "url": "https://www.proxynova.com/proxy-server-list/country-fr/", "type": "proxynova"},
-    {"id": "proxynova_elite", "name": "ProxyNova Elite", "url": "https://www.proxynova.com/proxy-server-list/elite-proxies/", "type": "proxynova"},
-    {"id": "proxynova_anon", "name": "ProxyNova Anonymous", "url": "https://www.proxynova.com/proxy-server-list/anonymous-proxies/", "type": "proxynova"},
-
+    {
+        "id": "proxynova",
+        "name": "ProxyNova",
+        "url": "https://www.proxynova.com/proxy-server-list/",
+        "type": "proxynova",
+    },
+    {
+        "id": "proxynova_us",
+        "name": "ProxyNova US",
+        "url": "https://www.proxynova.com/proxy-server-list/country-us/",
+        "type": "proxynova",
+    },
+    {
+        "id": "proxynova_uk",
+        "name": "ProxyNova UK",
+        "url": "https://www.proxynova.com/proxy-server-list/country-gb/",
+        "type": "proxynova",
+    },
+    {
+        "id": "proxynova_de",
+        "name": "ProxyNova Germany",
+        "url": "https://www.proxynova.com/proxy-server-list/country-de/",
+        "type": "proxynova",
+    },
+    {
+        "id": "proxynova_fr",
+        "name": "ProxyNova France",
+        "url": "https://www.proxynova.com/proxy-server-list/country-fr/",
+        "type": "proxynova",
+    },
+    {
+        "id": "proxynova_elite",
+        "name": "ProxyNova Elite",
+        "url": "https://www.proxynova.com/proxy-server-list/elite-proxies/",
+        "type": "proxynova",
+    },
+    {
+        "id": "proxynova_anon",
+        "name": "ProxyNova Anonymous",
+        "url": "https://www.proxynova.com/proxy-server-list/anonymous-proxies/",
+        "type": "proxynova",
+    },
     # ===== HIDEMY.NAME (HTML Table Scraping) =====
-    {"id": "hidemy", "name": "HideMy.name HTTP/S", "url": "https://hidemy.name/en/proxy-list/?type=hs", "type": "hidemy"},
-    {"id": "hidemy_socks4", "name": "HideMy.name SOCKS4", "url": "https://hidemy.name/en/proxy-list/?type=4", "type": "hidemy"},
-    {"id": "hidemy_socks5", "name": "HideMy.name SOCKS5", "url": "https://hidemy.name/en/proxy-list/?type=5", "type": "hidemy"},
-    {"id": "hidemy_anon", "name": "HideMy.name Anonymous", "url": "https://hidemy.name/en/proxy-list/?anon=34", "type": "hidemy"},
-    {"id": "hidemy_us", "name": "HideMy.name US", "url": "https://hidemy.name/en/proxy-list/?country=US", "type": "hidemy"},
-    {"id": "hidemy_uk", "name": "HideMy.name UK", "url": "https://hidemy.name/en/proxy-list/?country=GB", "type": "hidemy"},
-
+    {
+        "id": "hidemy",
+        "name": "HideMy.name HTTP/S",
+        "url": "https://hidemy.name/en/proxy-list/?type=hs",
+        "type": "hidemy",
+    },
+    {
+        "id": "hidemy_socks4",
+        "name": "HideMy.name SOCKS4",
+        "url": "https://hidemy.name/en/proxy-list/?type=4",
+        "type": "hidemy",
+    },
+    {
+        "id": "hidemy_socks5",
+        "name": "HideMy.name SOCKS5",
+        "url": "https://hidemy.name/en/proxy-list/?type=5",
+        "type": "hidemy",
+    },
+    {
+        "id": "hidemy_anon",
+        "name": "HideMy.name Anonymous",
+        "url": "https://hidemy.name/en/proxy-list/?anon=34",
+        "type": "hidemy",
+    },
+    {
+        "id": "hidemy_us",
+        "name": "HideMy.name US",
+        "url": "https://hidemy.name/en/proxy-list/?country=US",
+        "type": "hidemy",
+    },
+    {
+        "id": "hidemy_uk",
+        "name": "HideMy.name UK",
+        "url": "https://hidemy.name/en/proxy-list/?country=GB",
+        "type": "hidemy",
+    },
     # ===== PROXYLISTPLUS (HTML Table Scraping) =====
-    {"id": "proxylistplus_1", "name": "ProxyListPlus Page 1", "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-1", "type": "html_table"},
-    {"id": "proxylistplus_2", "name": "ProxyListPlus Page 2", "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-2", "type": "html_table"},
-    {"id": "proxylistplus_3", "name": "ProxyListPlus Page 3", "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-3", "type": "html_table"},
-    {"id": "proxylistplus_4", "name": "ProxyListPlus Page 4", "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-4", "type": "html_table"},
-    {"id": "proxylistplus_5", "name": "ProxyListPlus Page 5", "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-5", "type": "html_table"},
-    {"id": "proxylistplus_ssl", "name": "ProxyListPlus SSL", "url": "https://list.proxylistplus.com/SSL-List-1", "type": "html_table"},
-
+    {
+        "id": "proxylistplus_1",
+        "name": "ProxyListPlus Page 1",
+        "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-1",
+        "type": "html_table",
+    },
+    {
+        "id": "proxylistplus_2",
+        "name": "ProxyListPlus Page 2",
+        "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-2",
+        "type": "html_table",
+    },
+    {
+        "id": "proxylistplus_3",
+        "name": "ProxyListPlus Page 3",
+        "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-3",
+        "type": "html_table",
+    },
+    {
+        "id": "proxylistplus_4",
+        "name": "ProxyListPlus Page 4",
+        "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-4",
+        "type": "html_table",
+    },
+    {
+        "id": "proxylistplus_5",
+        "name": "ProxyListPlus Page 5",
+        "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-5",
+        "type": "html_table",
+    },
+    {
+        "id": "proxylistplus_ssl",
+        "name": "ProxyListPlus SSL",
+        "url": "https://list.proxylistplus.com/SSL-List-1",
+        "type": "html_table",
+    },
     # ===== FREEPROXY.WORLD (HTML Table Scraping) =====
-    {"id": "freeproxyworld_1", "name": "FreeProxy.World Page 1", "url": "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=1", "type": "html_table"},
-    {"id": "freeproxyworld_2", "name": "FreeProxy.World Page 2", "url": "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=2", "type": "html_table"},
-    {"id": "freeproxyworld_3", "name": "FreeProxy.World Page 3", "url": "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=3", "type": "html_table"},
-    {"id": "freeproxyworld_https", "name": "FreeProxy.World HTTPS", "url": "https://www.freeproxy.world/?type=https&anonymity=&country=&speed=&port=&page=1", "type": "html_table"},
-    {"id": "freeproxyworld_socks4", "name": "FreeProxy.World SOCKS4", "url": "https://www.freeproxy.world/?type=socks4&anonymity=&country=&speed=&port=&page=1", "type": "html_table"},
-    {"id": "freeproxyworld_socks5", "name": "FreeProxy.World SOCKS5", "url": "https://www.freeproxy.world/?type=socks5&anonymity=&country=&speed=&port=&page=1", "type": "html_table"},
-
+    {
+        "id": "freeproxyworld_1",
+        "name": "FreeProxy.World Page 1",
+        "url": "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=1",
+        "type": "html_table",
+    },
+    {
+        "id": "freeproxyworld_2",
+        "name": "FreeProxy.World Page 2",
+        "url": "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=2",
+        "type": "html_table",
+    },
+    {
+        "id": "freeproxyworld_3",
+        "name": "FreeProxy.World Page 3",
+        "url": "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=3",
+        "type": "html_table",
+    },
+    {
+        "id": "freeproxyworld_https",
+        "name": "FreeProxy.World HTTPS",
+        "url": "https://www.freeproxy.world/?type=https&anonymity=&country=&speed=&port=&page=1",
+        "type": "html_table",
+    },
+    {
+        "id": "freeproxyworld_socks4",
+        "name": "FreeProxy.World SOCKS4",
+        "url": "https://www.freeproxy.world/?type=socks4&anonymity=&country=&speed=&port=&page=1",
+        "type": "html_table",
+    },
+    {
+        "id": "freeproxyworld_socks5",
+        "name": "FreeProxy.World SOCKS5",
+        "url": "https://www.freeproxy.world/?type=socks5&anonymity=&country=&speed=&port=&page=1",
+        "type": "html_table",
+    },
     # ===== FREEPROXY.CZ (HTML Table Scraping) =====
-    {"id": "freeproxycz_1", "name": "FreeProxy.cz Page 1", "url": "http://free-proxy.cz/en/proxylist/main/1", "type": "html_table"},
-    {"id": "freeproxycz_2", "name": "FreeProxy.cz Page 2", "url": "http://free-proxy.cz/en/proxylist/main/2", "type": "html_table"},
-    {"id": "freeproxycz_3", "name": "FreeProxy.cz Page 3", "url": "http://free-proxy.cz/en/proxylist/main/3", "type": "html_table"},
-    {"id": "freeproxycz_4", "name": "FreeProxy.cz Page 4", "url": "http://free-proxy.cz/en/proxylist/main/4", "type": "html_table"},
-    {"id": "freeproxycz_5", "name": "FreeProxy.cz Page 5", "url": "http://free-proxy.cz/en/proxylist/main/5", "type": "html_table"},
-    {"id": "freeproxycz_us", "name": "FreeProxy.cz US", "url": "http://free-proxy.cz/en/proxylist/country/US/all/ping/all", "type": "html_table"},
-
+    {
+        "id": "freeproxycz_1",
+        "name": "FreeProxy.cz Page 1",
+        "url": "http://free-proxy.cz/en/proxylist/main/1",
+        "type": "html_table",
+    },
+    {
+        "id": "freeproxycz_2",
+        "name": "FreeProxy.cz Page 2",
+        "url": "http://free-proxy.cz/en/proxylist/main/2",
+        "type": "html_table",
+    },
+    {
+        "id": "freeproxycz_3",
+        "name": "FreeProxy.cz Page 3",
+        "url": "http://free-proxy.cz/en/proxylist/main/3",
+        "type": "html_table",
+    },
+    {
+        "id": "freeproxycz_4",
+        "name": "FreeProxy.cz Page 4",
+        "url": "http://free-proxy.cz/en/proxylist/main/4",
+        "type": "html_table",
+    },
+    {
+        "id": "freeproxycz_5",
+        "name": "FreeProxy.cz Page 5",
+        "url": "http://free-proxy.cz/en/proxylist/main/5",
+        "type": "html_table",
+    },
+    {
+        "id": "freeproxycz_us",
+        "name": "FreeProxy.cz US",
+        "url": "http://free-proxy.cz/en/proxylist/country/US/all/ping/all",
+        "type": "html_table",
+    },
     # ===== SPYS.ONE (HTML Scraping - complex) =====
-    {"id": "spysone_http", "name": "Spys.one HTTP", "url": "https://spys.one/en/http-proxy-list/", "type": "spys"},
-    {"id": "spysone_anon", "name": "Spys.one Anonymous", "url": "https://spys.one/en/anonymous-proxy-list/", "type": "spys"},
-    {"id": "spysone_socks", "name": "Spys.one SOCKS", "url": "https://spys.one/en/socks-proxy-list/", "type": "spys"},
-
+    {
+        "id": "spysone_http",
+        "name": "Spys.one HTTP",
+        "url": "https://spys.one/en/http-proxy-list/",
+        "type": "spys",
+    },
+    {
+        "id": "spysone_anon",
+        "name": "Spys.one Anonymous",
+        "url": "https://spys.one/en/anonymous-proxy-list/",
+        "type": "spys",
+    },
+    {
+        "id": "spysone_socks",
+        "name": "Spys.one SOCKS",
+        "url": "https://spys.one/en/socks-proxy-list/",
+        "type": "spys",
+    },
     # ===== GEONODE (Website Scraping) =====
-    {"id": "geonode_1", "name": "Geonode.com Page 1", "url": "https://geonode.com/free-proxy-list", "type": "geonode"},
-    {"id": "geonode_us", "name": "Geonode.com US", "url": "https://geonode.com/free-proxy-list?country=US", "type": "geonode"},
-    {"id": "geonode_uk", "name": "Geonode.com UK", "url": "https://geonode.com/free-proxy-list?country=GB", "type": "geonode"},
-
+    {
+        "id": "geonode_1",
+        "name": "Geonode.com Page 1",
+        "url": "https://geonode.com/free-proxy-list",
+        "type": "geonode",
+    },
+    {
+        "id": "geonode_us",
+        "name": "Geonode.com US",
+        "url": "https://geonode.com/free-proxy-list?country=US",
+        "type": "geonode",
+    },
+    {
+        "id": "geonode_uk",
+        "name": "Geonode.com UK",
+        "url": "https://geonode.com/free-proxy-list?country=GB",
+        "type": "geonode",
+    },
     # ===== PROXY-LIST.ORG (HTML Scraping) =====
-    {"id": "proxylistorg_1", "name": "Proxy-List.org Page 1", "url": "https://proxy-list.org/english/index.php?p=1", "type": "proxylistorg"},
-    {"id": "proxylistorg_2", "name": "Proxy-List.org Page 2", "url": "https://proxy-list.org/english/index.php?p=2", "type": "proxylistorg"},
-    {"id": "proxylistorg_3", "name": "Proxy-List.org Page 3", "url": "https://proxy-list.org/english/index.php?p=3", "type": "proxylistorg"},
-
+    {
+        "id": "proxylistorg_1",
+        "name": "Proxy-List.org Page 1",
+        "url": "https://proxy-list.org/english/index.php?p=1",
+        "type": "proxylistorg",
+    },
+    {
+        "id": "proxylistorg_2",
+        "name": "Proxy-List.org Page 2",
+        "url": "https://proxy-list.org/english/index.php?p=2",
+        "type": "proxylistorg",
+    },
+    {
+        "id": "proxylistorg_3",
+        "name": "Proxy-List.org Page 3",
+        "url": "https://proxy-list.org/english/index.php?p=3",
+        "type": "proxylistorg",
+    },
     # ===== ISRAEL PROXY LISTS =====
-    {"id": "spysone_israel", "name": "Spys.one Israel", "url": "https://spys.one/free-proxy-list/IL/", "type": "spys"},
-    {"id": "proxynova_israel", "name": "ProxyNova Israel", "url": "https://www.proxynova.com/proxy-server-list/country-il/", "type": "proxynova"},
-    {"id": "hidemy_israel", "name": "HideMy.name Israel", "url": "https://hidemy.name/en/proxy-list/?country=IL", "type": "hidemy"},
-    {"id": "freeproxyworld_israel", "name": "FreeProxy.World Israel", "url": "https://www.freeproxy.world/?type=&anonymity=&country=IL&speed=&port=&page=1", "type": "html_table"},
-    {"id": "geonode_israel", "name": "Geonode.com Israel", "url": "https://geonode.com/free-proxy-list?country=IL", "type": "geonode"},
-    {"id": "freeproxycz_israel", "name": "FreeProxy.cz Israel", "url": "http://free-proxy.cz/en/proxylist/country/IL/all/ping/all", "type": "html_table"},
-
+    {
+        "id": "spysone_israel",
+        "name": "Spys.one Israel",
+        "url": "https://spys.one/free-proxy-list/IL/",
+        "type": "spys",
+    },
+    {
+        "id": "proxynova_israel",
+        "name": "ProxyNova Israel",
+        "url": "https://www.proxynova.com/proxy-server-list/country-il/",
+        "type": "proxynova",
+    },
+    {
+        "id": "hidemy_israel",
+        "name": "HideMy.name Israel",
+        "url": "https://hidemy.name/en/proxy-list/?country=IL",
+        "type": "hidemy",
+    },
+    {
+        "id": "freeproxyworld_israel",
+        "name": "FreeProxy.World Israel",
+        "url": "https://www.freeproxy.world/?type=&anonymity=&country=IL&speed=&port=&page=1",
+        "type": "html_table",
+    },
+    {
+        "id": "geonode_israel",
+        "name": "Geonode.com Israel",
+        "url": "https://geonode.com/free-proxy-list?country=IL",
+        "type": "geonode",
+    },
+    {
+        "id": "freeproxycz_israel",
+        "name": "FreeProxy.cz Israel",
+        "url": "http://free-proxy.cz/en/proxylist/country/IL/all/ping/all",
+        "type": "html_table",
+    },
     # ===== API-BASED SOURCES (Pre-tested, updated frequently) =====
     # Proxifly - Updated every 5 minutes
-    {"id": "proxifly_http", "name": "Proxifly HTTP", "url": "https://cdn.proxifly.dev/proxies/http/raw/proxies.txt", "type": "raw_txt"},
-    {"id": "proxifly_https", "name": "Proxifly HTTPS", "url": "https://cdn.proxifly.dev/proxies/https/raw/proxies.txt", "type": "raw_txt"},
-    {"id": "proxifly_socks4", "name": "Proxifly SOCKS4", "url": "https://cdn.proxifly.dev/proxies/socks4/raw/proxies.txt", "type": "raw_txt"},
-    {"id": "proxifly_socks5", "name": "Proxifly SOCKS5", "url": "https://cdn.proxifly.dev/proxies/socks5/raw/proxies.txt", "type": "raw_txt"},
-
+    {
+        "id": "proxifly_http",
+        "name": "Proxifly HTTP",
+        "url": "https://cdn.proxifly.dev/proxies/http/raw/proxies.txt",
+        "type": "raw_txt",
+    },
+    {
+        "id": "proxifly_https",
+        "name": "Proxifly HTTPS",
+        "url": "https://cdn.proxifly.dev/proxies/https/raw/proxies.txt",
+        "type": "raw_txt",
+    },
+    {
+        "id": "proxifly_socks4",
+        "name": "Proxifly SOCKS4",
+        "url": "https://cdn.proxifly.dev/proxies/socks4/raw/proxies.txt",
+        "type": "raw_txt",
+    },
+    {
+        "id": "proxifly_socks5",
+        "name": "Proxifly SOCKS5",
+        "url": "https://cdn.proxifly.dev/proxies/socks5/raw/proxies.txt",
+        "type": "raw_txt",
+    },
     # ProxyScrape API - Updated every minute
-    {"id": "proxyscrape_http", "name": "ProxyScrape HTTP", "url": "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all", "type": "raw_txt"},
-    {"id": "proxyscrape_https", "name": "ProxyScrape HTTPS", "url": "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=https&timeout=10000&country=all", "type": "raw_txt"},
-    {"id": "proxyscrape_socks4", "name": "ProxyScrape SOCKS4", "url": "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks4&timeout=10000&country=all", "type": "raw_txt"},
-    {"id": "proxyscrape_socks5", "name": "ProxyScrape SOCKS5", "url": "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks5&timeout=10000&country=all", "type": "raw_txt"},
-
+    {
+        "id": "proxyscrape_http",
+        "name": "ProxyScrape HTTP",
+        "url": "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all",
+        "type": "raw_txt",
+    },
+    {
+        "id": "proxyscrape_https",
+        "name": "ProxyScrape HTTPS",
+        "url": "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=https&timeout=10000&country=all",
+        "type": "raw_txt",
+    },
+    {
+        "id": "proxyscrape_socks4",
+        "name": "ProxyScrape SOCKS4",
+        "url": "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks4&timeout=10000&country=all",
+        "type": "raw_txt",
+    },
+    {
+        "id": "proxyscrape_socks5",
+        "name": "ProxyScrape SOCKS5",
+        "url": "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks5&timeout=10000&country=all",
+        "type": "raw_txt",
+    },
     # jetkai/proxy-list GitHub - Updated hourly, pre-tested
-    {"id": "jetkai_http", "name": "Jetkai HTTP", "url": "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-http.txt", "type": "raw_txt"},
-    {"id": "jetkai_https", "name": "Jetkai HTTPS", "url": "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-https.txt", "type": "raw_txt"},
-    {"id": "jetkai_socks4", "name": "Jetkai SOCKS4", "url": "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks4.txt", "type": "raw_txt"},
-    {"id": "jetkai_socks5", "name": "Jetkai SOCKS5", "url": "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks5.txt", "type": "raw_txt"},
-
+    {
+        "id": "jetkai_http",
+        "name": "Jetkai HTTP",
+        "url": "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-http.txt",
+        "type": "raw_txt",
+    },
+    {
+        "id": "jetkai_https",
+        "name": "Jetkai HTTPS",
+        "url": "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-https.txt",
+        "type": "raw_txt",
+    },
+    {
+        "id": "jetkai_socks4",
+        "name": "Jetkai SOCKS4",
+        "url": "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks4.txt",
+        "type": "raw_txt",
+    },
+    {
+        "id": "jetkai_socks5",
+        "name": "Jetkai SOCKS5",
+        "url": "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks5.txt",
+        "type": "raw_txt",
+    },
     # TheSpeedX/PROXY-List GitHub - Large collection
-    {"id": "thespeedx_http", "name": "TheSpeedX HTTP", "url": "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt", "type": "raw_txt"},
-    {"id": "thespeedx_socks4", "name": "TheSpeedX SOCKS4", "url": "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks4.txt", "type": "raw_txt"},
-    {"id": "thespeedx_socks5", "name": "TheSpeedX SOCKS5", "url": "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks5.txt", "type": "raw_txt"},
-
+    {
+        "id": "thespeedx_http",
+        "name": "TheSpeedX HTTP",
+        "url": "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt",
+        "type": "raw_txt",
+    },
+    {
+        "id": "thespeedx_socks4",
+        "name": "TheSpeedX SOCKS4",
+        "url": "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks4.txt",
+        "type": "raw_txt",
+    },
+    {
+        "id": "thespeedx_socks5",
+        "name": "TheSpeedX SOCKS5",
+        "url": "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks5.txt",
+        "type": "raw_txt",
+    },
     # clarketm/proxy-list GitHub - Quality proxies
-    {"id": "clarketm_http", "name": "Clarketm HTTP", "url": "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt", "type": "raw_txt"},
-
+    {
+        "id": "clarketm_http",
+        "name": "Clarketm HTTP",
+        "url": "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt",
+        "type": "raw_txt",
+    },
     # monosans/proxy-list GitHub - Geo-checked
-    {"id": "monosans_http", "name": "Monosans HTTP", "url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt", "type": "raw_txt"},
-    {"id": "monosans_socks4", "name": "Monosans SOCKS4", "url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks4.txt", "type": "raw_txt"},
-    {"id": "monosans_socks5", "name": "Monosans SOCKS5", "url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt", "type": "raw_txt"},
+    {
+        "id": "monosans_http",
+        "name": "Monosans HTTP",
+        "url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
+        "type": "raw_txt",
+    },
+    {
+        "id": "monosans_socks4",
+        "name": "Monosans SOCKS4",
+        "url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks4.txt",
+        "type": "raw_txt",
+    },
+    {
+        "id": "monosans_socks5",
+        "name": "Monosans SOCKS5",
+        "url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt",
+        "type": "raw_txt",
+    },
 ]
 
 
 # ============ SCRAPER FUNCTIONS ============
+
 
 async def scrape_html_table(client: httpx.AsyncClient, url: str) -> set[str]:
     """Scrape proxies from HTML table (free-proxy-list.net style)."""
@@ -227,16 +566,16 @@ async def scrape_html_table(client: httpx.AsyncClient, url: str) -> set[str]:
         if response.status_code != 200:
             return proxies
 
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, "html.parser")
 
         # Find table rows
-        for table in soup.find_all('table'):
-            for row in table.find_all('tr'):
-                cells = row.find_all('td')
+        for table in soup.find_all("table"):
+            for row in table.find_all("tr"):
+                cells = row.find_all("td")
                 if len(cells) >= 2:
                     ip = cells[0].get_text(strip=True)
                     port = cells[1].get_text(strip=True)
-                    if re.match(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip) and port.isdigit():
+                    if re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", ip) and port.isdigit():
                         proxies.add(f"{ip}:{port}")
     except Exception:
         pass
@@ -251,16 +590,18 @@ async def scrape_proxynova(client: httpx.AsyncClient, url: str) -> set[str]:
         if response.status_code != 200:
             return proxies
 
-        soup = BeautifulSoup(response.text, 'html.parser')
-        for row in soup.select('tr'):
-            cells = row.find_all('td')
+        soup = BeautifulSoup(response.text, "html.parser")
+        for row in soup.select("tr"):
+            cells = row.find_all("td")
             if len(cells) >= 2:
                 # ProxyNova obfuscates IP in script tag
                 ip_cell = cells[0]
-                script = ip_cell.find('script')
+                script = ip_cell.find("script")
                 if script:
                     # Extract IP from document.write()
-                    match = re.search(r"'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'", script.string or '')
+                    match = re.search(
+                        r"'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'", script.string or ""
+                    )
                     if match:
                         ip = match.group(1)
                         port = cells[1].get_text(strip=True)
@@ -268,7 +609,7 @@ async def scrape_proxynova(client: httpx.AsyncClient, url: str) -> set[str]:
                             proxies.add(f"{ip}:{port}")
                 else:
                     ip = ip_cell.get_text(strip=True)
-                    if re.match(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip):
+                    if re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", ip):
                         port = cells[1].get_text(strip=True)
                         if port.isdigit():
                             proxies.add(f"{ip}:{port}")
@@ -285,13 +626,13 @@ async def scrape_hidemy(client: httpx.AsyncClient, url: str) -> set[str]:
         if response.status_code != 200:
             return proxies
 
-        soup = BeautifulSoup(response.text, 'html.parser')
-        for row in soup.select('table tbody tr'):
-            cells = row.find_all('td')
+        soup = BeautifulSoup(response.text, "html.parser")
+        for row in soup.select("table tbody tr"):
+            cells = row.find_all("td")
             if len(cells) >= 2:
                 ip = cells[0].get_text(strip=True)
                 port = cells[1].get_text(strip=True)
-                if re.match(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip) and port.isdigit():
+                if re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", ip) and port.isdigit():
                     proxies.add(f"{ip}:{port}")
     except Exception:
         pass
@@ -306,10 +647,10 @@ async def scrape_spys(client: httpx.AsyncClient, url: str) -> set[str]:
         if response.status_code != 200:
             return proxies
 
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, "html.parser")
 
         # Spys.one uses font tags with class for proxy display
-        for row in soup.select('tr.spy1x, tr.spy1xx'):
+        for row in soup.select("tr.spy1x, tr.spy1xx"):
             text = row.get_text()
             # Find IP:port pattern in the row text
             matches = PROXY_PATTERN.findall(text)
@@ -317,7 +658,7 @@ async def scrape_spys(client: httpx.AsyncClient, url: str) -> set[str]:
                 proxies.add(f"{ip}:{port}")
 
         # Also try finding in font tags
-        for font in soup.select('font.spy14'):
+        for font in soup.select("font.spy14"):
             text = font.get_text()
             match = PROXY_PATTERN.search(text)
             if match:
@@ -335,15 +676,15 @@ async def scrape_geonode(client: httpx.AsyncClient, url: str) -> set[str]:
         if response.status_code != 200:
             return proxies
 
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, "html.parser")
 
         # Geonode renders proxies in table or data attributes
-        for row in soup.select('table tbody tr'):
-            cells = row.find_all('td')
+        for row in soup.select("table tbody tr"):
+            cells = row.find_all("td")
             if len(cells) >= 2:
                 ip = cells[0].get_text(strip=True)
                 port = cells[1].get_text(strip=True)
-                if re.match(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip) and port.isdigit():
+                if re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", ip) and port.isdigit():
                     proxies.add(f"{ip}:{port}")
 
         # Also search for ip:port patterns in the page
@@ -360,24 +701,25 @@ async def scrape_proxylistorg(client: httpx.AsyncClient, url: str) -> set[str]:
     proxies = set()
     try:
         import base64
+
         response = await client.get(url)
         if response.status_code != 200:
             return proxies
 
-        soup = BeautifulSoup(response.text, 'html.parser')
+        soup = BeautifulSoup(response.text, "html.parser")
 
         # Proxy-List.org encodes proxies in base64 within list items
-        for li in soup.select('ul.proxy-list li'):
+        for li in soup.select("ul.proxy-list li"):
             # The proxy is in a script or encoded
             text = li.get_text(strip=True)
             # Try to find base64 encoded content
-            for script in li.find_all('script'):
+            for script in li.find_all("script"):
                 if script.string:
                     # Look for Proxy() calls or base64
                     b64_match = re.search(r"Proxy\('([A-Za-z0-9+/=]+)'\)", script.string)
                     if b64_match:
                         try:
-                            decoded = base64.b64decode(b64_match.group(1)).decode('utf-8')
+                            decoded = base64.b64decode(b64_match.group(1)).decode("utf-8")
                             match = PROXY_PATTERN.search(decoded)
                             if match:
                                 proxies.add(f"{match.group(1)}:{match.group(2)}")
@@ -405,6 +747,7 @@ SCRAPER_MAP = {
 
 # ============ UTILITY FUNCTIONS ============
 
+
 def count_lines(file_path: Path) -> int:
     """Count non-empty lines in a file."""
     if not file_path.exists():
@@ -428,6 +771,7 @@ def read_proxies(file_path: Path) -> set[str]:
 
 
 # ============ API ENDPOINTS ============
+
 
 @router.get("/sources")
 async def get_sources() -> dict:
@@ -492,7 +836,7 @@ async def _scrape_with_httpx(url: str) -> set[str]:
     async with httpx.AsyncClient(
         timeout=10.0,
         follow_redirects=True,
-        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
     ) as client:
         response = await client.get(url)
         if response.status_code != 200:
@@ -504,11 +848,14 @@ async def _scrape_with_httpx(url: str) -> set[str]:
 async def _scrape_with_aiohttp(url: str) -> set[str]:
     """Tier 2: aiohttp with different TLS fingerprint (stealth: 3)."""
     import aiohttp
+
     proxies: set[str] = set()
     # Use randomized headers to prevent fingerprinting
     headers = _get_random_scraper_headers()
     async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as response:
+        async with session.get(
+            url, headers=headers, timeout=aiohttp.ClientTimeout(total=10)
+        ) as response:
             if response.status != 200:
                 return proxies
             html = await response.text()
@@ -519,6 +866,7 @@ async def _scrape_with_aiohttp(url: str) -> set[str]:
 def _scrape_with_curl_cffi_sync(url: str) -> set[str]:
     """Tier 3: curl_cffi impersonating Chrome TLS (stealth: 7)."""
     from curl_cffi import requests as curl_requests
+
     proxies: set[str] = set()
     response = curl_requests.get(
         url,
@@ -528,15 +876,15 @@ def _scrape_with_curl_cffi_sync(url: str) -> set[str]:
     )
     if response.status_code != 200:
         return proxies
-    soup = BeautifulSoup(response.text, 'html.parser')
+    soup = BeautifulSoup(response.text, "html.parser")
     # Extract from tables
-    for table in soup.find_all('table'):
-        for row in table.find_all('tr'):
-            cells = row.find_all('td')
+    for table in soup.find_all("table"):
+        for row in table.find_all("tr"):
+            cells = row.find_all("td")
             if len(cells) >= 2:
                 ip = cells[0].get_text(strip=True)
                 port = cells[1].get_text(strip=True)
-                if re.match(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip) and port.isdigit():
+                if re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", ip) and port.isdigit():
                     proxies.add(f"{ip}:{port}")
     # Also search text
     text = soup.get_text()
@@ -548,28 +896,30 @@ def _scrape_with_curl_cffi_sync(url: str) -> set[str]:
 async def _scrape_with_curl_cffi(url: str) -> set[str]:
     """Tier 3: curl_cffi async wrapper (stealth: 7)."""
     import asyncio
+
     return await asyncio.get_event_loop().run_in_executor(None, _scrape_with_curl_cffi_sync, url)
 
 
 def _scrape_with_cloudscraper_sync(url: str) -> set[str]:
     """Tier 4: cloudscraper for Cloudflare bypass (stealth: 6)."""
     import cloudscraper
+
     proxies: set[str] = set()
     scraper = cloudscraper.create_scraper(
-        browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False}
+        browser={"browser": "chrome", "platform": "windows", "mobile": False}
     )
     response = scraper.get(url, timeout=15)
     if response.status_code != 200:
         return proxies
-    soup = BeautifulSoup(response.text, 'html.parser')
+    soup = BeautifulSoup(response.text, "html.parser")
     # Extract from tables
-    for table in soup.find_all('table'):
-        for row in table.find_all('tr'):
-            cells = row.find_all('td')
+    for table in soup.find_all("table"):
+        for row in table.find_all("tr"):
+            cells = row.find_all("td")
             if len(cells) >= 2:
                 ip = cells[0].get_text(strip=True)
                 port = cells[1].get_text(strip=True)
-                if re.match(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip) and port.isdigit():
+                if re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", ip) and port.isdigit():
                     proxies.add(f"{ip}:{port}")
     # Also search text
     text = soup.get_text()
@@ -581,12 +931,14 @@ def _scrape_with_cloudscraper_sync(url: str) -> set[str]:
 async def _scrape_with_cloudscraper(url: str) -> set[str]:
     """Tier 5: cloudscraper async wrapper (stealth: 6)."""
     import asyncio
+
     return await asyncio.get_event_loop().run_in_executor(None, _scrape_with_cloudscraper_sync, url)
 
 
 def _scrape_with_requests_sync(url: str) -> set[str]:
     """Tier 3: requests with different TLS (stealth: 2)."""
     import requests
+
     proxies: set[str] = set()
     headers = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
@@ -595,14 +947,14 @@ def _scrape_with_requests_sync(url: str) -> set[str]:
     response = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
     if response.status_code != 200:
         return proxies
-    soup = BeautifulSoup(response.text, 'html.parser')
-    for table in soup.find_all('table'):
-        for row in table.find_all('tr'):
-            cells = row.find_all('td')
+    soup = BeautifulSoup(response.text, "html.parser")
+    for table in soup.find_all("table"):
+        for row in table.find_all("tr"):
+            cells = row.find_all("td")
             if len(cells) >= 2:
                 ip = cells[0].get_text(strip=True)
                 port = cells[1].get_text(strip=True)
-                if re.match(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip) and port.isdigit():
+                if re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", ip) and port.isdigit():
                     proxies.add(f"{ip}:{port}")
     text = soup.get_text()
     for match in PROXY_PATTERN.finditer(text):
@@ -613,6 +965,7 @@ def _scrape_with_requests_sync(url: str) -> set[str]:
 async def _scrape_with_requests(url: str) -> set[str]:
     """Tier 3: requests async wrapper (stealth: 2)."""
     import asyncio
+
     return await asyncio.get_event_loop().run_in_executor(None, _scrape_with_requests_sync, url)
 
 
@@ -633,6 +986,7 @@ async def _scrape_with_playwright(url: str, browser_context) -> set[str]:
 def _scrape_with_nodriver_sync(url: str) -> set[str]:
     """Tier 8: nodriver pure CDP (stealth: 9)."""
     import nodriver as nd
+
     proxies: set[str] = set()
 
     async def _run():
@@ -644,18 +998,19 @@ def _scrape_with_nodriver_sync(url: str) -> set[str]:
         return content
 
     import asyncio
+
     try:
         loop = asyncio.new_event_loop()
         content = loop.run_until_complete(_run())
         loop.close()
-        soup = BeautifulSoup(content, 'html.parser')
-        for table in soup.find_all('table'):
-            for row in table.find_all('tr'):
-                cells = row.find_all('td')
+        soup = BeautifulSoup(content, "html.parser")
+        for table in soup.find_all("table"):
+            for row in table.find_all("tr"):
+                cells = row.find_all("td")
                 if len(cells) >= 2:
                     ip = cells[0].get_text(strip=True)
                     port = cells[1].get_text(strip=True)
-                    if re.match(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip) and port.isdigit():
+                    if re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", ip) and port.isdigit():
                         proxies.add(f"{ip}:{port}")
         text = soup.get_text()
         for match in PROXY_PATTERN.finditer(text):
@@ -668,32 +1023,35 @@ def _scrape_with_nodriver_sync(url: str) -> set[str]:
 async def _scrape_with_nodriver(url: str) -> set[str]:
     """Tier 8: nodriver async wrapper (stealth: 9)."""
     import asyncio
+
     return await asyncio.get_event_loop().run_in_executor(None, _scrape_with_nodriver_sync, url)
 
 
 def _scrape_with_uc_sync(url: str) -> set[str]:
     """Tier 9: undetected-chromedriver (stealth: 8)."""
     import undetected_chromedriver as uc
+
     proxies: set[str] = set()
     options = uc.ChromeOptions()
-    options.add_argument('--headless=new')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     driver = None
     try:
         driver = uc.Chrome(options=options, use_subprocess=True)
         driver.get(url)
         import time
+
         time.sleep(3)
         content = driver.page_source
-        soup = BeautifulSoup(content, 'html.parser')
-        for table in soup.find_all('table'):
-            for row in table.find_all('tr'):
-                cells = row.find_all('td')
+        soup = BeautifulSoup(content, "html.parser")
+        for table in soup.find_all("table"):
+            for row in table.find_all("tr"):
+                cells = row.find_all("td")
                 if len(cells) >= 2:
                     ip = cells[0].get_text(strip=True)
                     port = cells[1].get_text(strip=True)
-                    if re.match(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip) and port.isdigit():
+                    if re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", ip) and port.isdigit():
                         proxies.add(f"{ip}:{port}")
         text = soup.get_text()
         for match in PROXY_PATTERN.finditer(text):
@@ -702,32 +1060,31 @@ def _scrape_with_uc_sync(url: str) -> set[str]:
         pass
     finally:
         if driver:
-            try:
+            with contextlib.suppress(Exception):
                 driver.quit()
-            except Exception:
-                pass
     return proxies
 
 
 async def _scrape_with_uc(url: str) -> set[str]:
     """Tier 9: undetected-chromedriver async wrapper (stealth: 8)."""
     import asyncio
+
     return await asyncio.get_event_loop().run_in_executor(None, _scrape_with_uc_sync, url)
 
 
 async def _extract_proxies_from_html(html: str) -> set[str]:
     """Extract proxies from HTML content."""
     proxies: set[str] = set()
-    soup = BeautifulSoup(html, 'html.parser')
+    soup = BeautifulSoup(html, "html.parser")
 
     # Extract from tables
-    for table in soup.find_all('table'):
-        for row in table.find_all('tr'):
-            cells = row.find_all('td')
+    for table in soup.find_all("table"):
+        for row in table.find_all("tr"):
+            cells = row.find_all("td")
             if len(cells) >= 2:
                 ip = cells[0].get_text(strip=True)
                 port = cells[1].get_text(strip=True)
-                if re.match(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ip) and port.isdigit():
+                if re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", ip) and port.isdigit():
                     proxies.add(f"{ip}:{port}")
 
     # Also search text for ip:port
@@ -797,34 +1154,26 @@ async def _run_scrape_job(job_id: str) -> None:
             # === TIER 2: aiohttp (different TLS, stealth 3) ===
             if len(proxies) == 0:
                 method_used = "aiohttp"
-                try:
+                with contextlib.suppress(Exception):
                     proxies = await _scrape_with_aiohttp(source["url"])
-                except Exception:
-                    pass
 
             # === TIER 3: requests (sync, Safari UA, stealth 2) ===
             if len(proxies) == 0:
                 method_used = "requests"
-                try:
+                with contextlib.suppress(Exception):
                     proxies = await _scrape_with_requests(source["url"])
-                except Exception:
-                    pass
 
             # === TIER 4: curl_cffi (Chrome TLS impersonation, stealth 7) ===
             if len(proxies) == 0:
                 method_used = "curl_cffi"
-                try:
+                with contextlib.suppress(Exception):
                     proxies = await _scrape_with_curl_cffi(source["url"])
-                except Exception:
-                    pass
 
             # === TIER 5: cloudscraper (Cloudflare bypass, stealth 6) ===
             if len(proxies) == 0:
                 method_used = "cloudscraper"
-                try:
+                with contextlib.suppress(Exception):
                     proxies = await _scrape_with_cloudscraper(source["url"])
-                except Exception:
-                    pass
 
             # === TIER 6: Playwright standard (browser, stealth 5) ===
             if len(proxies) == 0:
@@ -832,6 +1181,7 @@ async def _run_scrape_job(job_id: str) -> None:
                 if playwright_browser is None:
                     try:
                         from playwright.async_api import async_playwright
+
                         playwright_pw = await async_playwright().start()
                         playwright_browser = await playwright_pw.chromium.launch(headless=True)
                         playwright_ctx = await playwright_browser.new_context()
@@ -839,10 +1189,8 @@ async def _run_scrape_job(job_id: str) -> None:
                         playwright_ctx = None
 
                 if playwright_ctx:
-                    try:
+                    with contextlib.suppress(Exception):
                         proxies = await _scrape_with_playwright(source["url"], playwright_ctx)
-                    except Exception:
-                        pass
 
             # === TIER 7: Patchright (undetected Chromium, stealth 9) ===
             if len(proxies) == 0:
@@ -850,10 +1198,11 @@ async def _run_scrape_job(job_id: str) -> None:
                 if patchright_browser is None:
                     try:
                         from patchright.async_api import async_playwright
+
                         patchright_pw = await async_playwright().start()
                         patchright_browser = await patchright_pw.chromium.launch(
                             headless=True,
-                            args=["--disable-blink-features=AutomationControlled", "--no-sandbox"]
+                            args=["--disable-blink-features=AutomationControlled", "--no-sandbox"],
                         )
                         patchright_ctx = await patchright_browser.new_context(
                             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
@@ -863,26 +1212,20 @@ async def _run_scrape_job(job_id: str) -> None:
                         patchright_ctx = None
 
                 if patchright_ctx:
-                    try:
+                    with contextlib.suppress(Exception):
                         proxies = await _scrape_with_patchright(source["url"], patchright_ctx)
-                    except Exception:
-                        pass
 
             # === TIER 8: nodriver (pure CDP, stealth 9) ===
             if len(proxies) == 0:
                 method_used = "nodriver"
-                try:
+                with contextlib.suppress(Exception):
                     proxies = await _scrape_with_nodriver(source["url"])
-                except Exception:
-                    pass
 
             # === TIER 9: undetected-chromedriver (selenium, stealth 8) ===
             if len(proxies) == 0:
                 method_used = "uc"
-                try:
+                with contextlib.suppress(Exception):
                     proxies = await _scrape_with_uc(source["url"])
-                except Exception:
-                    pass
 
             # === TIER 10: Camoufox (Firefox C++ spoofing, stealth 10) ===
             if len(proxies) == 0:
@@ -890,6 +1233,7 @@ async def _run_scrape_job(job_id: str) -> None:
                 if camoufox_instance is None:
                     try:
                         from camoufox.async_api import AsyncCamoufox
+
                         camoufox_instance = AsyncCamoufox(headless=True, humanize=True)
                         camoufox_browser = await camoufox_instance.__aenter__()
                         camoufox_ctx = await camoufox_browser.new_context()
@@ -897,32 +1241,34 @@ async def _run_scrape_job(job_id: str) -> None:
                         camoufox_ctx = None
 
                 if camoufox_ctx is not None:
-                    try:
+                    with contextlib.suppress(Exception):
                         proxies = await _scrape_with_camoufox(source["url"], camoufox_ctx)
-                    except Exception:
-                        pass
 
             # Filter out garbage/private IPs
             proxies = filter_valid_proxies(proxies)
             new_proxies = proxies - existing - all_proxies
             all_proxies.update(proxies)
 
-            job["results"].append({
-                "name": source["name"],
-                "found": len(proxies),
-                "new": len(new_proxies),
-                "method": method_used,
-                "success": True,
-            })
+            job["results"].append(
+                {
+                    "name": source["name"],
+                    "found": len(proxies),
+                    "new": len(new_proxies),
+                    "method": method_used,
+                    "success": True,
+                }
+            )
         except Exception as e:
-            job["results"].append({
-                "name": source["name"],
-                "found": 0,
-                "new": 0,
-                "method": method_used,
-                "success": False,
-                "error": str(e)[:100],
-            })
+            job["results"].append(
+                {
+                    "name": source["name"],
+                    "found": 0,
+                    "new": 0,
+                    "method": method_used,
+                    "success": False,
+                    "error": str(e)[:100],
+                }
+            )
 
         job["sources_done"] = i + 1
         job["proxies_found"] = len(all_proxies)
@@ -961,7 +1307,7 @@ async def _run_scrape_job(job_id: str) -> None:
         # Test in batches of 50
         batch_size = 50
         for i in range(0, len(proxies_list), batch_size):
-            batch = proxies_list[i:i + batch_size]
+            batch = proxies_list[i : i + batch_size]
             results = await asyncio.gather(*[_test_single_proxy(p) for p in batch])
 
             for proxy, is_alive in zip(batch, results):
@@ -1052,7 +1398,7 @@ async def _run_test_job(job_id: str) -> None:
             job["status"] = "cancelled"
             return
 
-        batch = all_proxies[i:i + batch_size]
+        batch = all_proxies[i : i + batch_size]
         results = await asyncio.gather(*[_test_single_proxy(p) for p in batch])
 
         for proxy, is_alive in zip(batch, results):
@@ -1070,7 +1416,9 @@ async def _run_test_job(job_id: str) -> None:
         if elapsed > 0:
             job["speed_per_sec"] = round(tested / elapsed, 1)
             remaining = len(all_proxies) - tested
-            job["eta_seconds"] = int(remaining / job["speed_per_sec"]) if job["speed_per_sec"] > 0 else 0
+            job["eta_seconds"] = (
+                int(remaining / job["speed_per_sec"]) if job["speed_per_sec"] > 0 else 0
+            )
 
     # Save alive proxies
     with open(proxy_dir / "alive_proxies.txt", "w") as f:
@@ -1154,6 +1502,7 @@ def _get_credential_store():
     global _credential_store
     if _credential_store is None:
         from ghoststorm.core.config.credentials import CredentialStore
+
         _credential_store = CredentialStore(DATA_DIR / "config")
     return _credential_store
 
@@ -1162,6 +1511,7 @@ def _create_provider(provider_name: str, config: dict[str, Any]):
     """Create a provider instance from config."""
     if provider_name == "decodo":
         from ghoststorm.plugins.proxies.decodo_provider import DecodoProvider
+
         return DecodoProvider(
             username=config["username"],
             password=config["password"],
@@ -1171,6 +1521,7 @@ def _create_provider(provider_name: str, config: dict[str, Any]):
         )
     elif provider_name == "brightdata":
         from ghoststorm.plugins.proxies.brightdata_provider import BrightDataProvider
+
         return BrightDataProvider(
             customer_id=config["customer_id"],
             zone=config.get("zone", "residential"),
@@ -1185,6 +1536,7 @@ def _create_provider(provider_name: str, config: dict[str, Any]):
 
 class ProviderConfig(BaseModel):
     """Configuration for a premium proxy provider."""
+
     provider: Literal["decodo", "brightdata", "oxylabs", "iproyal", "webshare"]
     # Common fields
     username: str | None = None
@@ -1209,12 +1561,14 @@ async def list_providers() -> dict:
 
     for name in ["decodo", "brightdata", "oxylabs", "iproyal", "webshare"]:
         config = store.get(name)
-        providers.append({
-            "name": name,
-            "configured": config is not None,
-            "country": config.get("country") if config else None,
-            "session_type": config.get("session_type", "rotating") if config else None,
-        })
+        providers.append(
+            {
+                "name": name,
+                "configured": config is not None,
+                "country": config.get("country") if config else None,
+                "session_type": config.get("session_type", "rotating") if config else None,
+            }
+        )
 
     return {"providers": providers}
 
@@ -1230,9 +1584,9 @@ async def get_provider(provider_name: str) -> dict:
 
     # Don't expose full password
     safe_config = dict(config)
-    if "password" in safe_config and safe_config["password"]:
+    if safe_config.get("password"):
         safe_config["password"] = "********"
-    if "api_key" in safe_config and safe_config["api_key"]:
+    if safe_config.get("api_key"):
         safe_config["api_key"] = "********"
 
     return {"configured": True, "provider": provider_name, "config": safe_config}
@@ -1302,6 +1656,7 @@ async def test_provider(provider_name: str) -> dict:
 
 class TorTestRequest(BaseModel):
     """Tor connection test request."""
+
     port: int = 9050
     host: str = "127.0.0.1"
 
@@ -1335,7 +1690,10 @@ async def test_tor_connection(request: TorTestRequest | None = None) -> dict:
 
                 connector = aiohttp_socks.ProxyConnector.from_url(f"socks5://{host}:{port}")
                 async with aiohttp.ClientSession(connector=connector) as session:
-                    async with session.get("https://check.torproject.org/api/ip", timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                    async with session.get(
+                        "https://check.torproject.org/api/ip",
+                        timeout=aiohttp.ClientTimeout(total=10),
+                    ) as resp:
                         if resp.status == 200:
                             data = await resp.json()
                             return {
@@ -1357,10 +1715,16 @@ async def test_tor_connection(request: TorTestRequest | None = None) -> dict:
 
         return {"connected": False, "error": "Invalid SOCKS5 response"}
 
-    except asyncio.TimeoutError:
-        return {"connected": False, "error": f"Connection timeout - is Tor running on {host}:{port}?"}
+    except TimeoutError:
+        return {
+            "connected": False,
+            "error": f"Connection timeout - is Tor running on {host}:{port}?",
+        }
     except ConnectionRefusedError:
-        return {"connected": False, "error": f"Connection refused - Tor daemon not running on {host}:{port}"}
+        return {
+            "connected": False,
+            "error": f"Connection refused - Tor daemon not running on {host}:{port}",
+        }
     except Exception as e:
         return {"connected": False, "error": str(e)}
 
@@ -1376,8 +1740,7 @@ async def remove_provider(provider_name: str) -> dict:
     store.remove(provider_name)
 
     # Remove from active instances
-    if provider_name in _configured_providers:
-        del _configured_providers[provider_name]
+    _configured_providers.pop(provider_name, None)
 
     return {"success": True, "provider": provider_name, "message": "Provider removed"}
 

@@ -138,8 +138,7 @@ class MobileInAppGenerator(IFingerprintGenerator):
             if filepath.exists():
                 with filepath.open() as f:
                     agents = [
-                        line.strip() for line in f
-                        if line.strip() and not line.startswith("#")
+                        line.strip() for line in f if line.strip() and not line.startswith("#")
                     ]
                     setattr(self, target, agents)
                     logger.debug(
@@ -366,7 +365,9 @@ window.yt.player = window.yt.player || {{}};
             js_interface = self._build_tiktok_js_interface(device_id, install_id)
 
         elif platform == "instagram":
-            app_version = self.INSTAGRAM_IOS_VERSION if os == "ios" else self.INSTAGRAM_ANDROID_VERSION
+            app_version = (
+                self.INSTAGRAM_IOS_VERSION if os == "ios" else self.INSTAGRAM_ANDROID_VERSION
+            )
             mid = self._generate_mid()
 
             if os == "ios":

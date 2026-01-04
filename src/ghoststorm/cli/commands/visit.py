@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from rich.console import Console
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
@@ -11,6 +11,9 @@ from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn, TimeEl
 from ghoststorm.core.engine.orchestrator import Orchestrator
 from ghoststorm.core.models.config import Config, ProxyProviderConfig
 from ghoststorm.core.models.task import Task, TaskConfig, TaskType
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 console = Console()
 

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -354,9 +356,7 @@ class TestFlowsAPI:
         checkpoint_id = cp_response.json()["id"]
 
         # Delete checkpoint
-        response = api_test_client.delete(
-            f"/api/flows/{flow_id}/checkpoints/{checkpoint_id}"
-        )
+        response = api_test_client.delete(f"/api/flows/{flow_id}/checkpoints/{checkpoint_id}")
 
         assert response.status_code == 200
 
@@ -369,9 +369,7 @@ class TestFlowsAPI:
         create_response = api_test_client.post("/api/flows", json=sample_flow_data)
         flow_id = create_response.json()["id"]
 
-        response = api_test_client.delete(
-            f"/api/flows/{flow_id}/checkpoints/nonexistent-cp-id"
-        )
+        response = api_test_client.delete(f"/api/flows/{flow_id}/checkpoints/nonexistent-cp-id")
 
         assert response.status_code == 404
 
@@ -590,9 +588,7 @@ class TestFlowsAPI:
 
     def test_cancel_execution_not_found(self, api_test_client: TestClient):
         """Test cancelling non-existent execution."""
-        response = api_test_client.post(
-            "/api/flows/executions/nonexistent-exec-id/cancel"
-        )
+        response = api_test_client.post("/api/flows/executions/nonexistent-exec-id/cancel")
 
         assert response.status_code == 404
 

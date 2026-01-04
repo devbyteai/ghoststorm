@@ -32,34 +32,34 @@ from ghoststorm.plugins.behavior.url_filter import URLFilter, URLFilterConfig
 from ghoststorm.plugins.behavior.utm_injector import UTMConfig, UTMInjector
 
 __all__ = [
-    # Core behavior
-    "MouseBehavior",
-    "KeyboardBehavior",
-    "ScrollBehavior",
-    "TimingBehavior",
-    # ML Mouse
-    "MLMouseGenerator",
-    "MLMouseConfig",
-    "MLMousePlugin",
-    "MovementStyle",
-    "Trajectory",
-    "Point",
-    "get_ml_mouse_generator",
+    "AttentionState",
+    "BrowseSessionResult",
+    "CircadianProfile",
+    "CoherenceConfig",
     # Coherence Engine
     "CoherenceEngine",
-    "CoherenceConfig",
-    "SessionState",
-    "UserPersona",
-    "AttentionState",
-    "SessionPhase",
-    "CircadianProfile",
-    "get_coherence_engine",
+    "KeyboardBehavior",
+    "MLMouseConfig",
+    # ML Mouse
+    "MLMouseGenerator",
+    "MLMousePlugin",
+    # Core behavior
+    "MouseBehavior",
+    "MovementStyle",
     # Traffic behavior
     "OrganicBrowsingBehavior",
     "OrganicBrowsingConfig",
-    "BrowseSessionResult",
-    "UTMInjector",
-    "UTMConfig",
+    "Point",
+    "ScrollBehavior",
+    "SessionPhase",
+    "SessionState",
+    "TimingBehavior",
+    "Trajectory",
     "URLFilter",
     "URLFilterConfig",
+    "UTMConfig",
+    "UTMInjector",
+    "UserPersona",
+    "get_coherence_engine",
+    "get_ml_mouse_generator",
 ]

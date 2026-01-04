@@ -25,14 +25,16 @@ logger = structlog.get_logger(__name__)
 
 class ProxyType(str, Enum):
     """Proxy quality tiers."""
+
     AUTHENTICATED = "authenticated"  # ip:port:user:pass - highest quality
-    SOCKS4 = "socks4"               # SOCKS4 with country codes
-    BASIC = "basic"                  # ip:port only
+    SOCKS4 = "socks4"  # SOCKS4 with country codes
+    BASIC = "basic"  # ip:port only
 
 
 @dataclass
 class Proxy:
     """Proxy configuration."""
+
     host: str
     port: int
     username: str | None = None
@@ -62,6 +64,7 @@ class Proxy:
 @dataclass
 class DeviceFingerprint:
     """Device fingerprint from devices.json."""
+
     id: str
     device_type: str  # WINDOWS, ANDROID, IOS, etc.
     user_agent: str
@@ -82,6 +85,7 @@ class DeviceFingerprint:
 @dataclass
 class BehaviorPattern:
     """TikTok behavior pattern configuration."""
+
     watch_min_seconds: float
     watch_max_seconds: float
     skip_probability: float
@@ -105,7 +109,9 @@ class ResourceLoader:
     """
 
     # Base paths - relative to project root
-    PROJECT_ROOT = Path(__file__).parent.parent.parent.parent.parent  # src/ghoststorm/core/resources -> project root
+    PROJECT_ROOT = Path(
+        __file__
+    ).parent.parent.parent.parent.parent  # src/ghoststorm/core/resources -> project root
     DATA_ROOT = PROJECT_ROOT / "data"
 
     def __init__(self, lazy_load: bool = True) -> None:
@@ -209,7 +215,9 @@ class ResourceLoader:
                         )
                         self._proxies[ProxyType.AUTHENTICATED].append(proxy)
 
-            logger.debug(f"[RESOURCES] Loaded {len(self._proxies[ProxyType.AUTHENTICATED])} authenticated proxies")
+            logger.debug(
+                f"[RESOURCES] Loaded {len(self._proxies[ProxyType.AUTHENTICATED])} authenticated proxies"
+            )
         except Exception as e:
             logger.error(f"[RESOURCES] Failed to load authenticated proxies: {e}")
 
@@ -234,7 +242,9 @@ class ResourceLoader:
                             )
                             self._proxies[ProxyType.SOCKS4].append(proxy)
 
-            logger.debug(f"[RESOURCES] Loaded {len(self._proxies[ProxyType.SOCKS4])} SOCKS4 proxies")
+            logger.debug(
+                f"[RESOURCES] Loaded {len(self._proxies[ProxyType.SOCKS4])} SOCKS4 proxies"
+            )
         except Exception as e:
             logger.error(f"[RESOURCES] Failed to load SOCKS4 proxies: {e}")
 
@@ -266,7 +276,9 @@ class ResourceLoader:
                             except ValueError:
                                 continue
 
-            logger.debug(f"[RESOURCES] Loaded {len(self._proxies[ProxyType.BASIC])} basic proxies (limited)")
+            logger.debug(
+                f"[RESOURCES] Loaded {len(self._proxies[ProxyType.BASIC])} basic proxies (limited)"
+            )
         except Exception as e:
             logger.error(f"[RESOURCES] Failed to load basic proxies: {e}")
 
@@ -607,7 +619,9 @@ class ResourceLoader:
             watch_max_seconds=15.0,
             skip_probability=pattern.get("skip_probability", 0.3),
             scroll_probability=0.5,
-            pause_probability=pattern.get("pause_probability", 0.1) if "pause" in str(pattern) else 0.1,
+            pause_probability=pattern.get("pause_probability", 0.1)
+            if "pause" in str(pattern)
+            else 0.1,
             interest_level=interest_level,
         )
 

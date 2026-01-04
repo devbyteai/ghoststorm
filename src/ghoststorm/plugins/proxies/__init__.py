@@ -28,17 +28,17 @@ def register(manager: PluginManager) -> None:
 
 
 __all__ = [
-    # File-based
-    "FileProxyProvider",
-    "RotatingProxyProvider",
     # Dynamic auth
     "DynamicProxyAuth",
+    # File-based
+    "FileProxyProvider",
     "ProxyCredentials",
+    "RotatingProxyProvider",
+    "TorBrowserLauncher",
+    "TorCircuitStrategy",
+    "TorConfig",
     # Tor
     "TorProxyProvider",
-    "TorBrowserLauncher",
-    "TorConfig",
-    "TorCircuitStrategy",
     # Registration
     "register",
 ]

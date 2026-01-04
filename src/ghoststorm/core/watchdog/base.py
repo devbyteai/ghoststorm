@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import time
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
-from ghoststorm.core.events.bus import Event
 from ghoststorm.core.events.types import EventType
 from ghoststorm.core.watchdog.models import (
     FailureInfo,
@@ -23,7 +23,9 @@ from ghoststorm.core.watchdog.models import (
 )
 
 if TYPE_CHECKING:
-    from ghoststorm.core.events.bus import AsyncEventBus
+    from collections.abc import Callable
+
+    from ghoststorm.core.events.bus import AsyncEventBus, Event
 
 logger = structlog.get_logger(__name__)
 
@@ -122,10 +124,8 @@ class BaseWatchdog(ABC):
         # Stop health check loop
         if self._health_check_task:
             self._health_check_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._health_check_task
-            except asyncio.CancelledError:
-                pass
             self._health_check_task = None
 
         # Unsubscribe from events

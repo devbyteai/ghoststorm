@@ -36,18 +36,21 @@ class ZefoyOCRSolver:
         """Check available OCR dependencies."""
         try:
             import pytesseract
+
             self._tesseract_available = True
         except ImportError:
             logger.warning("pytesseract not installed. Install with: pip install pytesseract")
 
         try:
             import easyocr
+
             self._easyocr_available = True
         except ImportError:
             logger.debug("easyocr not installed. Install with: pip install easyocr")
 
         try:
             from PIL import Image
+
             self._pil_available = True
         except ImportError:
             logger.warning("Pillow not installed. Install with: pip install Pillow")
@@ -117,8 +120,8 @@ class ZefoyOCRSolver:
     def _try_tesseract(self, image_bytes: bytes, preprocess: str = "default") -> str | None:
         """Try Tesseract with specific preprocessing."""
         try:
-            from PIL import Image
             import pytesseract
+            from PIL import Image
 
             img = Image.open(io.BytesIO(image_bytes))
 
@@ -131,16 +134,18 @@ class ZefoyOCRSolver:
 
             # Try multiple Tesseract configs
             configs = [
-                r'--oem 3 --psm 7 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
-                r'--oem 3 --psm 8 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
-                r'--oem 3 --psm 6',
+                r"--oem 3 --psm 7 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+                r"--oem 3 --psm 8 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+                r"--oem 3 --psm 6",
             ]
 
             for config in configs:
                 text = pytesseract.image_to_string(img, config=config)
                 solution = self._clean_solution(text)
                 if solution:
-                    logger.debug(f"[ZEFOY_OCR] Tesseract result: raw='{text.strip()}' clean='{solution}'")
+                    logger.debug(
+                        f"[ZEFOY_OCR] Tesseract result: raw='{text.strip()}' clean='{solution}'"
+                    )
                     return solution
 
         except Exception as e:
@@ -152,13 +157,13 @@ class ZefoyOCRSolver:
         """Try EasyOCR as fallback."""
         try:
             import easyocr
-            from PIL import Image
             import numpy as np
+            from PIL import Image
 
             # Initialize reader (cached)
             if self._easyocr_reader is None:
                 logger.info("[ZEFOY_OCR] Initializing EasyOCR (first time, may take a moment)...")
-                self._easyocr_reader = easyocr.Reader(['en'], gpu=False)
+                self._easyocr_reader = easyocr.Reader(["en"], gpu=False)
 
             # Convert to numpy array
             img = Image.open(io.BytesIO(image_bytes))
@@ -169,7 +174,7 @@ class ZefoyOCRSolver:
 
             # Extract text
             texts = [r[1] for r in results]
-            combined = ''.join(texts)
+            combined = "".join(texts)
             solution = self._clean_solution(combined)
 
             if solution:
@@ -243,9 +248,7 @@ class ZefoyOCRSolver:
                             "content": [
                                 {
                                     "type": "image_url",
-                                    "image_url": {
-                                        "url": f"data:image/png;base64,{image_b64}"
-                                    },
+                                    "image_url": {"url": f"data:image/png;base64,{image_b64}"},
                                 },
                                 {
                                     "type": "text",
@@ -310,7 +313,7 @@ class ZefoyOCRSolver:
 
     def _preprocess_high_contrast(self, img: Any) -> Any:
         """Preprocess with very high contrast."""
-        from PIL import ImageEnhance, ImageFilter, ImageOps
+        from PIL import ImageEnhance, ImageFilter
 
         img = img.convert("L")
         # Very high contrast
@@ -326,8 +329,8 @@ class ZefoyOCRSolver:
     def _clean_solution(self, text: str) -> str | None:
         """Clean up OCR result."""
         text = text.strip()
-        text = re.sub(r'\s+', '', text)
-        text = re.sub(r'[^a-zA-Z0-9]', '', text)
+        text = re.sub(r"\s+", "", text)
+        text = re.sub(r"[^a-zA-Z0-9]", "", text)
 
         # Zefoy captchas are typically 4-6 characters
         if text and 4 <= len(text) <= 8:

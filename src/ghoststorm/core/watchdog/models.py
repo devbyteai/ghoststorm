@@ -152,9 +152,7 @@ class WatchdogState:
     enabled: bool = True
     running: bool = False
     health: HealthStatus = field(
-        default_factory=lambda: HealthStatus(
-            level=HealthLevel.UNKNOWN, message="Not yet checked"
-        )
+        default_factory=lambda: HealthStatus(level=HealthLevel.UNKNOWN, message="Not yet checked")
     )
     last_check: datetime | None = None
     total_events: int = 0

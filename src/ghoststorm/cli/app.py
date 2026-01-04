@@ -111,9 +111,9 @@ def scrape(
         typer.Argument(help="File containing URLs to scrape"),
     ],
     extract: Annotated[
-        list[str],
+        list[str] | None,
         typer.Option("--extract", "-x", help="Extraction rules (name=selector)"),
-    ] = [],
+    ] = None,
     output: Annotated[
         Path,
         typer.Option("--output", "-o", help="Output file"),
@@ -132,6 +132,8 @@ def scrape(
     ] = None,
 ) -> None:
     """Scrape data from URLs using extraction rules."""
+    if extract is None:
+        extract = []
     console.print("[bold]Scraping URLs...[/bold]")
     console.print(f"URLs: {urls_file}")
     console.print(f"Extractions: {extract}")
@@ -223,9 +225,8 @@ def profile(
     elif action == "generate":
         console.print(f"[bold]Generating {count} profiles...[/bold]")
         # TODO: Generate profiles
-    elif action == "import":
-        if file:
-            console.print(f"[bold]Importing profiles from {file}...[/bold]")
+    elif action == "import" and file:
+        console.print(f"[bold]Importing profiles from {file}...[/bold]")
         # TODO: Import profiles
 
 
@@ -338,11 +339,13 @@ def serve(
     console.print("[bold green]Starting GhostStorm Web UI[/bold green]")
     console.print(f"  Host: {host}")
     console.print(f"  Port: {port}")
-    console.print(f"  URL: [link=http://{host if host != '0.0.0.0' else 'localhost'}:{port}]http://localhost:{port}[/link]")
+    console.print(
+        f"  URL: [link=http://{host if host != '0.0.0.0' else 'localhost'}:{port}]http://localhost:{port}[/link]"
+    )
     console.print()
 
     # Create app
-    app_instance = create_app()
+    create_app()
 
     # Run with uvicorn
     uvicorn.run(

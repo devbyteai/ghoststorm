@@ -422,9 +422,7 @@ class CoherenceEngine:
 
         # Maybe update attention state
         if random.random() < self.config.attention_change_probability:
-            state.attention_state = self._transition_attention_state(
-                state.attention_state
-            )
+            state.attention_state = self._transition_attention_state(state.attention_state)
 
         # Update session phase
         state.session_phase = self._determine_session_phase(state)
@@ -492,10 +490,7 @@ class CoherenceEngine:
             return SessionPhase.START
 
         # End phase: approaching timeout or max duration
-        if (
-            session_duration > self.config.max_session_duration * 0.9
-            or state.fatigue_level > 0.8
-        ):
+        if session_duration > self.config.max_session_duration * 0.9 or state.fatigue_level > 0.8:
             return SessionPhase.END
 
         # Winding down: high fatigue or long session

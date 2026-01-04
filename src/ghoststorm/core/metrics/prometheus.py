@@ -13,6 +13,7 @@ Exposes metrics via HTTP endpoint for Prometheus scraping.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from dataclasses import dataclass
 
 import structlog
@@ -31,6 +32,7 @@ try:
         generate_latest,
         start_http_server,
     )
+
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False
@@ -253,10 +255,8 @@ class MetricsCollector:
 
         if self._collection_task:
             self._collection_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._collection_task
-            except asyncio.CancelledError:
-                pass
 
         logger.info("Metrics collection stopped")
 
@@ -269,6 +269,7 @@ class MetricsCollector:
                 # Collect memory usage
                 try:
                     import psutil
+
                     process = psutil.Process(os.getpid())
                     self.memory_usage_bytes.set(process.memory_info().rss)
                     self.cpu_usage_percent.set(process.cpu_percent())
@@ -329,9 +330,7 @@ class MetricsCollector:
         self.proxy_requests_total.labels(proxy_id=proxy_id, status=status).inc()
 
         if response_time > 0:
-            self.proxy_response_time_seconds.labels(proxy_id=proxy_id).observe(
-                response_time
-            )
+            self.proxy_response_time_seconds.labels(proxy_id=proxy_id).observe(response_time)
 
     def set_proxy_health(self, proxy_id: str, score: float) -> None:
         """Update proxy health score."""

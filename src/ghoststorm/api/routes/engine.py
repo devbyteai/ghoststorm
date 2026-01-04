@@ -391,7 +391,6 @@ async def analyze_page(request: EngineTestRequest) -> dict:
 @router.post("/start")
 async def start_engine_job(request: EngineStartRequest) -> dict:
     """Start a new engine job."""
-    from ghoststorm.plugins.automation.engine import AutomationEngine, EngineConfig
 
     if not request.url:
         return {"error": "URL is required"}

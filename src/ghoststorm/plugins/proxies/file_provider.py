@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import asyncio
 import random
-from collections.abc import AsyncIterator
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import aiohttp
 import structlog
 
 from ghoststorm.core.models.proxy import Proxy, ProxyHealth, RotationStrategy
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 logger = structlog.get_logger(__name__)
 
@@ -101,14 +104,12 @@ class FileProxyProvider:
                 candidates = [p for p in candidates if p.country == country]
 
             if proxy_type:
-                candidates = [
-                    p for p in candidates
-                    if p.category.value == proxy_type
-                ]
+                candidates = [p for p in candidates if p.category.value == proxy_type]
 
             # Filter by health
             healthy_candidates = [
-                p for p in candidates
+                p
+                for p in candidates
                 if self._health.get(p.id, ProxyHealth(proxy=p, is_healthy=True)).is_healthy
             ]
 
@@ -142,7 +143,10 @@ class FileProxyProvider:
                 # Sort by latency
                 sorted_proxies = sorted(
                     healthy_candidates,
-                    key=lambda p: self._health.get(p.id, ProxyHealth(proxy=p, is_healthy=True)).latency_ms or float("inf"),
+                    key=lambda p: self._health.get(
+                        p.id, ProxyHealth(proxy=p, is_healthy=True)
+                    ).latency_ms
+                    or float("inf"),
                 )
                 return sorted_proxies[0]
 
@@ -192,11 +196,15 @@ class FileProxyProvider:
                         ) as response:
                             if response.status == 200:
                                 latency = (datetime.now() - start).total_seconds() * 1000
-                                health = self._health.get(proxy.id, ProxyHealth(proxy=proxy, is_healthy=True))
+                                health = self._health.get(
+                                    proxy.id, ProxyHealth(proxy=proxy, is_healthy=True)
+                                )
                                 health.mark_success(latency)
                                 return health
                             else:
-                                health = self._health.get(proxy.id, ProxyHealth(proxy=proxy, is_healthy=True))
+                                health = self._health.get(
+                                    proxy.id, ProxyHealth(proxy=proxy, is_healthy=True)
+                                )
                                 health.mark_failure(f"Status {response.status}")
                                 return health
                 except Exception as e:

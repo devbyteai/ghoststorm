@@ -6,7 +6,7 @@ ghoststorm.plugins.automation.base
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -18,7 +18,6 @@ from ghoststorm.plugins.automation.base import (
     VideoWatchOutcome,
     WatchResult,
 )
-
 
 # ============================================================================
 # SocialPlatform ENUM TESTS
@@ -442,8 +441,8 @@ class TestSessionResult:
 
     def test_success_tiktok_session(self):
         """SessionResult should represent successful TikTok session."""
-        start = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
-        end = datetime(2024, 1, 1, 12, 5, 0, tzinfo=timezone.utc)
+        start = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+        end = datetime(2024, 1, 1, 12, 5, 0, tzinfo=UTC)
 
         result = SessionResult(
             success=True,
@@ -462,8 +461,8 @@ class TestSessionResult:
 
     def test_success_instagram_session(self):
         """SessionResult should represent successful Instagram session."""
-        start = datetime.now(timezone.utc)
-        end = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
+        end = datetime.now(UTC)
 
         result = SessionResult(
             success=True,
@@ -481,8 +480,8 @@ class TestSessionResult:
 
     def test_success_youtube_session(self):
         """SessionResult should represent successful YouTube session."""
-        start = datetime.now(timezone.utc)
-        end = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
+        end = datetime.now(UTC)
 
         result = SessionResult(
             success=True,
@@ -497,8 +496,8 @@ class TestSessionResult:
 
     def test_failure_with_errors(self):
         """SessionResult should track multiple errors."""
-        start = datetime.now(timezone.utc)
-        end = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
+        end = datetime.now(UTC)
 
         result = SessionResult(
             success=False,
@@ -515,8 +514,8 @@ class TestSessionResult:
 
     def test_default_values(self):
         """SessionResult should have correct default values."""
-        start = datetime.now(timezone.utc)
-        end = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
+        end = datetime.now(UTC)
 
         result = SessionResult(
             success=True,
@@ -534,8 +533,8 @@ class TestSessionResult:
 
     def test_with_watch_results(self):
         """SessionResult should store WatchResult list."""
-        start = datetime.now(timezone.utc)
-        end = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
+        end = datetime.now(UTC)
 
         watch1 = WatchResult(
             success=True,
@@ -567,8 +566,8 @@ class TestSessionResult:
 
     def test_session_duration_calculation(self):
         """Session duration should be calculable from timestamps."""
-        start = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
-        end = datetime(2024, 1, 1, 12, 10, 30, tzinfo=timezone.utc)
+        start = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+        end = datetime(2024, 1, 1, 12, 10, 30, tzinfo=UTC)
 
         result = SessionResult(
             success=True,
@@ -582,8 +581,8 @@ class TestSessionResult:
 
     def test_partial_success_with_errors(self):
         """SessionResult can succeed even with some errors."""
-        start = datetime.now(timezone.utc)
-        end = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
+        end = datetime.now(UTC)
 
         result = SessionResult(
             success=True,
@@ -600,8 +599,8 @@ class TestSessionResult:
 
     def test_empty_session(self):
         """SessionResult should handle zero-activity sessions."""
-        start = datetime.now(timezone.utc)
-        end = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
+        end = datetime.now(UTC)
 
         result = SessionResult(
             success=False,
@@ -661,8 +660,8 @@ class TestDataclassProperties:
 
     def test_session_result_mutable_lists(self):
         """SessionResult lists should be mutable after creation."""
-        start = datetime.now(timezone.utc)
-        end = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
+        end = datetime.now(UTC)
 
         result = SessionResult(
             success=True,
@@ -688,8 +687,8 @@ class TestDataclassProperties:
 
     def test_session_result_default_factory_isolation(self):
         """Each SessionResult should have independent default lists."""
-        start = datetime.now(timezone.utc)
-        end = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
+        end = datetime.now(UTC)
 
         result1 = SessionResult(
             success=True,

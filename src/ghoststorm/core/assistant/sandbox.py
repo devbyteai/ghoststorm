@@ -17,15 +17,19 @@ import shlex
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import AsyncIterator
+from typing import TYPE_CHECKING
 
 import structlog
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 logger = structlog.get_logger(__name__)
 
 
 class CommandStatus(Enum):
     """Command execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -37,6 +41,7 @@ class CommandStatus(Enum):
 @dataclass
 class CommandResult:
     """Result of command execution."""
+
     command: str
     status: CommandStatus
     stdout: str
@@ -49,28 +54,84 @@ class CommandResult:
 # Commands that are always allowed (read-only or safe)
 WHITELISTED_COMMANDS = {
     # File system (read-only)
-    "ls", "cat", "head", "tail", "less", "more", "file", "stat",
-    "find", "locate", "which", "whereis", "wc", "du", "df",
+    "ls",
+    "cat",
+    "head",
+    "tail",
+    "less",
+    "more",
+    "file",
+    "stat",
+    "find",
+    "locate",
+    "which",
+    "whereis",
+    "wc",
+    "du",
+    "df",
     # Text processing
-    "grep", "awk", "sed", "cut", "sort", "uniq", "diff", "tr",
+    "grep",
+    "awk",
+    "sed",
+    "cut",
+    "sort",
+    "uniq",
+    "diff",
+    "tr",
     # Development tools
-    "python", "python3", "pip", "pip3", "poetry", "uv",
-    "node", "npm", "npx", "yarn", "pnpm",
-    "git", "gh",
+    "python",
+    "python3",
+    "pip",
+    "pip3",
+    "poetry",
+    "uv",
+    "node",
+    "npm",
+    "npx",
+    "yarn",
+    "pnpm",
+    "git",
+    "gh",
     # Build/test
-    "pytest", "mypy", "ruff", "black", "isort", "flake8",
-    "eslint", "prettier", "tsc",
+    "pytest",
+    "mypy",
+    "ruff",
+    "black",
+    "isort",
+    "flake8",
+    "eslint",
+    "prettier",
+    "tsc",
     # Utilities
-    "echo", "printf", "date", "env", "pwd", "basename", "dirname",
-    "jq", "yq", "curl", "wget",
+    "echo",
+    "printf",
+    "date",
+    "env",
+    "pwd",
+    "basename",
+    "dirname",
+    "jq",
+    "yq",
+    "curl",
+    "wget",
 }
 
 # Commands that require approval (can modify files)
 APPROVAL_REQUIRED_COMMANDS = {
-    "mkdir", "touch", "cp", "mv", "ln",
-    "chmod", "chown",
-    "git commit", "git push", "git merge", "git rebase",
-    "pip install", "npm install", "poetry add",
+    "mkdir",
+    "touch",
+    "cp",
+    "mv",
+    "ln",
+    "chmod",
+    "chown",
+    "git commit",
+    "git push",
+    "git merge",
+    "git rebase",
+    "pip install",
+    "npm install",
+    "poetry add",
 }
 
 # Patterns that are NEVER allowed
@@ -148,8 +209,7 @@ class CommandSandbox:
 
         # Compile blacklist patterns
         self._blacklist_regex = [
-            re.compile(pattern, re.IGNORECASE)
-            for pattern in BLACKLISTED_PATTERNS
+            re.compile(pattern, re.IGNORECASE) for pattern in BLACKLISTED_PATTERNS
         ]
 
         logger.info(
@@ -226,6 +286,7 @@ class CommandSandbox:
             CommandResult with execution details
         """
         import time
+
         start_time = time.monotonic()
 
         # Validate command
@@ -272,7 +333,7 @@ class CommandSandbox:
                     process.communicate(),
                     timeout=effective_timeout,
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 process.kill()
                 await process.wait()
                 duration_ms = (time.monotonic() - start_time) * 1000
@@ -293,8 +354,8 @@ class CommandSandbox:
                 )
 
             # Truncate output if too large
-            stdout = stdout_bytes[:self.max_output_bytes].decode("utf-8", errors="replace")
-            stderr = stderr_bytes[:self.max_output_bytes].decode("utf-8", errors="replace")
+            stdout = stdout_bytes[: self.max_output_bytes].decode("utf-8", errors="replace")
+            stderr = stderr_bytes[: self.max_output_bytes].decode("utf-8", errors="replace")
 
             duration_ms = (time.monotonic() - start_time) * 1000
 
@@ -390,7 +451,7 @@ class CommandSandbox:
                         process.stdout.readline(),
                         timeout=1.0,
                     )
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     continue
 
                 if not line:
@@ -440,8 +501,7 @@ class FileSandbox:
         """
         self.project_root = Path(project_root).resolve()
         self._sensitive_regex = [
-            re.compile(pattern, re.IGNORECASE)
-            for pattern in self.SENSITIVE_PATTERNS
+            re.compile(pattern, re.IGNORECASE) for pattern in self.SENSITIVE_PATTERNS
         ]
 
         logger.info(
@@ -564,17 +624,10 @@ class FileSandbox:
             return None, f"Not a directory: {path}"
 
         try:
-            if recursive:
-                files = list(resolved.rglob(pattern))
-            else:
-                files = list(resolved.glob(pattern))
+            files = list(resolved.rglob(pattern)) if recursive else list(resolved.glob(pattern))
 
             # Return relative paths
-            relative_files = [
-                str(f.relative_to(self.project_root))
-                for f in files
-                if f.is_file()
-            ]
+            relative_files = [str(f.relative_to(self.project_root)) for f in files if f.is_file()]
 
             return sorted(relative_files), None
         except Exception as e:
@@ -624,11 +677,13 @@ class FileSandbox:
                     content = file_path.read_text(encoding="utf-8")
                     for i, line in enumerate(content.splitlines(), 1):
                         if pattern.search(line):
-                            matches.append({
-                                "file": str(file_path.relative_to(self.project_root)),
-                                "line": i,
-                                "content": line.strip()[:200],
-                            })
+                            matches.append(
+                                {
+                                    "file": str(file_path.relative_to(self.project_root)),
+                                    "line": i,
+                                    "content": line.strip()[:200],
+                                }
+                            )
                 except Exception:
                     continue
 

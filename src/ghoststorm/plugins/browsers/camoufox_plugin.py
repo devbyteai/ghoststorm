@@ -319,9 +319,7 @@ class CamoufoxEngine:
         try:
             from camoufox.async_api import AsyncCamoufox
         except ImportError:
-            logger.error(
-                "Camoufox not installed. Install with: pip install camoufox[geoip]"
-            )
+            logger.error("Camoufox not installed. Install with: pip install camoufox[geoip]")
             raise ImportError("Camoufox is required but not installed")
 
         config = config or CamoufoxConfig()
@@ -463,6 +461,7 @@ class CamoufoxEngine:
         """
         try:
             import subprocess
+
             result = subprocess.run(
                 ["python", "-c", "import camoufox; camoufox.install()"],
                 capture_output=True,

@@ -262,7 +262,9 @@ class HighVolumeRunner:
 
         elapsed = str(timedelta(seconds=int(self._stats.elapsed_seconds)))
 
-        table.add_row("Status", "[bold green]RUNNING[/]" if self._running else "[bold red]STOPPED[/]")
+        table.add_row(
+            "Status", "[bold green]RUNNING[/]" if self._running else "[bold red]STOPPED[/]"
+        )
         table.add_row("Elapsed Time", elapsed)
         table.add_row("", "")
         table.add_row("[bold]Views[/]", "")
@@ -337,10 +339,7 @@ class HighVolumeRunner:
             await self._executor.start()
 
             # Start workers
-            workers = [
-                asyncio.create_task(self._worker(i))
-                for i in range(self.concurrent_limit)
-            ]
+            workers = [asyncio.create_task(self._worker(i)) for i in range(self.concurrent_limit)]
 
             # Start stats display
             stats_task = asyncio.create_task(self._stats_display())

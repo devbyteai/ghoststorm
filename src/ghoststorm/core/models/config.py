@@ -203,11 +203,15 @@ class LLMProviderConfig(BaseModel):
 class VisionSettingsConfig(BaseModel):
     """Vision/screenshot analysis configuration."""
 
-    mode: Literal["off", "auto", "always"] = "auto"  # off=DOM only, auto=fallback, always=screenshot
+    mode: Literal["off", "auto", "always"] = (
+        "auto"  # off=DOM only, auto=fallback, always=screenshot
+    )
     detail_level: Literal["low", "high", "auto"] = "auto"
     max_width: int = Field(default=1280, ge=640, le=3840)
     max_height: int = Field(default=800, ge=480, le=2160)
-    fallback_threshold: float = Field(default=0.6, ge=0, le=1)  # Use vision if DOM confidence below this
+    fallback_threshold: float = Field(
+        default=0.6, ge=0, le=1
+    )  # Use vision if DOM confidence below this
 
 
 class LLMConfig(BaseModel):
@@ -218,11 +222,15 @@ class LLMConfig(BaseModel):
 
     # Provider configs
     openai: LLMProviderConfig = Field(default_factory=lambda: LLMProviderConfig(model="gpt-4o"))
-    anthropic: LLMProviderConfig = Field(default_factory=lambda: LLMProviderConfig(model="claude-sonnet-4-20250514"))
-    ollama: LLMProviderConfig = Field(default_factory=lambda: LLMProviderConfig(
-        model="llama3",
-        base_url=os.getenv("OLLAMA_HOST", "http://localhost:11434"),
-    ))
+    anthropic: LLMProviderConfig = Field(
+        default_factory=lambda: LLMProviderConfig(model="claude-sonnet-4-20250514")
+    )
+    ollama: LLMProviderConfig = Field(
+        default_factory=lambda: LLMProviderConfig(
+            model="llama3",
+            base_url=os.getenv("OLLAMA_HOST", "http://localhost:11434"),
+        )
+    )
 
     # Shared settings
     temperature: float = Field(default=0.2, ge=0, le=2)

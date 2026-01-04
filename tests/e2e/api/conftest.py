@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any, AsyncGenerator
-from unittest.mock import MagicMock
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
 
-from tests.pytest_plugins.mock_services import create_mock_orchestrator
-
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+    from unittest.mock import MagicMock
 
 # ============================================================================
 # API CLIENT FIXTURES

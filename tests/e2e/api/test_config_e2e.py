@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -41,7 +43,7 @@ class TestPlatformConfigAPI:
         assert response.status_code == 200
         data = response.json()
 
-        for platform_name, platform_data in data["platforms"].items():
+        for _platform_name, platform_data in data["platforms"].items():
             assert "defaults" in platform_data
             assert "fields" in platform_data
             assert "description" in platform_data
@@ -221,13 +223,12 @@ class TestUserConfigAPI:
 
     def test_reset_config(self, api_test_client: TestClient):
         """Test resetting configuration."""
-        with patch("pathlib.Path.exists", return_value=True):
-            with patch("pathlib.Path.unlink"):
-                response = api_test_client.post("/api/config/reset")
+        with patch("pathlib.Path.exists", return_value=True), patch("pathlib.Path.unlink"):
+            response = api_test_client.post("/api/config/reset")
 
-                assert response.status_code == 200
-                data = response.json()
-                assert data["status"] == "reset"
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "reset"
 
     def test_reset_config_not_exists(self, api_test_client: TestClient):
         """Test resetting when config doesn't exist."""

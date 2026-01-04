@@ -119,7 +119,9 @@ class Checkpoint:
             timing=timing,
             reference_screenshot=data.get("reference_screenshot"),
             order=data.get("order", 0),
-            created_at=datetime.fromisoformat(data["created_at"]) if "created_at" in data else datetime.now(),
+            created_at=datetime.fromisoformat(data["created_at"])
+            if "created_at" in data
+            else datetime.now(),
             metadata=data.get("metadata", {}),
         )
 
@@ -225,10 +227,7 @@ class RecordedFlow:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> RecordedFlow:
         """Create from dictionary."""
-        checkpoints = [
-            Checkpoint.from_dict(cp_data)
-            for cp_data in data.get("checkpoints", [])
-        ]
+        checkpoints = [Checkpoint.from_dict(cp_data) for cp_data in data.get("checkpoints", [])]
 
         return cls(
             id=data.get("id", str(uuid4())),
@@ -239,8 +238,12 @@ class RecordedFlow:
             checkpoints=checkpoints,
             summary_goal=data.get("summary_goal", ""),
             recorded_with_browser=data.get("recorded_with_browser", "patchright"),
-            created_at=datetime.fromisoformat(data["created_at"]) if "created_at" in data else datetime.now(),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if "updated_at" in data else datetime.now(),
+            created_at=datetime.fromisoformat(data["created_at"])
+            if "created_at" in data
+            else datetime.now(),
+            updated_at=datetime.fromisoformat(data["updated_at"])
+            if "updated_at" in data
+            else datetime.now(),
             times_executed=data.get("times_executed", 0),
             successful_executions=data.get("successful_executions", 0),
             tags=data.get("tags", []),

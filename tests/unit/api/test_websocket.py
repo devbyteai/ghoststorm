@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -15,7 +16,6 @@ from ghoststorm.api.websocket import (
     websocket_endpoint,
     ws_manager,
 )
-
 
 # ============================================================================
 # FIXTURES
@@ -42,6 +42,7 @@ def mock_websocket() -> MagicMock:
 @pytest.fixture
 def mock_websocket_factory():
     """Factory to create multiple mock WebSockets."""
+
     def _create():
         ws = MagicMock()
         ws.accept = AsyncMock()
@@ -49,6 +50,7 @@ def mock_websocket_factory():
         ws.close = AsyncMock()
         ws.receive_text = AsyncMock()
         return ws
+
     return _create
 
 
@@ -124,17 +126,15 @@ class TestStart:
         ws_manager_instance: WebSocketManager,
     ) -> None:
         """Test that start() sets _running to True."""
-        with patch.object(ws_manager_instance, '_heartbeat_loop', new_callable=AsyncMock):
+        with patch.object(ws_manager_instance, "_heartbeat_loop", new_callable=AsyncMock):
             await ws_manager_instance.start()
             assert ws_manager_instance._running is True
             # Cleanup
             ws_manager_instance._running = False
             if ws_manager_instance._heartbeat_task:
                 ws_manager_instance._heartbeat_task.cancel()
-                try:
+                with contextlib.suppress(asyncio.CancelledError):
                     await ws_manager_instance._heartbeat_task
-                except asyncio.CancelledError:
-                    pass
 
     @pytest.mark.asyncio
     async def test_start_creates_heartbeat_task(
@@ -142,17 +142,15 @@ class TestStart:
         ws_manager_instance: WebSocketManager,
     ) -> None:
         """Test that start() creates a heartbeat task."""
-        with patch.object(ws_manager_instance, '_heartbeat_loop', new_callable=AsyncMock):
+        with patch.object(ws_manager_instance, "_heartbeat_loop", new_callable=AsyncMock):
             await ws_manager_instance.start()
             assert ws_manager_instance._heartbeat_task is not None
             assert isinstance(ws_manager_instance._heartbeat_task, asyncio.Task)
             # Cleanup
             ws_manager_instance._running = False
             ws_manager_instance._heartbeat_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await ws_manager_instance._heartbeat_task
-            except asyncio.CancelledError:
-                pass
 
     @pytest.mark.asyncio
     async def test_start_idempotent(
@@ -160,7 +158,7 @@ class TestStart:
         ws_manager_instance: WebSocketManager,
     ) -> None:
         """Test that calling start() twice doesn't create duplicate tasks."""
-        with patch.object(ws_manager_instance, '_heartbeat_loop', new_callable=AsyncMock):
+        with patch.object(ws_manager_instance, "_heartbeat_loop", new_callable=AsyncMock):
             await ws_manager_instance.start()
             first_task = ws_manager_instance._heartbeat_task
             await ws_manager_instance.start()
@@ -169,10 +167,8 @@ class TestStart:
             ws_manager_instance._running = False
             if ws_manager_instance._heartbeat_task:
                 ws_manager_instance._heartbeat_task.cancel()
-                try:
+                with contextlib.suppress(asyncio.CancelledError):
                     await ws_manager_instance._heartbeat_task
-                except asyncio.CancelledError:
-                    pass
 
     @pytest.mark.asyncio
     async def test_start_does_not_start_if_already_running(
@@ -211,7 +207,7 @@ class TestStop:
         ws_manager_instance: WebSocketManager,
     ) -> None:
         """Test that stop() cancels the heartbeat task."""
-        with patch.object(ws_manager_instance, '_heartbeat_loop', new_callable=AsyncMock):
+        with patch.object(ws_manager_instance, "_heartbeat_loop", new_callable=AsyncMock):
             await ws_manager_instance.start()
             task = ws_manager_instance._heartbeat_task
             await ws_manager_instance.stop()
@@ -520,7 +516,7 @@ class TestBroadcast:
         """Test that broadcast() uses default=str for non-serializable objects."""
         ws_manager_instance._connections.add(mock_websocket)
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         message = {"type": "test", "datetime": now}
         await ws_manager_instance.broadcast(message)
 
@@ -544,9 +540,7 @@ class TestSendToClient:
         mock_websocket: MagicMock,
     ) -> None:
         """Test that _send_to_client() returns True on success."""
-        result = await ws_manager_instance._send_to_client(
-            mock_websocket, {"type": "test"}
-        )
+        result = await ws_manager_instance._send_to_client(mock_websocket, {"type": "test"})
         assert result is True
 
     @pytest.mark.asyncio
@@ -557,9 +551,7 @@ class TestSendToClient:
     ) -> None:
         """Test that _send_to_client() returns False on failure."""
         mock_websocket.send_text = AsyncMock(side_effect=Exception("Send failed"))
-        result = await ws_manager_instance._send_to_client(
-            mock_websocket, {"type": "test"}
-        )
+        result = await ws_manager_instance._send_to_client(mock_websocket, {"type": "test"})
         assert result is False
 
     @pytest.mark.asyncio
@@ -631,6 +623,7 @@ class TestHeartbeatLoop:
         ws_manager_instance._running = True
 
         with patch("ghoststorm.api.websocket.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+
             async def stop_after_first(seconds):
                 ws_manager_instance._running = False
 
@@ -674,7 +667,10 @@ class TestHeartbeatLoop:
         ws_manager_instance._running = True
 
         with patch("ghoststorm.api.websocket.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-            with patch.object(ws_manager_instance, "broadcast", new_callable=AsyncMock) as mock_broadcast:
+            with patch.object(
+                ws_manager_instance, "broadcast", new_callable=AsyncMock
+            ) as mock_broadcast:
+
                 async def stop_after_first(seconds):
                     ws_manager_instance._running = False
 
@@ -695,6 +691,7 @@ class TestHeartbeatLoop:
         ws_manager_instance._running = True
 
         with patch("ghoststorm.api.websocket.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+
             async def stop_after_first(seconds):
                 ws_manager_instance._running = False
 
@@ -856,4 +853,5 @@ class TestGlobalWsManager:
     def test_global_instance_is_singleton(self) -> None:
         """Test that importing returns the same instance."""
         from ghoststorm.api.websocket import ws_manager as ws_manager_2
+
         assert ws_manager is ws_manager_2

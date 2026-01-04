@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
@@ -27,7 +28,9 @@ router = APIRouter()
 def get_orchestrator():
     """Get orchestrator from app state (lazy import to avoid circular deps)."""
     from ghoststorm.api.app import get_orchestrator as _get_orchestrator
+
     return _get_orchestrator()
+
 
 # In-memory task storage (replace with database in production)
 _tasks: dict[str, dict[str, Any]] = {}
@@ -79,18 +82,17 @@ async def _execute_with_llm(
         Execution result dictionary
     """
     import base64
+
     from ghoststorm.api.websocket import ws_manager
-    from ghoststorm.core.llm.service import LLMService
-    from ghoststorm.core.llm.controller import LLMController
     from ghoststorm.core.dom.service import DOMService
+    from ghoststorm.core.llm.controller import LLMController
+    from ghoststorm.core.llm.service import LLMService
 
     try:
         # Try to get orchestrator, but work without it
         orchestrator = None
-        try:
+        with contextlib.suppress(Exception):
             orchestrator = get_orchestrator()
-        except Exception:
-            pass
 
         # Initialize LLM services - use orchestrator's if available, else create our own
         if orchestrator and orchestrator.llm_controller:
@@ -115,20 +117,24 @@ async def _execute_with_llm(
             try:
                 screenshot = await page.screenshot(type="png")
                 screenshot_b64 = base64.b64encode(screenshot).decode()
-                await ws_manager.broadcast({
-                    "type": "visual.screenshot_live",
-                    "task_id": task_id,
-                    "data": {"screenshot": screenshot_b64},
-                })
+                await ws_manager.broadcast(
+                    {
+                        "type": "visual.screenshot_live",
+                        "task_id": task_id,
+                        "data": {"screenshot": screenshot_b64},
+                    }
+                )
             except Exception as e:
                 logger.debug("Screenshot capture failed", error=str(e))
 
             # Broadcast navigation event
-            await ws_manager.broadcast({
-                "type": "llm_navigated",
-                "task_id": task_id,
-                "url": url,
-            })
+            await ws_manager.broadcast(
+                {
+                    "type": "llm_navigated",
+                    "task_id": task_id,
+                    "url": url,
+                }
+            )
 
             # Build task description
             if not llm_task:
@@ -147,11 +153,13 @@ async def _execute_with_llm(
             if dom_service:
                 try:
                     dom_state = await dom_service.extract_dom(page)
-                    await ws_manager.broadcast({
-                        "type": "dom_extracted",
-                        "task_id": task_id,
-                        "elements_count": len(dom_state.elements) if dom_state else 0,
-                    })
+                    await ws_manager.broadcast(
+                        {
+                            "type": "dom_extracted",
+                            "task_id": task_id,
+                            "elements_count": len(dom_state.elements) if dom_state else 0,
+                        }
+                    )
                 except Exception as e:
                     logger.warning("DOM extraction failed", error=str(e))
 
@@ -168,20 +176,24 @@ async def _execute_with_llm(
                 try:
                     screenshot = await page.screenshot(type="png")
                     screenshot_b64 = base64.b64encode(screenshot).decode()
-                    await ws_manager.broadcast({
-                        "type": "visual.screenshot_live",
-                        "task_id": task_id,
-                        "data": {"screenshot": screenshot_b64},
-                    })
+                    await ws_manager.broadcast(
+                        {
+                            "type": "visual.screenshot_live",
+                            "task_id": task_id,
+                            "data": {"screenshot": screenshot_b64},
+                        }
+                    )
                 except Exception:
                     pass
 
-                await ws_manager.broadcast({
-                    "type": "llm_task_complete",
-                    "task_id": task_id,
-                    "success": result.success,
-                    "steps": result.steps_taken,
-                })
+                await ws_manager.broadcast(
+                    {
+                        "type": "llm_task_complete",
+                        "task_id": task_id,
+                        "success": result.success,
+                        "steps": result.steps_taken,
+                    }
+                )
 
                 return {
                     "success": result.success,
@@ -201,13 +213,17 @@ async def _execute_with_llm(
                 analysis = await llm_controller.analyze_page(page, llm_task)
 
                 # Broadcast analysis for UI
-                await ws_manager.broadcast({
-                    "type": "llm_analysis_ready",
-                    "task_id": task_id,
-                    "analysis": analysis.analysis,
-                    "confidence": analysis.confidence,
-                    "next_action": analysis.next_action.model_dump() if analysis.next_action else None,
-                })
+                await ws_manager.broadcast(
+                    {
+                        "type": "llm_analysis_ready",
+                        "task_id": task_id,
+                        "analysis": analysis.analysis,
+                        "confidence": analysis.confidence,
+                        "next_action": analysis.next_action.model_dump()
+                        if analysis.next_action
+                        else None,
+                    }
+                )
 
                 return {
                     "success": True,
@@ -217,7 +233,9 @@ async def _execute_with_llm(
                     "analysis": {
                         "text": analysis.analysis,
                         "confidence": analysis.confidence,
-                        "suggested_action": analysis.next_action.model_dump() if analysis.next_action else None,
+                        "suggested_action": analysis.next_action.model_dump()
+                        if analysis.next_action
+                        else None,
                     },
                 }
 
@@ -246,10 +264,13 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
     and runs the appropriate automation plugin.
     """
     try:
-        await _update_task(task_id, {
-            "status": "running",
-            "started_at": datetime.now(UTC),
-        })
+        await _update_task(
+            task_id,
+            {
+                "status": "running",
+                "started_at": datetime.now(UTC),
+            },
+        )
 
         platform = task_data["platform"]
         url = task_data["url"]
@@ -267,21 +288,23 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
 
         # Broadcast start event via WebSocket
         from ghoststorm.api.websocket import ws_manager
-        await ws_manager.broadcast({
-            "type": "task_started",
-            "task_id": task_id,
-            "platform": platform,
-            "url": url,
-        })
+
+        await ws_manager.broadcast(
+            {
+                "type": "task_started",
+                "task_id": task_id,
+                "platform": platform,
+                "url": url,
+            }
+        )
 
         # Import data loading utilities
         from ghoststorm.api.routes.data import (
-            get_random_user_agent,
-            get_random_fingerprint,
-            get_random_screen_size,
-            get_random_referrer,
             get_evasion_scripts,
             get_random_proxy,
+            get_random_referrer,
+            get_random_screen_size,
+            get_random_user_agent,
         )
 
         # Load data based on config flags
@@ -384,7 +407,10 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
                 if platform in ("tiktok", "instagram", "youtube"):
                     # Use mobile viewport for social media, but respect custom screen size
                     if screen_size:
-                        context_args["viewport"] = {"width": screen_size[0], "height": screen_size[1]}
+                        context_args["viewport"] = {
+                            "width": screen_size[0],
+                            "height": screen_size[1],
+                        }
                     else:
                         context_args["viewport"] = {"width": 390, "height": 844}
                     context_args["is_mobile"] = True
@@ -433,21 +459,28 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
                             "final_url": result.get("final_url"),
                         }
 
-                        await _update_task(task_id, {
-                            "status": "completed" if result.get("success") else "failed",
-                            "progress": 1.0,
-                            "completed_at": datetime.now(UTC),
-                            "results": results_data,
-                            "llm_analysis": result.get("analysis"),
-                            "error": result.get("error"),
-                        })
+                        await _update_task(
+                            task_id,
+                            {
+                                "status": "completed" if result.get("success") else "failed",
+                                "progress": 1.0,
+                                "completed_at": datetime.now(UTC),
+                                "results": results_data,
+                                "llm_analysis": result.get("analysis"),
+                                "error": result.get("error"),
+                            },
+                        )
 
-                        await ws_manager.broadcast({
-                            "type": "task_completed" if result.get("success") else "task_failed",
-                            "task_id": task_id,
-                            "results": results_data,
-                            "llm_mode": llm_mode,
-                        })
+                        await ws_manager.broadcast(
+                            {
+                                "type": "task_completed"
+                                if result.get("success")
+                                else "task_failed",
+                                "task_id": task_id,
+                                "results": results_data,
+                                "llm_mode": llm_mode,
+                            }
+                        )
 
                         logger.info(
                             "LLM task completed",
@@ -467,9 +500,13 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
 
                     # Check for unsupported content types
                     if "/photo/" in url:
-                        raise ValueError("Photo URLs are not supported. Please use a video URL (/video/) or profile URL (@username).")
+                        raise ValueError(
+                            "Photo URLs are not supported. Please use a video URL (/video/) or profile URL (@username)."
+                        )
                     if "/live/" in url:
-                        raise ValueError("Live stream URLs are not supported. Please use a video URL (/video/) or profile URL (@username).")
+                        raise ValueError(
+                            "Live stream URLs are not supported. Please use a video URL (/video/) or profile URL (@username)."
+                        )
 
                     # Build config - handle video URLs
                     video_urls = config.get("target_video_urls", [])
@@ -504,7 +541,9 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
                         target_url=url,
                         target_reel_urls=reel_urls,
                         bio_link_click_probability=config.get("bio_link_click_probability", 0.15),
-                        story_link_click_probability=config.get("story_link_click_probability", 0.10),
+                        story_link_click_probability=config.get(
+                            "story_link_click_probability", 0.10
+                        ),
                         reels_per_session=tuple(config.get("reels_per_session", [10, 30])),
                     )
 
@@ -529,7 +568,9 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
                         target_video_urls=video_urls,
                         target_short_urls=short_urls,
                         min_watch_seconds=config.get("min_watch_seconds", 30),
-                        description_click_probability=config.get("description_click_probability", 0.10),
+                        description_click_probability=config.get(
+                            "description_click_probability", 0.10
+                        ),
                     )
 
                     automation = YouTubeAutomation(config=yt_config)
@@ -588,49 +629,63 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
                         "profiles_visited": getattr(result, "profiles_visited", 0),
                         "errors": result.errors if result.errors else [],
                         "duration_seconds": (result.end_time - result.start_time).total_seconds()
-                        if hasattr(result, "end_time") else 0,
+                        if hasattr(result, "end_time")
+                        else 0,
                     }
                 else:
-                    results_data = {"success": True, **result} if isinstance(result, dict) else {"success": True}
+                    results_data = (
+                        {"success": True, **result}
+                        if isinstance(result, dict)
+                        else {"success": True}
+                    )
 
                 # Determine actual status - failed if errors and no results
                 total_activity = (
-                    results_data.get("videos_watched", 0) +
-                    results_data.get("bio_links_clicked", 0) +
-                    results_data.get("profiles_visited", 0)
+                    results_data.get("videos_watched", 0)
+                    + results_data.get("bio_links_clicked", 0)
+                    + results_data.get("profiles_visited", 0)
                 )
                 has_errors = bool(results_data.get("errors"))
 
                 if has_errors and total_activity == 0:
                     # Had errors and achieved nothing = failed
-                    final_status = "failed"
                     error_summary = "; ".join(results_data.get("errors", [])[:3])  # First 3 errors
-                    await _update_task(task_id, {
-                        "status": "failed",
-                        "progress": 1.0,
-                        "completed_at": datetime.now(UTC),
-                        "results": results_data,
-                        "error": error_summary or "Task completed with no results",
-                    })
-                    await ws_manager.broadcast({
-                        "type": "task_failed",
-                        "task_id": task_id,
-                        "error": error_summary,
-                        "results": results_data,
-                    })
+                    await _update_task(
+                        task_id,
+                        {
+                            "status": "failed",
+                            "progress": 1.0,
+                            "completed_at": datetime.now(UTC),
+                            "results": results_data,
+                            "error": error_summary or "Task completed with no results",
+                        },
+                    )
+                    await ws_manager.broadcast(
+                        {
+                            "type": "task_failed",
+                            "task_id": task_id,
+                            "error": error_summary,
+                            "results": results_data,
+                        }
+                    )
                 else:
                     # Success or partial success
-                    await _update_task(task_id, {
-                        "status": "completed",
-                        "progress": 1.0,
-                        "completed_at": datetime.now(UTC),
-                        "results": results_data,
-                    })
-                    await ws_manager.broadcast({
-                        "type": "task_completed",
-                        "task_id": task_id,
-                        "results": results_data,
-                    })
+                    await _update_task(
+                        task_id,
+                        {
+                            "status": "completed",
+                            "progress": 1.0,
+                            "completed_at": datetime.now(UTC),
+                            "results": results_data,
+                        },
+                    )
+                    await ws_manager.broadcast(
+                        {
+                            "type": "task_completed",
+                            "task_id": task_id,
+                            "results": results_data,
+                        }
+                    )
 
                 logger.info(
                     "Task completed",
@@ -648,19 +703,25 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
         # Broadcast failure
         try:
             from ghoststorm.api.websocket import ws_manager
-            await ws_manager.broadcast({
-                "type": "task_failed",
-                "task_id": task_id,
-                "error": str(e),
-            })
+
+            await ws_manager.broadcast(
+                {
+                    "type": "task_failed",
+                    "task_id": task_id,
+                    "error": str(e),
+                }
+            )
         except Exception:
             pass
 
-        await _update_task(task_id, {
-            "status": "failed",
-            "error": str(e),
-            "completed_at": datetime.now(UTC),
-        })
+        await _update_task(
+            task_id,
+            {
+                "status": "failed",
+                "error": str(e),
+                "completed_at": datetime.now(UTC),
+            },
+        )
 
 
 @router.post("", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
@@ -785,10 +846,13 @@ async def cancel_task(task_id: str) -> None:
             detail=f"Cannot cancel task with status: {task['status']}",
         )
 
-    await _update_task(task_id, {
-        "status": "cancelled",
-        "completed_at": datetime.now(UTC),
-    })
+    await _update_task(
+        task_id,
+        {
+            "status": "cancelled",
+            "completed_at": datetime.now(UTC),
+        },
+    )
 
     logger.info("Task cancelled", task_id=task_id)
 

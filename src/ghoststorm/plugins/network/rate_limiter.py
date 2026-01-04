@@ -265,7 +265,7 @@ class RateLimiter:
             if state.consecutive_errors > 0:
                 return min(
                     self.config.max_delay,
-                    base * (self.config.backoff_multiplier ** state.consecutive_errors),
+                    base * (self.config.backoff_multiplier**state.consecutive_errors),
                 )
             return base
 
@@ -338,9 +338,7 @@ class RateLimiter:
             if state.avg_response_time == 0:
                 state.avg_response_time = response_time
             else:
-                state.avg_response_time = (
-                    state.avg_response_time * 0.9 + response_time * 0.1
-                )
+                state.avg_response_time = state.avg_response_time * 0.9 + response_time * 0.1
 
             # Update proxy score
             if proxy_id:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import math
 import random
 from dataclasses import dataclass
@@ -56,8 +57,14 @@ class MouseBehavior:
         """Calculate point on cubic Bezier curve."""
         u = 1 - t
         return Point(
-            x=(u ** 3) * start.x + 3 * (u ** 2) * t * control1.x + 3 * u * (t ** 2) * control2.x + (t ** 3) * end.x,
-            y=(u ** 3) * start.y + 3 * (u ** 2) * t * control1.y + 3 * u * (t ** 2) * control2.y + (t ** 3) * end.y,
+            x=(u**3) * start.x
+            + 3 * (u**2) * t * control1.x
+            + 3 * u * (t**2) * control2.x
+            + (t**3) * end.x,
+            y=(u**3) * start.y
+            + 3 * (u**2) * t * control1.y
+            + 3 * u * (t**2) * control2.y
+            + (t**3) * end.y,
         )
 
     def _generate_control_points(self, start: Point, end: Point) -> tuple[Point, Point]:
@@ -104,7 +111,9 @@ class MouseBehavior:
         distance = math.sqrt((end.x - start.x) ** 2 + (end.y - start.y) ** 2)
 
         # More steps for longer distances
-        num_steps = int(self.min_steps + (self.max_steps - self.min_steps) * min(distance / 1000, 1))
+        num_steps = int(
+            self.min_steps + (self.max_steps - self.min_steps) * min(distance / 1000, 1)
+        )
 
         # Generate control points
         c1, c2 = self._generate_control_points(start, end)
@@ -139,10 +148,12 @@ class MouseBehavior:
             correction_steps = random.randint(3, 7)
             for i in range(1, correction_steps + 1):
                 t = i / correction_steps
-                path.append(Point(
-                    x=overshoot_point.x + (end.x - overshoot_point.x) * t,
-                    y=overshoot_point.y + (end.y - overshoot_point.y) * t,
-                ))
+                path.append(
+                    Point(
+                        x=overshoot_point.x + (end.x - overshoot_point.x) * t,
+                        y=overshoot_point.y + (end.y - overshoot_point.y) * t,
+                    )
+                )
 
         return path
 
@@ -156,7 +167,9 @@ class MouseBehavior:
         """
         # Get current position (default to center if unknown)
         try:
-            current = await page.evaluate("() => ({x: window._mouseX || window.innerWidth/2, y: window._mouseY || window.innerHeight/2})")
+            current = await page.evaluate(
+                "() => ({x: window._mouseX || window.innerWidth/2, y: window._mouseY || window.innerHeight/2})"
+            )
             start = Point(current["x"], current["y"])
         except Exception:
             start = Point(400, 300)
@@ -172,7 +185,9 @@ class MouseBehavior:
             try:
                 await page.mouse.move(point.x, point.y)
                 # Track position for next movement
-                await page.evaluate(f"() => {{ window._mouseX = {point.x}; window._mouseY = {point.y}; }}")
+                await page.evaluate(
+                    f"() => {{ window._mouseX = {point.x}; window._mouseY = {point.y}; }}"
+                )
             except Exception:
                 pass
 
@@ -256,16 +271,12 @@ class MouseBehavior:
             progress = i / max(len(path) - 1, 1)
             delay = self._calculate_delay(progress, distance) * 1.5  # Slower for drag
 
-            try:
+            with contextlib.suppress(Exception):
                 await page.mouse.move(point.x, point.y)
-            except Exception:
-                pass
 
             await asyncio.sleep(delay / 1000)
 
         # Release
         await asyncio.sleep(random.uniform(0.05, 0.1))
-        try:
+        with contextlib.suppress(Exception):
             await page.mouse.up()
-        except Exception:
-            pass

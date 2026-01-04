@@ -27,7 +27,6 @@ from ghoststorm.api.schemas import (
     detect_platform,
 )
 
-
 # ============================================================================
 # DETECT_PLATFORM FUNCTION TESTS
 # ============================================================================
@@ -197,7 +196,9 @@ class TestDetectPlatformDEXTools:
 
     def test_dextools_pair_explorer_url(self):
         """Detect DEXTools pair explorer URL with pair address extraction."""
-        url = "https://dextools.io/app/ether/pair-explorer/0x1234567890abcdef1234567890abcdef12345678"
+        url = (
+            "https://dextools.io/app/ether/pair-explorer/0x1234567890abcdef1234567890abcdef12345678"
+        )
         platform, metadata = detect_platform(url)
 
         assert platform == "dextools"
@@ -402,14 +403,24 @@ class TestTaskListResponse:
         now = datetime.utcnow()
         tasks = [
             TaskResponse(
-                task_id="1", status="running", platform="tiktok",
-                url="https://tiktok.com/@a", mode="batch", workers=1,
-                progress=0.5, created_at=now,
+                task_id="1",
+                status="running",
+                platform="tiktok",
+                url="https://tiktok.com/@a",
+                mode="batch",
+                workers=1,
+                progress=0.5,
+                created_at=now,
             ),
             TaskResponse(
-                task_id="2", status="completed", platform="youtube",
-                url="https://youtube.com/watch?v=b", mode="batch", workers=1,
-                progress=1.0, created_at=now,
+                task_id="2",
+                status="completed",
+                platform="youtube",
+                url="https://youtube.com/watch?v=b",
+                mode="batch",
+                workers=1,
+                progress=1.0,
+                created_at=now,
             ),
         ]
 
@@ -737,8 +748,14 @@ class TestWebSocketEvent:
 
     def test_websocket_event_types(self):
         """WebSocketEvent accepts various event types."""
-        for event_type in ["task_created", "task_started", "task_completed",
-                          "task_failed", "metrics_update", "log"]:
+        for event_type in [
+            "task_created",
+            "task_started",
+            "task_completed",
+            "task_failed",
+            "metrics_update",
+            "log",
+        ]:
             event = WebSocketEvent(type=event_type)
             assert event.type == event_type
 
@@ -809,12 +826,12 @@ class TestEdgeCases:
 
     def test_detect_platform_empty_string(self):
         """Empty URL returns generic."""
-        platform, metadata = detect_platform("")
+        platform, _metadata = detect_platform("")
         assert platform == "generic"
 
     def test_detect_platform_whitespace_only(self):
         """Whitespace-only URL returns generic."""
-        platform, metadata = detect_platform("   ")
+        platform, _metadata = detect_platform("   ")
         assert platform == "generic"
 
     def test_task_create_url_required(self):
@@ -828,29 +845,49 @@ class TestEdgeCases:
 
         # Valid boundaries
         TaskResponse(
-            task_id="1", status="pending", platform="generic",
-            url="https://x.com", mode="batch", workers=1,
-            progress=0.0, created_at=now,
+            task_id="1",
+            status="pending",
+            platform="generic",
+            url="https://x.com",
+            mode="batch",
+            workers=1,
+            progress=0.0,
+            created_at=now,
         )
         TaskResponse(
-            task_id="2", status="completed", platform="generic",
-            url="https://x.com", mode="batch", workers=1,
-            progress=1.0, created_at=now,
+            task_id="2",
+            status="completed",
+            platform="generic",
+            url="https://x.com",
+            mode="batch",
+            workers=1,
+            progress=1.0,
+            created_at=now,
         )
 
         # Invalid progress
         with pytest.raises(ValidationError):
             TaskResponse(
-                task_id="3", status="running", platform="generic",
-                url="https://x.com", mode="batch", workers=1,
-                progress=-0.1, created_at=now,
+                task_id="3",
+                status="running",
+                platform="generic",
+                url="https://x.com",
+                mode="batch",
+                workers=1,
+                progress=-0.1,
+                created_at=now,
             )
 
         with pytest.raises(ValidationError):
             TaskResponse(
-                task_id="4", status="running", platform="generic",
-                url="https://x.com", mode="batch", workers=1,
-                progress=1.5, created_at=now,
+                task_id="4",
+                status="running",
+                platform="generic",
+                url="https://x.com",
+                mode="batch",
+                workers=1,
+                progress=1.5,
+                created_at=now,
             )
 
     def test_config_schema_field_ranges(self):

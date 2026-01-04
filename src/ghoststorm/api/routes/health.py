@@ -15,6 +15,7 @@ router = APIRouter()
 def _get_orchestrator():
     """Get orchestrator with late import to avoid circular dependency."""
     from ghoststorm.api.app import get_orchestrator
+
     return get_orchestrator()
 
 

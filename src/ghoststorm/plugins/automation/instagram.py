@@ -12,11 +12,12 @@ Designed to avoid detection by mimicking real user behavior.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import random
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import structlog
 
@@ -39,10 +40,12 @@ from ghoststorm.plugins.automation.social_media_behavior import (
 from ghoststorm.plugins.automation.view_tracking import (
     get_view_tracker,
 )
-from ghoststorm.plugins.behavior.coherence_engine import (
-    CoherenceEngine,
-)
-from ghoststorm.plugins.network.rate_limiter import RateLimiter
+
+if TYPE_CHECKING:
+    from ghoststorm.plugins.behavior.coherence_engine import (
+        CoherenceEngine,
+    )
+    from ghoststorm.plugins.network.rate_limiter import RateLimiter
 
 logger = structlog.get_logger(__name__)
 
@@ -276,6 +279,7 @@ class InstagramAutomation(SocialMediaAutomation):
         """Generate a realistic Instagram device ID."""
         import hashlib
         import uuid
+
         return hashlib.md5(str(uuid.uuid4()).encode()).hexdigest()
 
     async def _setup_context(self, page: Any) -> None:
@@ -289,10 +293,12 @@ class InstagramAutomation(SocialMediaAutomation):
             await page.add_init_script(js_code)
 
             # Set mobile viewport
-            await page.set_viewport_size({
-                "width": self.config.viewport_width,
-                "height": self.config.viewport_height,
-            })
+            await page.set_viewport_size(
+                {
+                    "width": self.config.viewport_width,
+                    "height": self.config.viewport_height,
+                }
+            )
 
             # Set extra headers
             headers = INSTAGRAM_HEADERS.copy()
@@ -362,9 +368,7 @@ class InstagramAutomation(SocialMediaAutomation):
 
             # Apply coherence modifiers
             if self._session_state:
-                modifiers = self.coherence_engine.get_behavior_modifiers(
-                    self._session_state
-                )
+                modifiers = self.coherence_engine.get_behavior_modifiers(self._session_state)
                 watch_time *= modifiers.get("dwell_time_factor", 1.0)
 
             logger.info(
@@ -379,9 +383,7 @@ class InstagramAutomation(SocialMediaAutomation):
             await asyncio.sleep(watch_time)
 
             # Calculate completion rate
-            completion_rate = (
-                watch_time / video_duration if video_duration else 1.0
-            )
+            completion_rate = watch_time / video_duration if video_duration else 1.0
 
             # Determine outcome
             outcome = self._determine_watch_outcome(watch_time, video_duration)
@@ -522,11 +524,9 @@ class InstagramAutomation(SocialMediaAutomation):
             link_clicked = False
             total_duration = 0.0
 
-            for i in range(max_stories):
+            for _i in range(max_stories):
                 # Check for link sticker
-                has_link = await page.locator(
-                    self.selectors.story_link_sticker
-                ).count() > 0
+                has_link = await page.locator(self.selectors.story_link_sticker).count() > 0
 
                 # Generate view behavior
                 view_duration, action = self.story_behavior.generate_view_duration(
@@ -564,15 +564,11 @@ class InstagramAutomation(SocialMediaAutomation):
                     break
 
             # Close stories if still open
-            try:
+            with contextlib.suppress(Exception):
                 await self._safe_click(page, self.selectors.story_close_button)
-            except Exception:
-                pass
 
             if self._session_state:
-                self.coherence_engine.record_action(
-                    self._session_state, "view_stories"
-                )
+                self.coherence_engine.record_action(self._session_state, "view_stories")
 
             logger.info(
                 "[INSTAGRAM_STORY] Story viewing completed",
@@ -737,9 +733,7 @@ class InstagramAutomation(SocialMediaAutomation):
                 result = await self._simulate_inapp_browser(page, "bio")
 
                 if self._session_state:
-                    self.coherence_engine.record_action(
-                        self._session_state, "click", target_url
-                    )
+                    self.coherence_engine.record_action(self._session_state, "click", target_url)
 
                 logger.info(
                     "[INSTAGRAM_BIO_CLICK] Bio link click completed",
@@ -795,6 +789,7 @@ class InstagramAutomation(SocialMediaAutomation):
         else:
             # Fallback - use hash of URL
             import hashlib
+
             reel_id = hashlib.md5(url.encode()).hexdigest()[:16]
 
         return reel_id
@@ -873,7 +868,7 @@ class InstagramAutomation(SocialMediaAutomation):
 
             # Generate watch duration based on behavior model
             if watch_duration is None:
-                watch_time, outcome_str = self.watch_behavior.generate_watch_duration(
+                watch_time, _outcome_str = self.watch_behavior.generate_watch_duration(
                     video_duration=video_duration,
                     content_interest=random.uniform(0.5, 0.9),  # Higher interest for target reels
                 )
@@ -882,13 +877,10 @@ class InstagramAutomation(SocialMediaAutomation):
                 watch_time = max(watch_time, min_watch + random.uniform(0.5, 2.0))
             else:
                 watch_time = watch_duration
-                outcome_str = "full"
 
             # Apply coherence modifiers
             if self._session_state:
-                modifiers = self.coherence_engine.get_behavior_modifiers(
-                    self._session_state
-                )
+                modifiers = self.coherence_engine.get_behavior_modifiers(self._session_state)
                 watch_time *= modifiers.get("dwell_time_factor", 1.0)
 
             logger.info(
@@ -1110,9 +1102,7 @@ class InstagramAutomation(SocialMediaAutomation):
             self._profiles_visited += 1
 
             if self._session_state:
-                self.coherence_engine.record_action(
-                    self._session_state, "navigate", page.url
-                )
+                self.coherence_engine.record_action(self._session_state, "navigate", page.url)
 
             return True
 
@@ -1187,9 +1177,7 @@ class InstagramAutomation(SocialMediaAutomation):
                     await asyncio.sleep(break_duration)
 
                     if self._session_state:
-                        self.coherence_engine.record_break(
-                            self._session_state, break_duration
-                        )
+                        self.coherence_engine.record_break(self._session_state, break_duration)
 
                 # Watch current reel
                 watch_result = await self.watch_reel(page)
@@ -1232,20 +1220,19 @@ class InstagramAutomation(SocialMediaAutomation):
                     errors.append(swipe_result.error or "Swipe failed")
 
             # Visit target profile if specified
-            if target_profile:
-                if await self.visit_profile(page, target_profile):
-                    profiles_visited += 1
+            if target_profile and await self.visit_profile(page, target_profile):
+                profiles_visited += 1
 
-                    # View stories if available
-                    story_result = await self.view_stories(page)
-                    if story_result.link_clicked:
-                        story_links_clicked += 1
+                # View stories if available
+                story_result = await self.view_stories(page)
+                if story_result.link_clicked:
+                    story_links_clicked += 1
 
-                    # Click bio link with configured probability
-                    if random.random() < self.config.bio_link_click_probability:
-                        bio_result = await self.click_bio_link(page)
-                        if bio_result.success:
-                            bio_links_clicked += 1
+                # Click bio link with configured probability
+                if random.random() < self.config.bio_link_click_probability:
+                    bio_result = await self.click_bio_link(page)
+                    if bio_result.success:
+                        bio_links_clicked += 1
 
         except Exception as e:
             errors.append(str(e))
@@ -1266,7 +1253,8 @@ class InstagramAutomation(SocialMediaAutomation):
         successful_watches = sum(1 for w in watch_results if w.success)
         avg_watch_time = (
             sum(w.watch_duration for w in watch_results) / len(watch_results)
-            if watch_results else 0
+            if watch_results
+            else 0
         )
 
         logger.info(
@@ -1348,7 +1336,7 @@ class InstagramAutomation(SocialMediaAutomation):
         # Setup context
         await self._setup_context(page)
         start_time = datetime.now(UTC)
-        session = self._create_session()
+        self._create_session()
 
         # PRIORITY 1: If target reel URLs are configured, watch them directly
         if self.config.target_reel_urls:

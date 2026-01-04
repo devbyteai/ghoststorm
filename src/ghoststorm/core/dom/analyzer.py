@@ -4,14 +4,10 @@ from __future__ import annotations
 
 import re
 from difflib import SequenceMatcher
-from typing import TYPE_CHECKING
 
 import structlog
 
-from ghoststorm.core.dom.models import DOMNode, DOMState, ElementInfo, ElementType
-
-if TYPE_CHECKING:
-    pass
+from ghoststorm.core.dom.models import DOMState, ElementInfo, ElementType
 
 logger = structlog.get_logger(__name__)
 
@@ -157,10 +153,7 @@ class DOMAnalyzer:
         stop_words = {"the", "a", "an", "to", "on", "in", "for", "with", "that", "this"}
         words = description.split()
         keywords = [
-            w for w in words
-            if w not in stop_words
-            and w not in self.ACTION_VERBS
-            and len(w) > 2
+            w for w in words if w not in stop_words and w not in self.ACTION_VERBS and len(w) > 2
         ]
 
         return {
@@ -217,21 +210,25 @@ class DOMAnalyzer:
                 score += 0.4
 
         # Element type match
-        if parsed["type_hints"]:
-            if node.element_type in parsed["type_hints"]:
-                score += 0.2
+        if parsed["type_hints"] and node.element_type in parsed["type_hints"]:
+            score += 0.2
 
         # Keyword matching
         keywords = parsed["keywords"]
         if keywords:
             # Combine all text sources for matching
-            element_text = " ".join(filter(None, [
-                node.text,
-                node.aria_label,
-                node.placeholder,
-                node.id_attr,
-                " ".join(node.class_list),
-            ])).lower()
+            element_text = " ".join(
+                filter(
+                    None,
+                    [
+                        node.text,
+                        node.aria_label,
+                        node.placeholder,
+                        node.id_attr,
+                        " ".join(node.class_list),
+                    ],
+                )
+            ).lower()
 
             keyword_matches = sum(1 for kw in keywords if kw in element_text)
             if keywords:
@@ -239,10 +236,7 @@ class DOMAnalyzer:
 
         # Fuzzy text similarity
         if node.text:
-            similarity = self._text_similarity(
-                parsed["original"],
-                node.text.lower()
-            )
+            similarity = self._text_similarity(parsed["original"], node.text.lower())
             score += similarity * 0.2
 
         # Bonus for visible elements
@@ -298,11 +292,11 @@ class DOMAnalyzer:
 
         for elem in all_elements:
             if elem.node.role == role:
-                if name is None:
-                    results.append(elem)
-                elif elem.node.aria_label and name.lower() in elem.node.aria_label.lower():
-                    results.append(elem)
-                elif elem.node.text and name.lower() in elem.node.text.lower():
+                if (
+                    name is None
+                    or (elem.node.aria_label and name.lower() in elem.node.aria_label.lower())
+                    or (elem.node.text and name.lower() in elem.node.text.lower())
+                ):
                     results.append(elem)
 
         return results

@@ -10,13 +10,13 @@ This test simulates a complete user journey:
 
 from __future__ import annotations
 
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
-import json
-import time
+from typing import TYPE_CHECKING
+from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -117,7 +117,7 @@ class TestTikTokCampaignJourney:
                 session_id = record_response.json().get("session_id")
 
                 # Stop recording
-                stop_response = api_test_client.post(f"/api/flows/stop/{session_id}")
+                api_test_client.post(f"/api/flows/stop/{session_id}")
 
         # Step 3: Create task with flow-based execution
         task_response = api_test_client.post(
@@ -303,7 +303,7 @@ class TestTikTokErrorRecovery:
         task_id = task_response.json().get("task_id") or task_response.json().get("id")
 
         # Pause task
-        pause_response = api_test_client.post(f"/api/tasks/{task_id}/pause")
+        api_test_client.post(f"/api/tasks/{task_id}/pause")
 
         # Resume task
         resume_response = api_test_client.post(f"/api/tasks/{task_id}/resume")

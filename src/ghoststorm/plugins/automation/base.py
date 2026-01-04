@@ -14,9 +14,8 @@ import asyncio
 import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import structlog
 
@@ -30,6 +29,9 @@ from ghoststorm.plugins.network.rate_limiter import (
     RateLimiter,
     get_rate_limiter,
 )
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = structlog.get_logger(__name__)
 
@@ -165,15 +167,17 @@ class SocialMediaAutomation(ABC):
         """Create a coherent session for this automation."""
         # Default to SCROLLER or CONTENT_CONSUMER for video platforms
         if persona is None:
-            persona = random.choice([
-                UserPersona.SCANNER,  # Fast browsing
-                UserPersona.CASUAL,   # Relaxed viewing
-            ])
+            persona = random.choice(
+                [
+                    UserPersona.SCANNER,  # Fast browsing
+                    UserPersona.CASUAL,  # Relaxed viewing
+                ]
+            )
 
         self._session_state = self.coherence_engine.create_session(persona=persona)
         logger.info(
             "[SESSION_CREATE] New automation session started",
-            platform=self.platform.value if hasattr(self, 'platform') else "unknown",
+            platform=self.platform.value if hasattr(self, "platform") else "unknown",
             persona=persona.value,
             session_id=self._session_state.session_id,
         )
@@ -227,8 +231,8 @@ class SocialMediaAutomation(ABC):
 
         # Calculate control points for bezier curve
         # Add slight lateral drift for natural feel
-        mid_x = (start_x + end_x) / 2 + random.uniform(-15, 15)
-        mid_y = (start_y + end_y) / 2
+        (start_x + end_x) / 2 + random.uniform(-15, 15)
+        (start_y + end_y) / 2
 
         # Control points for cubic bezier
         cp1_x = start_x + random.uniform(-5, 5)
@@ -243,34 +247,33 @@ class SocialMediaAutomation(ABC):
             x = (
                 (1 - t) ** 3 * start_x
                 + 3 * (1 - t) ** 2 * t * cp1_x
-                + 3 * (1 - t) * t ** 2 * cp2_x
-                + t ** 3 * end_x
+                + 3 * (1 - t) * t**2 * cp2_x
+                + t**3 * end_x
             )
             y = (
                 (1 - t) ** 3 * start_y
                 + 3 * (1 - t) ** 2 * t * cp1_y
-                + 3 * (1 - t) * t ** 2 * cp2_y
-                + t ** 3 * end_y
+                + 3 * (1 - t) * t**2 * cp2_y
+                + t**3 * end_y
             )
 
             # Non-linear time progression (accelerate, plateau, decelerate)
             # Using easeInOutQuad
-            if t < 0.5:
-                time_t = 2 * t * t
-            else:
-                time_t = 1 - (-2 * t + 2) ** 2 / 2
+            time_t = 2 * t * t if t < 0.5 else 1 - (-2 * t + 2) ** 2 / 2
 
             time_ms = time_t * duration_ms
 
             # Variable pressure (higher at start and end)
             pressure = 0.4 + 0.2 * abs(2 * t - 1)
 
-            points.append(TouchPoint(
-                x=x + random.uniform(-1, 1),  # Micro jitter
-                y=y + random.uniform(-1, 1),
-                t=time_ms,
-                pressure=pressure,
-            ))
+            points.append(
+                TouchPoint(
+                    x=x + random.uniform(-1, 1),  # Micro jitter
+                    y=y + random.uniform(-1, 1),
+                    t=time_ms,
+                    pressure=pressure,
+                )
+            )
 
         return points
 
@@ -388,8 +391,9 @@ class SocialMediaAutomation(ABC):
 
             # Calculate distance
             end_point = gesture.points[-1]
-            distance = int(((end_point.x - start_point.x) ** 2 +
-                           (end_point.y - start_point.y) ** 2) ** 0.5)
+            distance = int(
+                ((end_point.x - start_point.x) ** 2 + (end_point.y - start_point.y) ** 2) ** 0.5
+            )
 
             # Record action in coherence engine
             if self._session_state:
@@ -443,10 +447,7 @@ class SocialMediaAutomation(ABC):
             True if click succeeded
         """
         try:
-            if use_xpath:
-                element = page.locator(f"xpath={selector}")
-            else:
-                element = page.locator(selector)
+            element = page.locator(f"xpath={selector}") if use_xpath else page.locator(selector)
 
             await element.click(timeout=timeout)
 

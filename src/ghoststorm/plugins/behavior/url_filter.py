@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -48,28 +49,65 @@ class URLFilter:
 
     DEFAULT_BLACKLIST = [
         # Auth pages
-        r"login", r"signin", r"sign-in", r"signup", r"sign-up",
-        r"register", r"logout", r"auth", r"oauth", r"password", r"forgot",
+        r"login",
+        r"signin",
+        r"sign-in",
+        r"signup",
+        r"sign-up",
+        r"register",
+        r"logout",
+        r"auth",
+        r"oauth",
+        r"password",
+        r"forgot",
         # Search/filter
-        r"search", r"filter", r"\?q=", r"\?query=",
+        r"search",
+        r"filter",
+        r"\?q=",
+        r"\?query=",
         # External social
-        r"facebook\.com", r"twitter\.com", r"x\.com", r"instagram\.com",
-        r"linkedin\.com", r"youtube\.com", r"tiktok\.com",
+        r"facebook\.com",
+        r"twitter\.com",
+        r"x\.com",
+        r"instagram\.com",
+        r"linkedin\.com",
+        r"youtube\.com",
+        r"tiktok\.com",
         # Technical
-        r"^mailto:", r"^javascript:", r"^tel:", r"^sms:",
-        r"^data:", r"^blob:", r"^#$",
+        r"^mailto:",
+        r"^javascript:",
+        r"^tel:",
+        r"^sms:",
+        r"^data:",
+        r"^blob:",
+        r"^#$",
         # Files
-        r"\.pdf$", r"\.zip$", r"\.exe$", r"\.dmg$",
-        r"\.doc$", r"\.docx$", r"\.xls$", r"\.xlsx$",
+        r"\.pdf$",
+        r"\.zip$",
+        r"\.exe$",
+        r"\.dmg$",
+        r"\.doc$",
+        r"\.docx$",
+        r"\.xls$",
+        r"\.xlsx$",
         # Legal
-        r"privacy-policy", r"terms-of-service", r"cookie-policy",
-        r"unsubscribe", r"opt-out",
+        r"privacy-policy",
+        r"terms-of-service",
+        r"cookie-policy",
+        r"unsubscribe",
+        r"opt-out",
         # Commerce
-        r"cart", r"checkout", r"add-to-cart",
+        r"cart",
+        r"checkout",
+        r"add-to-cart",
         # Admin
-        r"/admin", r"/wp-admin", r"/dashboard",
+        r"/admin",
+        r"/wp-admin",
+        r"/dashboard",
         # API
-        r"/api/", r"\.json$", r"\.xml$",
+        r"/api/",
+        r"\.json$",
+        r"\.xml$",
     ]
 
     def __init__(self, config: URLFilterConfig | None = None) -> None:
@@ -97,21 +135,13 @@ class URLFilter:
 
         # Compile blacklist
         for pattern in patterns:
-            try:
-                self._blacklist_patterns.append(
-                    re.compile(pattern, re.IGNORECASE)
-                )
-            except re.error:
-                pass
+            with contextlib.suppress(re.error):
+                self._blacklist_patterns.append(re.compile(pattern, re.IGNORECASE))
 
         # Compile whitelist
         for pattern in self.config.whitelist_patterns:
-            try:
-                self._whitelist_patterns.append(
-                    re.compile(pattern, re.IGNORECASE)
-                )
-            except re.error:
-                pass
+            with contextlib.suppress(re.error):
+                self._whitelist_patterns.append(re.compile(pattern, re.IGNORECASE))
 
     def _load_patterns_from_file(self, filepath: str) -> list[str]:
         """Load patterns from a text file.
@@ -210,10 +240,7 @@ class URLFilter:
         base_root = self._get_root_domain(base_domain)
         url_root = self._get_root_domain(url_domain)
 
-        if url_root == base_root and url_domain != base_domain:
-            return True
-
-        return False
+        return bool(url_root == base_root and url_domain != base_domain)
 
     def _matches_blacklist(self, url: str) -> bool:
         """Check if URL matches any blacklist pattern.
@@ -224,10 +251,7 @@ class URLFilter:
         Returns:
             True if matches blacklist
         """
-        for pattern in self._blacklist_patterns:
-            if pattern.search(url):
-                return True
-        return False
+        return any(pattern.search(url) for pattern in self._blacklist_patterns)
 
     def _matches_whitelist(self, url: str) -> bool:
         """Check if URL matches any whitelist pattern.
@@ -241,10 +265,7 @@ class URLFilter:
         if not self._whitelist_patterns:
             return True  # No whitelist means all allowed
 
-        for pattern in self._whitelist_patterns:
-            if pattern.search(url):
-                return True
-        return False
+        return any(pattern.search(url) for pattern in self._whitelist_patterns)
 
     def is_allowed(self, url: str, base_domain: str | None = None) -> bool:
         """Check if URL is allowed by all filters.

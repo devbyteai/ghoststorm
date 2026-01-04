@@ -372,8 +372,7 @@ class FontDefender:
                 f
                 for f in self._profile.system_fonts
                 if any(
-                    s in f.lower()
-                    for s in ["times", "georgia", "palatino", "garamond", "serif"]
+                    s in f.lower() for s in ["times", "georgia", "palatino", "garamond", "serif"]
                 )
             ]
             fonts = serif_fonts if serif_fonts else self._profile.fallback_fonts

@@ -21,10 +21,10 @@ logger = structlog.get_logger(__name__)
 class TLSVersion(str, Enum):
     """TLS protocol versions."""
 
-    TLS_1_0 = "769"   # 0x0301
-    TLS_1_1 = "770"   # 0x0302
-    TLS_1_2 = "771"   # 0x0303
-    TLS_1_3 = "772"   # 0x0304
+    TLS_1_0 = "769"  # 0x0301
+    TLS_1_1 = "770"  # 0x0302
+    TLS_1_2 = "771"  # 0x0303
+    TLS_1_3 = "772"  # 0x0304
 
 
 @dataclass
@@ -62,6 +62,7 @@ class JA3Fingerprint:
     def compute_hash(self) -> str:
         """Compute MD5 hash of JA3 string."""
         import hashlib
+
         ja3_str = self.to_string()
         return hashlib.md5(ja3_str.encode()).hexdigest()
 
@@ -456,10 +457,7 @@ def get_random_fingerprint(browser: str | None = None) -> TLSFingerprint:
 
     if browser:
         browser_lower = browser.lower()
-        candidates = [
-            fp for fp in candidates
-            if fp.browser.lower() == browser_lower
-        ]
+        candidates = [fp for fp in candidates if fp.browser.lower() == browser_lower]
 
     if not candidates:
         # Fallback to any fingerprint

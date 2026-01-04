@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -46,15 +48,18 @@ class TestDataStatsAPI:
 class TestDataCategoryAPI:
     """Tests for /api/data/{category} endpoints."""
 
-    @pytest.mark.parametrize("category", [
-        "user_agents",
-        "fingerprints",
-        "referrers",
-        "blacklists",
-        "screen_sizes",
-        "behavior",
-        "evasion",
-    ])
+    @pytest.mark.parametrize(
+        "category",
+        [
+            "user_agents",
+            "fingerprints",
+            "referrers",
+            "blacklists",
+            "screen_sizes",
+            "behavior",
+            "evasion",
+        ],
+    )
     def test_list_category_items(self, api_test_client: TestClient, category: str):
         """Test listing items for each category."""
         response = api_test_client.get(f"/api/data/{category}")
@@ -80,7 +85,9 @@ class TestDataFileAPI:
         with patch("pathlib.Path.exists", return_value=True):
             with patch("builtins.open", MagicMock()) as mock_open:
                 mock_open.return_value.__enter__.return_value.read.return_value = "line1\nline2\n"
-                mock_open.return_value.__enter__.return_value.__iter__ = lambda self: iter(["line1\n", "line2\n"])
+                mock_open.return_value.__enter__.return_value.__iter__ = lambda self: iter(
+                    ["line1\n", "line2\n"]
+                )
 
                 response = api_test_client.get("/api/data/user_agents/test.txt")
 
@@ -103,23 +110,24 @@ class TestDataFileAPI:
 
     def test_add_data_item(self, api_test_client: TestClient):
         """Test adding a data item."""
-        with patch("pathlib.Path.exists", return_value=True):
-            with patch("pathlib.Path.mkdir"):
-                with patch("builtins.open", MagicMock()):
-                    response = api_test_client.post(
-                        "/api/data/user_agents/custom.txt",
-                        json={"content": "Mozilla/5.0 Test Agent"},
-                    )
+        with patch("pathlib.Path.exists", return_value=True), patch("pathlib.Path.mkdir"):
+            with patch("builtins.open", MagicMock()):
+                response = api_test_client.post(
+                    "/api/data/user_agents/custom.txt",
+                    json={"content": "Mozilla/5.0 Test Agent"},
+                )
 
-                    assert response.status_code == 200
-                    data = response.json()
-                    assert data["success"] is True
+                assert response.status_code == 200
+                data = response.json()
+                assert data["success"] is True
 
     def test_delete_data_item(self, api_test_client: TestClient):
         """Test deleting a data item."""
         with patch("pathlib.Path.exists", return_value=True):
             with patch("builtins.open", MagicMock()) as mock_open:
-                mock_open.return_value.__enter__.return_value.__iter__ = lambda self: iter(["item1\n", "item2\n"])
+                mock_open.return_value.__enter__.return_value.__iter__ = lambda self: iter(
+                    ["item1\n", "item2\n"]
+                )
 
                 response = api_test_client.delete(
                     "/api/data/user_agents/test.txt",
@@ -174,7 +182,9 @@ class TestUserAgentGenerationAPI:
         """Test parsing a user agent."""
         response = api_test_client.post(
             "/api/data/user_agents/parse",
-            json={"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0"},
+            json={
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0"
+            },
         )
 
         assert response.status_code == 200
@@ -189,7 +199,9 @@ class TestUserAgentGenerationAPI:
         """Test parsing Firefox user agent."""
         response = api_test_client.post(
             "/api/data/user_agents/parse",
-            json={"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"},
+            json={
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
+            },
         )
 
         assert response.status_code == 200
@@ -200,7 +212,9 @@ class TestUserAgentGenerationAPI:
         """Test parsing Safari user agent."""
         response = api_test_client.post(
             "/api/data/user_agents/parse",
-            json={"user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Safari/605.1.15"},
+            json={
+                "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Safari/605.1.15"
+            },
         )
 
         assert response.status_code == 200
@@ -212,7 +226,9 @@ class TestUserAgentGenerationAPI:
         """Test parsing mobile user agent."""
         response = api_test_client.post(
             "/api/data/user_agents/parse",
-            json={"user_agent": "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile"},
+            json={
+                "user_agent": "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile"
+            },
         )
 
         assert response.status_code == 200
@@ -294,9 +310,12 @@ class TestFingerprintGenerationAPI:
         with patch("pathlib.Path.exists", return_value=True):
             with patch("builtins.open", MagicMock()) as mock_open:
                 import json
-                mock_open.return_value.__enter__.return_value.read.return_value = json.dumps([
-                    {"screen": {"width": 1920, "height": 1080}},
-                ])
+
+                mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(
+                    [
+                        {"screen": {"width": 1920, "height": 1080}},
+                    ]
+                )
 
                 response = api_test_client.get("/api/data/fingerprints/sample")
 

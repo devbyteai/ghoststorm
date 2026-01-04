@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable, Coroutine
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
-from ghoststorm.core.events.bus import Event
 from ghoststorm.core.events.types import EventType
 from ghoststorm.core.watchdog.base import BaseWatchdog
 from ghoststorm.core.watchdog.models import (
@@ -21,7 +20,9 @@ from ghoststorm.core.watchdog.models import (
 )
 
 if TYPE_CHECKING:
-    from ghoststorm.core.events.bus import AsyncEventBus
+    from collections.abc import Callable, Coroutine
+
+    from ghoststorm.core.events.bus import AsyncEventBus, Event
     from ghoststorm.core.interfaces.browser import IBrowserEngine
 
 logger = structlog.get_logger(__name__)
@@ -88,9 +89,7 @@ class BrowserWatchdog(BaseWatchdog):
         # Restart callback
         self._restart_callback: Callable[[], Coroutine[Any, Any, None]] | None = None
 
-    def set_restart_callback(
-        self, callback: Callable[[], Coroutine[Any, Any, None]]
-    ) -> None:
+    def set_restart_callback(self, callback: Callable[[], Coroutine[Any, Any, None]]) -> None:
         """Set callback for browser restart."""
         self._restart_callback = callback
 
@@ -200,9 +199,7 @@ class BrowserWatchdog(BaseWatchdog):
         }
 
         if self._launch_time:
-            details["uptime_seconds"] = (
-                datetime.now() - self._launch_time
-            ).total_seconds()
+            details["uptime_seconds"] = (datetime.now() - self._launch_time).total_seconds()
 
         # Determine health level
         if not self._browser_launched:

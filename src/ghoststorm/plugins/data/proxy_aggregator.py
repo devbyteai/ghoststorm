@@ -37,33 +37,102 @@ class ProxyAggregator:
     # Proxy sources - verified working as of 2024
     SOURCES: list[ProxySource] = [
         # Tier 1: Massive lists
-        ProxySource("mishakorzik", "https://raw.githubusercontent.com/mishakorzik/100000-Proxy/main/proxy.txt"),
-        ProxySource("ercin_http", "https://raw.githubusercontent.com/ErcinDedeoglu/proxies/main/proxies/http.txt"),
-        ProxySource("ercin_socks4", "https://raw.githubusercontent.com/ErcinDedeoglu/proxies/main/proxies/socks4.txt", "socks4"),
-        ProxySource("ercin_socks5", "https://raw.githubusercontent.com/ErcinDedeoglu/proxies/main/proxies/socks5.txt", "socks5"),
-        ProxySource("speedx_http", "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt"),
-        ProxySource("speedx_socks4", "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks4.txt", "socks4"),
-        ProxySource("speedx_socks5", "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks5.txt", "socks5"),
-
+        ProxySource(
+            "mishakorzik",
+            "https://raw.githubusercontent.com/mishakorzik/100000-Proxy/main/proxy.txt",
+        ),
+        ProxySource(
+            "ercin_http",
+            "https://raw.githubusercontent.com/ErcinDedeoglu/proxies/main/proxies/http.txt",
+        ),
+        ProxySource(
+            "ercin_socks4",
+            "https://raw.githubusercontent.com/ErcinDedeoglu/proxies/main/proxies/socks4.txt",
+            "socks4",
+        ),
+        ProxySource(
+            "ercin_socks5",
+            "https://raw.githubusercontent.com/ErcinDedeoglu/proxies/main/proxies/socks5.txt",
+            "socks5",
+        ),
+        ProxySource(
+            "speedx_http", "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt"
+        ),
+        ProxySource(
+            "speedx_socks4",
+            "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks4.txt",
+            "socks4",
+        ),
+        ProxySource(
+            "speedx_socks5",
+            "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks5.txt",
+            "socks5",
+        ),
         # Tier 2: Fresh/verified lists
-        ProxySource("prxchk_http", "https://raw.githubusercontent.com/prxchk/proxy-list/main/http.txt"),
-        ProxySource("prxchk_socks4", "https://raw.githubusercontent.com/prxchk/proxy-list/main/socks4.txt", "socks4"),
-        ProxySource("prxchk_socks5", "https://raw.githubusercontent.com/prxchk/proxy-list/main/socks5.txt", "socks5"),
-        ProxySource("monosans", "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/all.txt"),
-        ProxySource("hookzof_socks5", "https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt", "socks5"),
-
+        ProxySource(
+            "prxchk_http", "https://raw.githubusercontent.com/prxchk/proxy-list/main/http.txt"
+        ),
+        ProxySource(
+            "prxchk_socks4",
+            "https://raw.githubusercontent.com/prxchk/proxy-list/main/socks4.txt",
+            "socks4",
+        ),
+        ProxySource(
+            "prxchk_socks5",
+            "https://raw.githubusercontent.com/prxchk/proxy-list/main/socks5.txt",
+            "socks5",
+        ),
+        ProxySource(
+            "monosans", "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/all.txt"
+        ),
+        ProxySource(
+            "hookzof_socks5",
+            "https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt",
+            "socks5",
+        ),
         # Tier 3: Additional sources
-        ProxySource("murong_http", "https://raw.githubusercontent.com/MuRongPIG/Proxy-Master/main/http.txt"),
-        ProxySource("murong_socks4", "https://raw.githubusercontent.com/MuRongPIG/Proxy-Master/main/socks4.txt", "socks4"),
-        ProxySource("murong_socks5", "https://raw.githubusercontent.com/MuRongPIG/Proxy-Master/main/socks5.txt", "socks5"),
-        ProxySource("seven_http", "https://raw.githubusercontent.com/SevenworksDev/proxy-list/main/proxies/http.txt"),
-        ProxySource("seven_socks4", "https://raw.githubusercontent.com/SevenworksDev/proxy-list/main/proxies/socks4.txt", "socks4"),
-        ProxySource("seven_socks5", "https://raw.githubusercontent.com/SevenworksDev/proxy-list/main/proxies/socks5.txt", "socks5"),
+        ProxySource(
+            "murong_http", "https://raw.githubusercontent.com/MuRongPIG/Proxy-Master/main/http.txt"
+        ),
+        ProxySource(
+            "murong_socks4",
+            "https://raw.githubusercontent.com/MuRongPIG/Proxy-Master/main/socks4.txt",
+            "socks4",
+        ),
+        ProxySource(
+            "murong_socks5",
+            "https://raw.githubusercontent.com/MuRongPIG/Proxy-Master/main/socks5.txt",
+            "socks5",
+        ),
+        ProxySource(
+            "seven_http",
+            "https://raw.githubusercontent.com/SevenworksDev/proxy-list/main/proxies/http.txt",
+        ),
+        ProxySource(
+            "seven_socks4",
+            "https://raw.githubusercontent.com/SevenworksDev/proxy-list/main/proxies/socks4.txt",
+            "socks4",
+        ),
+        ProxySource(
+            "seven_socks5",
+            "https://raw.githubusercontent.com/SevenworksDev/proxy-list/main/proxies/socks5.txt",
+            "socks5",
+        ),
         ProxySource("alii_http", "https://raw.githubusercontent.com/ALIILAPRO/Proxy/main/http.txt"),
-        ProxySource("p4p_http", "https://raw.githubusercontent.com/proxy4parsing/proxy-list/main/http.txt"),
-        ProxySource("jetkai", "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies.txt"),
-        ProxySource("clarketm", "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt"),
-        ProxySource("sunny", "https://raw.githubusercontent.com/sunny9577/proxy-scraper/master/proxies.txt"),
+        ProxySource(
+            "p4p_http", "https://raw.githubusercontent.com/proxy4parsing/proxy-list/main/http.txt"
+        ),
+        ProxySource(
+            "jetkai",
+            "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies.txt",
+        ),
+        ProxySource(
+            "clarketm",
+            "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt",
+        ),
+        ProxySource(
+            "sunny", "https://raw.githubusercontent.com/sunny9577/proxy-scraper/master/proxies.txt"
+        ),
     ]
 
     # IP:PORT pattern
@@ -151,10 +220,7 @@ class ProxyAggregator:
         all_proxies: list[str] = []
 
         async with aiohttp.ClientSession(timeout=self.timeout) as session:
-            tasks = [
-                self._download_source(session, source)
-                for source in self.SOURCES
-            ]
+            tasks = [self._download_source(session, source) for source in self.SOURCES]
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
 

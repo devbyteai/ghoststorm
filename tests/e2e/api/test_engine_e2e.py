@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -80,7 +82,7 @@ class TestEnginePresetsAPI:
         list_response = api_test_client.get("/api/engine/presets")
 
         if list_response.json()["presets"]:
-            preset_id = list(list_response.json()["presets"].keys())[0]
+            preset_id = next(iter(list_response.json()["presets"].keys()))
 
             response = api_test_client.get(f"/api/engine/presets/{preset_id}")
 

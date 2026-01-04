@@ -283,9 +283,11 @@ class ViewTrackingManager:
             "total_views": len(records),
             "views_last_hour": len(recent),
             "counted_views": len(counted),
-            "unique_ips": len(set(r.proxy_id for r in records)),
-            "unique_fingerprints": len(set(r.fingerprint_id for r in records)),
-            "avg_watch_time": sum(r.watch_duration for r in records) / len(records) if records else 0,
+            "unique_ips": len({r.proxy_id for r in records}),
+            "unique_fingerprints": len({r.fingerprint_id for r in records}),
+            "avg_watch_time": sum(r.watch_duration for r in records) / len(records)
+            if records
+            else 0,
         }
 
         logger.debug(
@@ -307,9 +309,7 @@ class ViewTrackingManager:
         cleaned = 0
         for video_id in list(self._records.keys()):
             original_count = len(self._records[video_id])
-            self._records[video_id] = [
-                r for r in self._records[video_id] if r.timestamp > cutoff
-            ]
+            self._records[video_id] = [r for r in self._records[video_id] if r.timestamp > cutoff]
             cleaned += original_count - len(self._records[video_id])
 
             # Remove empty entries

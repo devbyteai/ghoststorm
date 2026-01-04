@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -102,7 +104,10 @@ class TestZefoyStartAPI:
 
     def test_start_job_success(self, api_test_client: TestClient):
         """Test starting job successfully."""
-        with patch("ghoststorm.api.routes.zefoy.ZEFOY_SERVICES", {"views": ".btn-views", "likes": ".btn-likes"}):
+        with patch(
+            "ghoststorm.api.routes.zefoy.ZEFOY_SERVICES",
+            {"views": ".btn-views", "likes": ".btn-likes"},
+        ):
             with patch("ghoststorm.api.routes.zefoy._run_zefoy_job", new_callable=AsyncMock):
                 with patch("asyncio.create_task"):
                     response = api_test_client.post(
@@ -126,26 +131,31 @@ class TestZefoyStartAPI:
 
     def test_start_job_multiple_services(self, api_test_client: TestClient):
         """Test starting job with multiple services."""
-        with patch("ghoststorm.api.routes.zefoy.ZEFOY_SERVICES", {
-            "views": ".btn-views",
-            "likes": ".btn-likes",
-            "shares": ".btn-shares",
-        }):
-            with patch("ghoststorm.api.routes.zefoy._run_zefoy_job", new_callable=AsyncMock):
-                with patch("asyncio.create_task"):
-                    response = api_test_client.post(
-                        "/api/zefoy/start",
-                        json={
-                            "url": "https://www.tiktok.com/@user/video/123",
-                            "services": ["views", "likes"],
-                            "repeat": 2,
-                        },
-                    )
+        with (
+            patch(
+                "ghoststorm.api.routes.zefoy.ZEFOY_SERVICES",
+                {
+                    "views": ".btn-views",
+                    "likes": ".btn-likes",
+                    "shares": ".btn-shares",
+                },
+            ),
+            patch("ghoststorm.api.routes.zefoy._run_zefoy_job", new_callable=AsyncMock),
+        ):
+            with patch("asyncio.create_task"):
+                response = api_test_client.post(
+                    "/api/zefoy/start",
+                    json={
+                        "url": "https://www.tiktok.com/@user/video/123",
+                        "services": ["views", "likes"],
+                        "repeat": 2,
+                    },
+                )
 
-                    assert response.status_code == 200
-                    data = response.json()
-                    assert data["services"] == ["views", "likes"]
-                    assert data["total_runs"] == 4  # 2 services * 2 repeats
+                assert response.status_code == 200
+                data = response.json()
+                assert data["services"] == ["views", "likes"]
+                assert data["total_runs"] == 4  # 2 services * 2 repeats
 
     def test_start_job_config_stored(self, api_test_client: TestClient):
         """Test job config is stored correctly."""
@@ -184,12 +194,15 @@ class TestZefoyServicesAPI:
 
     def test_get_services(self, api_test_client: TestClient):
         """Test getting available Zefoy services."""
-        with patch("ghoststorm.api.routes.zefoy.ZEFOY_SERVICES", {
-            "views": ".btn-views",
-            "likes": ".btn-likes",
-            "shares": ".btn-shares",
-            "favorites": ".btn-favorites",
-        }):
+        with patch(
+            "ghoststorm.api.routes.zefoy.ZEFOY_SERVICES",
+            {
+                "views": ".btn-views",
+                "likes": ".btn-likes",
+                "shares": ".btn-shares",
+                "favorites": ".btn-favorites",
+            },
+        ):
             response = api_test_client.get("/api/zefoy/services")
 
             assert response.status_code == 200
@@ -211,11 +224,14 @@ class TestZefoyServicesAPI:
 
     def test_check_services_already_checking(self, api_test_client: TestClient):
         """Test check when already checking."""
-        with patch("ghoststorm.api.routes.zefoy._service_status_cache", {
-            "status": {},
-            "last_check": None,
-            "checking": True,
-        }):
+        with patch(
+            "ghoststorm.api.routes.zefoy._service_status_cache",
+            {
+                "status": {},
+                "last_check": None,
+                "checking": True,
+            },
+        ):
             response = api_test_client.post("/api/zefoy/services/check")
 
             assert response.status_code == 200
@@ -225,40 +241,50 @@ class TestZefoyServicesAPI:
 
     def test_check_services_success(self, api_test_client: TestClient):
         """Test checking services successfully."""
-        with patch("ghoststorm.api.routes.zefoy._service_status_cache", {
-            "status": {},
-            "last_check": None,
-            "checking": False,
-        }):
-            with patch("ghoststorm.api.routes.zefoy.check_zefoy_services") as mock_check:
-                mock_check.return_value = {
-                    "views": "available",
-                    "likes": "cooldown",
-                    "shares": "offline",
-                }
+        with (
+            patch(
+                "ghoststorm.api.routes.zefoy._service_status_cache",
+                {
+                    "status": {},
+                    "last_check": None,
+                    "checking": False,
+                },
+            ),
+            patch("ghoststorm.api.routes.zefoy.check_zefoy_services") as mock_check,
+        ):
+            mock_check.return_value = {
+                "views": "available",
+                "likes": "cooldown",
+                "shares": "offline",
+            }
 
-                response = api_test_client.post("/api/zefoy/services/check")
+            response = api_test_client.post("/api/zefoy/services/check")
 
-                assert response.status_code == 200
-                data = response.json()
-                if "status" in data:
-                    assert "views" in data["status"]
+            assert response.status_code == 200
+            data = response.json()
+            if "status" in data:
+                assert "views" in data["status"]
 
     def test_check_services_error(self, api_test_client: TestClient):
         """Test check services handles errors."""
-        with patch("ghoststorm.api.routes.zefoy._service_status_cache", {
-            "status": {},
-            "last_check": None,
-            "checking": False,
-        }):
-            with patch("ghoststorm.api.routes.zefoy.check_zefoy_services") as mock_check:
-                mock_check.side_effect = Exception("Network error")
+        with (
+            patch(
+                "ghoststorm.api.routes.zefoy._service_status_cache",
+                {
+                    "status": {},
+                    "last_check": None,
+                    "checking": False,
+                },
+            ),
+            patch("ghoststorm.api.routes.zefoy.check_zefoy_services") as mock_check,
+        ):
+            mock_check.side_effect = Exception("Network error")
 
-                response = api_test_client.post("/api/zefoy/services/check")
+            response = api_test_client.post("/api/zefoy/services/check")
 
-                assert response.status_code == 200
-                data = response.json()
-                assert "error" in data
+            assert response.status_code == 200
+            data = response.json()
+            assert "error" in data
 
 
 @pytest.mark.e2e

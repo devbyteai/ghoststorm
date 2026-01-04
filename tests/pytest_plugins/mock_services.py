@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass, field
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 
 # ============================================================================
 # MOCK OLLAMA SERVICE
@@ -229,7 +227,10 @@ def patch_ollama(mock_ollama_service: MockOllamaService):
                 response.json = lambda: {"response": mock_ollama_service.get_next_response()}
             elif "/api/chat" in url:
                 response.json = lambda: {
-                    "message": {"role": "assistant", "content": mock_ollama_service.get_next_response()},
+                    "message": {
+                        "role": "assistant",
+                        "content": mock_ollama_service.get_next_response(),
+                    },
                     "done": True,
                 }
             elif "/api/pull" in url:
@@ -247,7 +248,6 @@ def patch_ollama(mock_ollama_service: MockOllamaService):
 @pytest.fixture
 def patch_docker(mock_docker_service: MockDockerService):
     """Patch asyncio.create_subprocess_exec to mock Docker commands."""
-    original_create_subprocess = asyncio.create_subprocess_exec
 
     async def mock_subprocess(*args: Any, **kwargs: Any) -> MagicMock:
         proc = MagicMock()

@@ -18,6 +18,7 @@ DATA_DIR = Path(__file__).parent.parent.parent.parent.parent / "data"
 # ============ DATA LOADING UTILITIES ============
 # These functions are used by task execution to load random data items
 
+
 def get_random_user_agent(source_file: str | None = None) -> str | None:
     """Get a random user agent string from the data directory."""
     ua_dir = DATA_DIR / "user_agents"
@@ -191,6 +192,7 @@ def load_all_proxies() -> list[str]:
 
     return proxies
 
+
 # Category mappings
 CATEGORY_DIRS = {
     "user_agents": "user_agents",
@@ -229,11 +231,10 @@ def count_json_items(file_path: Path) -> int:
         return 0
     try:
         import json
+
         with open(file_path) as f:
             data = json.load(f)
-            if isinstance(data, list):
-                return len(data)
-            elif isinstance(data, dict):
+            if isinstance(data, (list, dict)):
                 return len(data)
             return 1
     except Exception:
@@ -287,12 +288,14 @@ def read_data_items(category: str) -> dict:
         try:
             with open(f) as file:
                 lines = [line.strip() for line in file if line.strip()]
-                result["files"].append({
-                    "name": f.name,
-                    "type": "txt",
-                    "count": len(lines),
-                    "items": lines[:100]  # Limit to first 100 for UI
-                })
+                result["files"].append(
+                    {
+                        "name": f.name,
+                        "type": "txt",
+                        "count": len(lines),
+                        "items": lines[:100],  # Limit to first 100 for UI
+                    }
+                )
         except Exception:
             pass
 
@@ -302,19 +305,18 @@ def read_data_items(category: str) -> dict:
             with open(f) as file:
                 data = json.load(file)
                 if isinstance(data, list):
-                    result["files"].append({
-                        "name": f.name,
-                        "type": "json",
-                        "count": len(data),
-                        "items": data[:100]
-                    })
+                    result["files"].append(
+                        {"name": f.name, "type": "json", "count": len(data), "items": data[:100]}
+                    )
                 elif isinstance(data, dict):
-                    result["files"].append({
-                        "name": f.name,
-                        "type": "json",
-                        "count": len(data),
-                        "items": list(data.keys())[:100]
-                    })
+                    result["files"].append(
+                        {
+                            "name": f.name,
+                            "type": "json",
+                            "count": len(data),
+                            "items": list(data.keys())[:100],
+                        }
+                    )
         except Exception:
             pass
 
@@ -430,8 +432,10 @@ async def delete_data_item(category: str, filename: str, item: DataItem) -> dict
 
 # ============ USER AGENT GENERATION ENDPOINTS ============
 
+
 class UAGenerateRequest(BaseModel):
     """Request for dynamic UA generation."""
+
     browser: str = "chrome"
     os: str = "windows"
     count: int = 1
@@ -439,6 +443,7 @@ class UAGenerateRequest(BaseModel):
 
 class UAParseRequest(BaseModel):
     """Request to parse a user agent string."""
+
     user_agent: str
 
 
@@ -457,13 +462,15 @@ async def generate_user_agent(request: UAGenerateRequest) -> dict:
 
         for _ in range(count):
             headers = hg.generate()
-            results.append({
-                "user_agent": headers.get("User-Agent", ""),
-                "sec_ch_ua": headers.get("sec-ch-ua", ""),
-                "sec_ch_ua_platform": headers.get("sec-ch-ua-platform", ""),
-                "sec_ch_ua_mobile": headers.get("sec-ch-ua-mobile", ""),
-                "accept_language": headers.get("Accept-Language", ""),
-            })
+            results.append(
+                {
+                    "user_agent": headers.get("User-Agent", ""),
+                    "sec_ch_ua": headers.get("sec-ch-ua", ""),
+                    "sec_ch_ua_platform": headers.get("sec-ch-ua-platform", ""),
+                    "sec_ch_ua_mobile": headers.get("sec-ch-ua-mobile", ""),
+                    "accept_language": headers.get("Accept-Language", ""),
+                }
+            )
 
         return {
             "success": True,
@@ -570,39 +577,41 @@ PLATFORM_UA_RECOMMENDATIONS = {
         "recommended_file": "tiktok_inapp.txt",
         "recommended_mode": "file",
         "message": "TikTok works best with in-app WebView user agents",
-        "settings": {"browser": "chrome", "os": "android", "include_webview": True}
+        "settings": {"browser": "chrome", "os": "android", "include_webview": True},
     },
     "instagram": {
         "recommended_file": "instagram_inapp.txt",
         "recommended_mode": "file",
         "message": "Instagram works best with in-app WebView user agents",
-        "settings": {"browser": "chrome", "os": "android", "include_webview": True}
+        "settings": {"browser": "chrome", "os": "android", "include_webview": True},
     },
     "youtube": {
         "recommended_file": "youtube_inapp.txt",
         "recommended_mode": "dynamic",
         "message": "YouTube works well with modern Chrome user agents",
-        "settings": {"browser": "chrome", "os": "windows", "include_mobile": True}
+        "settings": {"browser": "chrome", "os": "windows", "include_mobile": True},
     },
     "dextools": {
         "recommended_file": "aggregated.txt",
         "recommended_mode": "dynamic",
         "message": "DEXTools works best with desktop Chrome/Firefox",
-        "settings": {"browser": "chrome", "os": "windows", "include_mobile": False}
+        "settings": {"browser": "chrome", "os": "windows", "include_mobile": False},
     },
     "generic": {
         "recommended_file": "aggregated.txt",
         "recommended_mode": "dynamic",
         "message": "Using dynamic Chrome user agents for best compatibility",
-        "settings": {"browser": "chrome", "os": "windows", "include_mobile": False}
+        "settings": {"browser": "chrome", "os": "windows", "include_mobile": False},
     },
 }
 
 
 # ============ FINGERPRINT GENERATION ENDPOINTS ============
 
+
 class FPGenerateRequest(BaseModel):
     """Request for dynamic fingerprint generation."""
+
     browser: str = "chrome"
     os: str = "windows"
     count: int = 1
@@ -623,32 +632,34 @@ async def generate_fingerprint(request: FPGenerateRequest) -> dict:
             fp = fg.generate()
 
             # Extract key fingerprint data
-            results.append({
-                "screen": {
-                    "width": fp.screen.width,
-                    "height": fp.screen.height,
-                    "availWidth": fp.screen.availWidth,
-                    "availHeight": fp.screen.availHeight,
-                    "colorDepth": fp.screen.colorDepth,
-                    "pixelRatio": fp.screen.devicePixelRatio,
-                },
-                "navigator": {
-                    "userAgent": fp.navigator.userAgent,
-                    "platform": fp.navigator.platform,
-                    "language": fp.navigator.language,
-                    "languages": fp.navigator.languages,
-                    "hardwareConcurrency": fp.navigator.hardwareConcurrency,
-                    "deviceMemory": fp.navigator.deviceMemory,
-                    "maxTouchPoints": fp.navigator.maxTouchPoints,
-                },
-                "videoCard": {
-                    "vendor": fp.videoCard.vendor if fp.videoCard else None,
-                    "renderer": fp.videoCard.renderer if fp.videoCard else None,
-                },
-                "fonts": fp.fonts[:20] if fp.fonts else [],  # Limit fonts
-                "audioCodecs": fp.audioCodecs,
-                "videoCodecs": fp.videoCodecs,
-            })
+            results.append(
+                {
+                    "screen": {
+                        "width": fp.screen.width,
+                        "height": fp.screen.height,
+                        "availWidth": fp.screen.availWidth,
+                        "availHeight": fp.screen.availHeight,
+                        "colorDepth": fp.screen.colorDepth,
+                        "pixelRatio": fp.screen.devicePixelRatio,
+                    },
+                    "navigator": {
+                        "userAgent": fp.navigator.userAgent,
+                        "platform": fp.navigator.platform,
+                        "language": fp.navigator.language,
+                        "languages": fp.navigator.languages,
+                        "hardwareConcurrency": fp.navigator.hardwareConcurrency,
+                        "deviceMemory": fp.navigator.deviceMemory,
+                        "maxTouchPoints": fp.navigator.maxTouchPoints,
+                    },
+                    "videoCard": {
+                        "vendor": fp.videoCard.vendor if fp.videoCard else None,
+                        "renderer": fp.videoCard.renderer if fp.videoCard else None,
+                    },
+                    "fonts": fp.fonts[:20] if fp.fonts else [],  # Limit fonts
+                    "audioCodecs": fp.audioCodecs,
+                    "videoCodecs": fp.videoCodecs,
+                }
+            )
 
         return {
             "success": True,

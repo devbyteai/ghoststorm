@@ -93,6 +93,7 @@ def detect_platform(url: str) -> tuple[PlatformType, dict[str, str]]:
 
 # --- Task Schemas ---
 
+
 class TaskCreate(BaseModel):
     """Request schema for creating a new task."""
 
@@ -111,7 +112,8 @@ class TaskCreate(BaseModel):
 
     # LLM/AI control
     llm_mode: LLMMode = Field(
-        "off", description="LLM control mode: off (manual), assist (AI suggests), autonomous (AI executes)"
+        "off",
+        description="LLM control mode: off (manual), assist (AI suggests), autonomous (AI executes)",
     )
     llm_task: str | None = Field(
         None, description="Natural language goal for LLM (e.g., 'Watch 5 videos and like each')"
@@ -169,6 +171,7 @@ class TaskListResponse(BaseModel):
 
 
 # --- Platform Config Schemas ---
+
 
 class TikTokConfigSchema(BaseModel):
     """TikTok automation configuration."""
@@ -252,7 +255,7 @@ class DEXToolsConfigSchema(BaseModel):
     # === Behavior Settings ===
     behavior_mode: Literal["realistic", "passive", "light", "engaged", "custom"] = Field(
         "realistic",
-        description="realistic (60% passive, 30% light, 10% engaged), or force specific behavior"
+        description="realistic (60% passive, 30% light, 10% engaged), or force specific behavior",
     )
     dwell_time_min: float = Field(30.0, ge=1, description="Min time on page (seconds)")
     dwell_time_max: float = Field(120.0, ge=1, description="Max time on page (seconds)")
@@ -322,8 +325,12 @@ class LLMBehaviorConfig(BaseModel):
     provider: LLMProvider = Field("openai", description="LLM provider")
     model: str = Field("gpt-4o", description="Model name")
     personality: LLMPersonality = Field("casual", description="Browsing personality")
-    custom_prompt: str | None = Field(None, description="Custom behavior prompt when personality=custom")
-    decision_frequency: DecisionFrequency = Field("key", description="How often LLM makes decisions")
+    custom_prompt: str | None = Field(
+        None, description="Custom behavior prompt when personality=custom"
+    )
+    decision_frequency: DecisionFrequency = Field(
+        "key", description="How often LLM makes decisions"
+    )
     vision_enabled: bool = Field(False, description="Enable screenshot analysis")
     temperature: float = Field(0.3, ge=0, le=1, description="LLM temperature")
 
@@ -332,7 +339,9 @@ class ReferrerConfigSchema(BaseModel):
     """Smart referrer distribution configuration."""
 
     mode: ReferrerMode = Field("realistic", description="Distribution mode")
-    preset: str | None = Field("realistic", description="Preset name: realistic, search_heavy, social_viral")
+    preset: str | None = Field(
+        "realistic", description="Preset name: realistic, search_heavy, social_viral"
+    )
 
     # Custom weights (when mode=custom)
     direct_weight: int = Field(45, ge=0, le=100, description="Direct traffic %")
@@ -349,7 +358,7 @@ class ReferrerConfigSchema(BaseModel):
     # Social platform selection
     social_platforms: list[str] = Field(
         default_factory=lambda: ["twitter", "reddit", "facebook", "linkedin"],
-        description="Which social platforms to include"
+        description="Which social platforms to include",
     )
 
 
@@ -389,9 +398,9 @@ class SessionBehaviorSchema(BaseModel):
     break_max_sec: int = Field(5, ge=1, description="Max break duration")
 
     # Persona from CoherenceEngine
-    persona: Literal["casual", "researcher", "shopper", "scanner", "power_user", "scroller"] | None = Field(
-        None, description="User persona for behavior coherence"
-    )
+    persona: (
+        Literal["casual", "researcher", "shopper", "scanner", "power_user", "scroller"] | None
+    ) = Field(None, description="User persona for behavior coherence")
 
 
 class BehaviorModeSchema(BaseModel):
@@ -408,6 +417,7 @@ class BehaviorModeSchema(BaseModel):
 
 
 # --- Platform Detection ---
+
 
 class PlatformDetectRequest(BaseModel):
     """Request for platform detection."""
@@ -439,6 +449,7 @@ class AllPlatformsResponse(BaseModel):
 
 # --- Metrics Schemas ---
 
+
 class MetricsResponse(BaseModel):
     """Dashboard metrics response."""
 
@@ -468,6 +479,7 @@ class MetricsResponse(BaseModel):
 
 # --- WebSocket Event ---
 
+
 class WebSocketEvent(BaseModel):
     """WebSocket event message."""
 
@@ -478,6 +490,7 @@ class WebSocketEvent(BaseModel):
 
 
 # --- Presets ---
+
 
 class ConfigPreset(BaseModel):
     """Configuration preset."""

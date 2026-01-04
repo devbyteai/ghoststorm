@@ -10,11 +10,13 @@ This test simulates a complete user journey using AI:
 
 from __future__ import annotations
 
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -66,7 +68,7 @@ class TestLLMAssistedAutomationJourney:
                 "selectors": {
                     "like_button": '[data-e2e="like-icon"]',
                     "share_button": '[data-e2e="share-icon"]',
-                    "video_player": 'video',
+                    "video_player": "video",
                 },
             }
 
@@ -320,7 +322,7 @@ class TestAIErrorHandling:
             MockAI.return_value = mock_ai
 
             # First call
-            response1 = api_test_client.post(
+            api_test_client.post(
                 "/api/assistant/chat",
                 json={"message": "Hello"},
             )

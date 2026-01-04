@@ -144,12 +144,14 @@ class BrightDataProvider(PremiumProxyProvider):
     def to_config(self) -> dict[str, Any]:
         """Export configuration for saving."""
         config = super().to_config()
-        config.update({
-            "customer_id": self.customer_id,
-            "zone": self.zone,
-            "asn": self.asn,
-            "carrier": self.carrier,
-        })
+        config.update(
+            {
+                "customer_id": self.customer_id,
+                "zone": self.zone,
+                "asn": self.asn,
+                "carrier": self.carrier,
+            }
+        )
         return config
 
     @classmethod

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -97,9 +99,7 @@ class TestLLMCompletionAPI:
         response = api_test_client.post(
             "/api/llm/complete",
             json={
-                "messages": [
-                    {"role": "user", "content": "Say hello"}
-                ],
+                "messages": [{"role": "user", "content": "Say hello"}],
                 "temperature": 0.7,
             },
         )
@@ -416,7 +416,7 @@ class TestLLMHealthAPI:
         data = response.json()
 
         # Each provider should have a boolean status
-        for provider, status in data["providers"].items():
+        for _provider, status in data["providers"].items():
             assert isinstance(status, bool)
 
 

@@ -286,8 +286,7 @@ class DOMState:
             label = text or aria or placeholder or node.tag
 
             lines.append(
-                f"[{elem.index}] {node.element_type.value}: {label} "
-                f"(selector: {elem.selector})"
+                f"[{elem.index}] {node.element_type.value}: {label} (selector: {elem.selector})"
             )
 
         return "\n".join(lines)

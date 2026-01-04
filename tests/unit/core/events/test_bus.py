@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import time
-from unittest.mock import AsyncMock
 
 import pytest
 
-from ghoststorm.core.events.bus import AsyncEventBus, Event, EventHandler
+from ghoststorm.core.events.bus import AsyncEventBus, Event
 from ghoststorm.core.events.types import EventType
-
 
 # ============================================================================
 # EVENT DATACLASS TESTS
@@ -362,9 +360,7 @@ class TestAsyncEventBusSubscribe:
 
         event = Event(type=EventType.ENGINE_STARTED)
         await bus.publish(event)
-        await asyncio.wait_for(
-            asyncio.sleep(0.1), timeout=1.0
-        )  # Allow processing
+        await asyncio.wait_for(asyncio.sleep(0.1), timeout=1.0)  # Allow processing
 
         assert len(received) == 1
         assert received[0].id == event.id
@@ -882,12 +878,14 @@ class TestAsyncEventBusIntegration:
         results = []
 
         async def handler(event: Event) -> None:
-            results.append({
-                "id": event.id,
-                "type": event.type,
-                "data": event.data,
-                "source": event.source,
-            })
+            results.append(
+                {
+                    "id": event.id,
+                    "type": event.type,
+                    "data": event.data,
+                    "source": event.source,
+                }
+            )
 
         bus.subscribe(EventType.TASK_COMPLETED, handler)
 

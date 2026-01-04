@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 
 import structlog
 
-from ghoststorm.core.events.bus import Event
 from ghoststorm.core.events.types import EventType
 from ghoststorm.core.watchdog.base import BaseWatchdog
 from ghoststorm.core.watchdog.models import (
@@ -21,7 +20,7 @@ from ghoststorm.core.watchdog.models import (
 )
 
 if TYPE_CHECKING:
-    from ghoststorm.core.events.bus import AsyncEventBus
+    from ghoststorm.core.events.bus import AsyncEventBus, Event
 
 logger = structlog.get_logger(__name__)
 
@@ -176,7 +175,7 @@ class PageWatchdog(BaseWatchdog):
         # Check if this is a page/navigation error
         page_errors = ["navigation", "page", "load", "timeout", "goto"]
         if any(err in error.lower() for err in page_errors):
-            url = event.data.get("url", "unknown")
+            event.data.get("url", "unknown")
 
             failure = FailureInfo(
                 watchdog_name=self.name,
@@ -229,7 +228,7 @@ class PageWatchdog(BaseWatchdog):
         # Check for stale pending navigations
         stale_count = 0
         now = datetime.now()
-        for url, start_time in self._pending_navigations.items():
+        for _url, start_time in self._pending_navigations.items():
             if (now - start_time).total_seconds() > self.config.page_timeout:
                 stale_count += 1
 

@@ -258,7 +258,9 @@ async def analyze_page(request: AnalyzePageRequest) -> AnalysisResponse:
         # Get page from task
         page = orchestrator.get_page_for_task(request.task_id)
         if page is None:
-            raise HTTPException(status_code=404, detail=f"No active page for task {request.task_id}")
+            raise HTTPException(
+                status_code=404, detail=f"No active page for task {request.task_id}"
+            )
 
         controller = _get_llm_controller()
 
@@ -302,7 +304,9 @@ async def execute_task(request: ExecuteTaskRequest) -> TaskResultResponse:
         # Get page from task
         page = orchestrator.get_page_for_task(request.task_id)
         if page is None:
-            raise HTTPException(status_code=404, detail=f"No active page for task {request.task_id}")
+            raise HTTPException(
+                status_code=404, detail=f"No active page for task {request.task_id}"
+            )
 
         controller = _get_llm_controller()
 
@@ -374,9 +378,7 @@ async def health_check() -> HealthCheckResponse:
         llm_service = _get_llm_service()
         results = await llm_service.health_check_all()
 
-        return HealthCheckResponse(
-            providers={p.value: healthy for p, healthy in results.items()}
-        )
+        return HealthCheckResponse(providers={p.value: healthy for p, healthy in results.items()})
 
     except HTTPException:
         raise

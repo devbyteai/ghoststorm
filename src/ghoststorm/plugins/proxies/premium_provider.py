@@ -5,10 +5,9 @@ from __future__ import annotations
 import asyncio
 import secrets
 from abc import ABC, abstractmethod
-from collections.abc import AsyncIterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import aiohttp
 import structlog
@@ -17,9 +16,11 @@ from ghoststorm.core.models.proxy import (
     Proxy,
     ProxyCategory,
     ProxyHealth,
-    ProxyType,
     RotationStrategy,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 logger = structlog.get_logger(__name__)
 
@@ -132,7 +133,7 @@ class PremiumProxyProvider(ABC):
         """Initialize the provider."""
         self._initialized = True
         logger.info(
-            f"Premium provider initialized",
+            "Premium provider initialized",
             provider=self.name,
             country=self.country,
             session_type=self.session_type,
@@ -236,28 +237,30 @@ class PremiumProxyProvider(ABC):
         start = datetime.now()
 
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
+            async with (
+                aiohttp.ClientSession() as session,
+                session.get(
                     test_url,
                     proxy=proxy.url,
                     timeout=aiohttp.ClientTimeout(total=15),
-                ) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        latency = (datetime.now() - start).total_seconds() * 1000
-                        return {
-                            "success": True,
-                            "latency_ms": round(latency, 2),
-                            "ip": data.get("origin", "unknown"),
-                            "provider": self.name,
-                            "country": self.country,
-                        }
-                    else:
-                        return {
-                            "success": False,
-                            "error": f"HTTP {response.status}",
-                            "provider": self.name,
-                        }
+                ) as response,
+            ):
+                if response.status == 200:
+                    data = await response.json()
+                    latency = (datetime.now() - start).total_seconds() * 1000
+                    return {
+                        "success": True,
+                        "latency_ms": round(latency, 2),
+                        "ip": data.get("origin", "unknown"),
+                        "provider": self.name,
+                        "country": self.country,
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": f"HTTP {response.status}",
+                        "provider": self.name,
+                    }
         except Exception as e:
             return {
                 "success": False,
@@ -313,7 +316,7 @@ class PremiumProxyProvider(ABC):
     async def close(self) -> None:
         """Clean up resources."""
         self._active_sessions.clear()
-        logger.info(f"Premium provider closed", provider=self.name)
+        logger.info("Premium provider closed", provider=self.name)
 
     def to_config(self) -> dict[str, Any]:
         """Export configuration for saving."""

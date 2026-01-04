@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -14,6 +13,8 @@ from ghoststorm.core.llm.base import BaseLLM, LLMConfig, ProviderInfo
 from ghoststorm.core.llm.messages import LLMResponse, LLMUsage, Message
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     pass
 
 logger = structlog.get_logger(__name__)
@@ -42,7 +43,9 @@ class LLMServiceConfig:
     anthropic_model: str = "claude-sonnet-4-20250514"
     anthropic_base_url: str | None = None
 
-    ollama_host: str = field(default_factory=lambda: os.getenv("OLLAMA_HOST", "http://localhost:11434"))
+    ollama_host: str = field(
+        default_factory=lambda: os.getenv("OLLAMA_HOST", "http://localhost:11434")
+    )
     ollama_model: str = "llama3"
 
     # Shared settings

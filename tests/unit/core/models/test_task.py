@@ -6,8 +6,6 @@ import time
 from datetime import datetime, timedelta
 from uuid import UUID
 
-import pytest
-
 from ghoststorm.core.models.task import (
     BatchResult,
     Task,
@@ -17,7 +15,6 @@ from ghoststorm.core.models.task import (
     TaskStatus,
     TaskType,
 )
-
 
 # ============================================================================
 # TASKTYPE ENUM TESTS
@@ -837,11 +834,27 @@ class TestTaskResult:
         data = result.to_dict()
 
         expected_keys = {
-            "task_id", "success", "status", "started_at", "completed_at",
-            "duration_ms", "final_url", "status_code", "page_title",
-            "extracted_data", "screenshot_path", "error", "error_type",
-            "proxy_used", "fingerprint_used", "bytes_downloaded", "requests_made",
-            "captcha_detected", "captcha_solved", "bot_detected", "metadata",
+            "task_id",
+            "success",
+            "status",
+            "started_at",
+            "completed_at",
+            "duration_ms",
+            "final_url",
+            "status_code",
+            "page_title",
+            "extracted_data",
+            "screenshot_path",
+            "error",
+            "error_type",
+            "proxy_used",
+            "fingerprint_used",
+            "bytes_downloaded",
+            "requests_made",
+            "captcha_detected",
+            "captcha_solved",
+            "bot_detected",
+            "metadata",
         }
         assert set(data.keys()) == expected_keys
 

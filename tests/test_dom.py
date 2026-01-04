@@ -1,6 +1,9 @@
 """Tests for DOM intelligence module."""
 
 import pytest
+
+from ghoststorm.core.dom.analyzer import DOMAnalyzer
+from ghoststorm.core.dom.clickable import ClickableDetector
 from ghoststorm.core.dom.models import (
     BoundingBox,
     DOMConfig,
@@ -10,9 +13,7 @@ from ghoststorm.core.dom.models import (
     ElementType,
     InteractionType,
 )
-from ghoststorm.core.dom.clickable import ClickableDetector
 from ghoststorm.core.dom.selector import SelectorGenerator
-from ghoststorm.core.dom.analyzer import DOMAnalyzer
 
 
 class TestBoundingBox:

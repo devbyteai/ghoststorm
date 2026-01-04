@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from rich.console import Console
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 from ghoststorm.plugins.proxies.file_provider import FileProxyProvider
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 console = Console()
 

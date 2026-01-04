@@ -6,8 +6,12 @@ Run with: pytest tests/e2e/real/ --run-real -v
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.real
@@ -74,6 +78,7 @@ class TestProxyValidation:
         if scrape_response.status_code == 200:
             # Wait for scrape to complete or get job status
             import time
+
             time.sleep(5)
 
             # Start validation
@@ -125,7 +130,7 @@ class TestProxyStats:
     def test_stats_after_scrape(self, api_test_client: TestClient):
         """Test stats update after scraping."""
         # Get initial stats
-        initial = api_test_client.get("/api/proxies/stats").json()
+        api_test_client.get("/api/proxies/stats").json()
 
         # Scrape more
         api_test_client.post(
@@ -134,6 +139,7 @@ class TestProxyStats:
         )
 
         import time
+
         time.sleep(10)
 
         # Get updated stats

@@ -3,21 +3,25 @@
 from __future__ import annotations
 
 import asyncio
-import socket
+import contextlib
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from ghoststorm.core.models.proxy import Proxy, ProxyType
+
+if TYPE_CHECKING:
+    import socket
 
 
 class TorCircuitStrategy(Enum):
     """Strategy for Tor circuit management."""
 
-    STATIC = "static"           # Keep same circuit
+    STATIC = "static"  # Keep same circuit
     ROTATE_PER_REQUEST = "rotate_per_request"  # New circuit each request
     ROTATE_PER_SESSION = "rotate_per_session"  # New circuit per browser session
-    ROTATE_INTERVAL = "rotate_interval"         # Rotate every N seconds
+    ROTATE_INTERVAL = "rotate_interval"  # Rotate every N seconds
 
 
 @dataclass
@@ -194,7 +198,7 @@ class TorProxyProvider:
         """
         try:
             # Connect to control port if not connected
-            if not hasattr(self, '_control_writer') or self._control_writer is None:
+            if not hasattr(self, "_control_writer") or self._control_writer is None:
                 if not await self._connect_control_port():
                     return False
 
@@ -272,12 +276,10 @@ class TorProxyProvider:
 
     async def close(self) -> None:
         """Close control port connection."""
-        if hasattr(self, '_control_writer') and self._control_writer:
+        if hasattr(self, "_control_writer") and self._control_writer:
             self._control_writer.close()
-            try:
+            with contextlib.suppress(Exception):
                 await self._control_writer.wait_closed()
-            except Exception:
-                pass
 
     @property
     def is_connected(self) -> bool:

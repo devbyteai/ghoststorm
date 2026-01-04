@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import os
-from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING, Any
 
 import structlog
@@ -19,6 +18,8 @@ from ghoststorm.core.llm.vision import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     pass
 
 logger = structlog.get_logger(__name__)
@@ -97,9 +98,7 @@ class OllamaProvider(BaseLLM, BaseVisionProvider):
             try:
                 import httpx
             except ImportError:
-                raise ImportError(
-                    "httpx library not installed. Install with: pip install httpx"
-                )
+                raise ImportError("httpx library not installed. Install with: pip install httpx")
 
             self._http_client = httpx.AsyncClient(
                 base_url=self.config.base_url,
@@ -238,10 +237,19 @@ class OllamaProvider(BaseLLM, BaseVisionProvider):
     def supports_vision(self) -> bool:
         """Check if current model supports vision."""
         model = self.config.model.lower()
-        return any(vm in model for vm in [
-            "llava", "qwen3-vl", "qwen2.5vl", "moondream",
-            "minicpm-v", "vision", "bakllava", "gemma3"
-        ])
+        return any(
+            vm in model
+            for vm in [
+                "llava",
+                "qwen3-vl",
+                "qwen2.5vl",
+                "moondream",
+                "minicpm-v",
+                "vision",
+                "bakllava",
+                "gemma3",
+            ]
+        )
 
     @property
     def vision_models(self) -> list[str]:
@@ -409,11 +417,11 @@ class OllamaProvider(BaseLLM, BaseVisionProvider):
 
             # Parse coordinates if present
             coords = None
-            if "coordinates" in data and data["coordinates"]:
+            if data.get("coordinates"):
                 coords = tuple(data["coordinates"][:2])
-            elif "suggested_action" in data and data["suggested_action"]:
+            elif data.get("suggested_action"):
                 action = data["suggested_action"]
-                if "coordinates" in action and action["coordinates"]:
+                if action.get("coordinates"):
                     coords = tuple(action["coordinates"][:2])
 
             return VisionAnalysis(

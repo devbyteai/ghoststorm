@@ -7,7 +7,6 @@ realistic human-like behavior patterns for trending campaigns.
 from __future__ import annotations
 
 import asyncio
-import math
 import random
 from dataclasses import dataclass, field
 from enum import Enum
@@ -69,7 +68,9 @@ class DEXToolsSelectors:
     social_link_twitter: str = "a[href*='twitter.com'], a[href*='x.com']"
     social_link_telegram: str = "a[href*='t.me'], a[href*='telegram']"
     social_link_discord: str = "a[href*='discord']"
-    social_link_website: str = "a[href]:not([href*='twitter']):not([href*='t.me']):not([href*='discord'])"
+    social_link_website: str = (
+        "a[href]:not([href*='twitter']):not([href*='t.me']):not([href*='discord'])"
+    )
 
     # XPath fallbacks for social links
     social_link_1_xpath: str = "//div[contains(@class,'pair')]//a[@target='_blank'][1]"
@@ -203,8 +204,7 @@ class DEXToolsAutomation:
         else:
             # Custom mode - use realistic
             return random.choices(
-                list(BEHAVIOR_WEIGHTS.keys()),
-                weights=list(BEHAVIOR_WEIGHTS.values())
+                list(BEHAVIOR_WEIGHTS.keys()), weights=list(BEHAVIOR_WEIGHTS.values())
             )[0]
 
     def _get_dwell_time(self, behavior: VisitorBehavior) -> tuple[float, float]:
@@ -250,14 +250,14 @@ class DEXToolsAutomation:
         x = (
             (1 - t) ** 3 * p0[0]
             + 3 * (1 - t) ** 2 * t * p1[0]
-            + 3 * (1 - t) * t ** 2 * p2[0]
-            + t ** 3 * p3[0]
+            + 3 * (1 - t) * t**2 * p2[0]
+            + t**3 * p3[0]
         )
         y = (
             (1 - t) ** 3 * p0[1]
             + 3 * (1 - t) ** 2 * t * p1[1]
-            + 3 * (1 - t) * t ** 2 * p2[1]
-            + t ** 3 * p3[1]
+            + 3 * (1 - t) * t**2 * p2[1]
+            + t**3 * p3[1]
         )
         return (x, y)
 

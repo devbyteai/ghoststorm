@@ -109,12 +109,13 @@ async def capture_screenshot(
     config = config or VisionConfig()
 
     # Get viewport size
-    viewport = await page.evaluate("() => ({ width: window.innerWidth, height: window.innerHeight })")
+    viewport = await page.evaluate(
+        "() => ({ width: window.innerWidth, height: window.innerHeight })"
+    )
 
     # Calculate scale if needed
-    scale = 1.0
     if viewport.get("width", 0) > config.max_width:
-        scale = config.max_width / viewport["width"]
+        config.max_width / viewport["width"]
 
     # Take screenshot
     screenshot = await page.screenshot(

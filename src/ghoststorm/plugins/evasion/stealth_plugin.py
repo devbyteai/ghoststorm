@@ -12,12 +12,15 @@ Enterprise-grade evasion with 2025 anti-detection techniques:
 
 from __future__ import annotations
 
+import contextlib
 import random
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ghoststorm.core.models.fingerprint import Fingerprint
 from ghoststorm.core.registry.hookspecs import hookimpl
+
+if TYPE_CHECKING:
+    from ghoststorm.core.models.fingerprint import Fingerprint
 
 
 class StealthPlugin:
@@ -42,7 +45,12 @@ class StealthPlugin:
 
     def __init__(self) -> None:
         self._template: str | None = None
-        self._template_path = Path(__file__).parent.parent.parent.parent.parent / "data" / "evasion" / "stealth_template.js"
+        self._template_path = (
+            Path(__file__).parent.parent.parent.parent.parent
+            / "data"
+            / "evasion"
+            / "stealth_template.js"
+        )
 
     def _load_template(self) -> str:
         """Load the stealth JavaScript template."""
@@ -120,11 +128,13 @@ window.navigator.permissions.query = (parameters) => (
         # Generate random values if no fingerprint provided
         if fingerprint is None:
             vendor = random.choice(["Google Inc.", "Apple Computer, Inc.", ""])
-            oscpu = random.choice([
-                "Windows NT 10.0; Win64; x64",
-                "Intel Mac OS X 10_15_7",
-                "Linux x86_64",
-            ])
+            oscpu = random.choice(
+                [
+                    "Windows NT 10.0; Win64; x64",
+                    "Intel Mac OS X 10_15_7",
+                    "Linux x86_64",
+                ]
+            )
             history_length = random.randint(2, 50)
             hardware_concurrency = random.choice([2, 4, 6, 8, 12, 16])
             device_memory = random.choice([2, 4, 8, 16])
@@ -136,20 +146,27 @@ window.navigator.permissions.query = (parameters) => (
                 random.randint(-20, 20),
                 random.randint(-5, 5),
             ]
-            webgl_vendor = "WebKit"
-            webgl_renderer = random.choice([
-                "WebKit WebGL",
-                "ANGLE (NVIDIA GeForce GTX 1080 Direct3D11 vs_5_0 ps_5_0)",
-                "ANGLE (Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0)",
-                "ANGLE (AMD Radeon RX 580 Direct3D11 vs_5_0 ps_5_0)",
-            ])
+            webgl_renderer = random.choice(
+                [
+                    "WebKit WebGL",
+                    "ANGLE (NVIDIA GeForce GTX 1080 Direct3D11 vs_5_0 ps_5_0)",
+                    "ANGLE (Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0)",
+                    "ANGLE (AMD Radeon RX 580 Direct3D11 vs_5_0 ps_5_0)",
+                ]
+            )
             fonts = self._generate_random_fonts()
             is_chrome = True
         else:
             vendor = fingerprint.navigator.vendor if fingerprint.navigator else "Google Inc."
-            oscpu = fingerprint.navigator.oscpu if fingerprint.navigator and fingerprint.navigator.oscpu else ""
+            oscpu = (
+                fingerprint.navigator.oscpu
+                if fingerprint.navigator and fingerprint.navigator.oscpu
+                else ""
+            )
             history_length = random.randint(2, 50)
-            hardware_concurrency = fingerprint.navigator.hardware_concurrency if fingerprint.navigator else 4
+            hardware_concurrency = (
+                fingerprint.navigator.hardware_concurrency if fingerprint.navigator else 4
+            )
             device_memory = fingerprint.navigator.device_memory if fingerprint.navigator else 8
             color_depth = fingerprint.screen.color_depth if fingerprint.screen else 24
             pixel_depth = fingerprint.screen.pixel_depth if fingerprint.screen else 24
@@ -159,7 +176,6 @@ window.navigator.permissions.query = (parameters) => (
                 fingerprint.canvas.noise_b if fingerprint.canvas else random.randint(-20, 20),
                 fingerprint.canvas.noise_a if fingerprint.canvas else random.randint(-5, 5),
             ]
-            webgl_vendor = fingerprint.webgl.vendor if fingerprint.webgl else "WebKit"
             webgl_renderer = fingerprint.webgl.renderer if fingerprint.webgl else "WebKit WebGL"
             fonts = fingerprint.fonts if fingerprint.fonts else self._generate_random_fonts()
             is_chrome = "Chrome" in (fingerprint.user_agent or "Chrome")
@@ -199,10 +215,23 @@ window.navigator.permissions.query = (parameters) => (
     def _generate_random_fonts(self) -> str:
         """Generate a random list of common fonts."""
         common_fonts = [
-            "Arial", "Helvetica", "Times New Roman", "Georgia", "Verdana",
-            "Courier New", "Comic Sans MS", "Impact", "Trebuchet MS",
-            "Arial Black", "Palatino Linotype", "Lucida Console", "Tahoma",
-            "Century Gothic", "Bookman Old Style", "Garamond", "MS Sans Serif",
+            "Arial",
+            "Helvetica",
+            "Times New Roman",
+            "Georgia",
+            "Verdana",
+            "Courier New",
+            "Comic Sans MS",
+            "Impact",
+            "Trebuchet MS",
+            "Arial Black",
+            "Palatino Linotype",
+            "Lucida Console",
+            "Tahoma",
+            "Century Gothic",
+            "Bookman Old Style",
+            "Garamond",
+            "MS Sans Serif",
         ]
         selected = random.sample(common_fonts, min(len(common_fonts), random.randint(8, 15)))
         return ",".join(selected)
@@ -243,8 +272,6 @@ window.navigator.permissions.query = (parameters) => (
     async def before_page_load(self, page: Any, url: str) -> str:
         """Set up page interception for stealth injection."""
         script = self.generate_stealth_script()
-        try:
+        with contextlib.suppress(Exception):
             await page.add_init_script(script)
-        except Exception:
-            pass
         return url

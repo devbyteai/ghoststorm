@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 from datetime import UTC, datetime
 from typing import Any
@@ -50,18 +51,14 @@ class WebSocketManager:
 
         if self._heartbeat_task:
             self._heartbeat_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._heartbeat_task
-            except asyncio.CancelledError:
-                pass
 
         # Close all connections
         async with self._connection_lock:
             for websocket in list(self._connections):
-                try:
+                with contextlib.suppress(Exception):
                     await websocket.close()
-                except Exception:
-                    pass
             self._connections.clear()
 
         logger.info("WebSocket manager stopped")
@@ -79,11 +76,14 @@ class WebSocketManager:
         )
 
         # Send welcome message
-        await self._send_to_client(websocket, {
-            "type": "connected",
-            "message": "Connected to GhostStorm",
-            "timestamp": datetime.now(UTC).isoformat(),
-        })
+        await self._send_to_client(
+            websocket,
+            {
+                "type": "connected",
+                "message": "Connected to GhostStorm",
+                "timestamp": datetime.now(UTC).isoformat(),
+            },
+        )
 
     async def disconnect(self, websocket: WebSocket) -> None:
         """Remove a WebSocket connection."""
@@ -123,9 +123,7 @@ class WebSocketManager:
             # Remove disconnected clients
             self._connections -= disconnected
 
-    async def _send_to_client(
-        self, websocket: WebSocket, message: dict[str, Any]
-    ) -> bool:
+    async def _send_to_client(self, websocket: WebSocket, message: dict[str, Any]) -> bool:
         """Send a message to a specific client.
 
         Returns:
@@ -146,10 +144,12 @@ class WebSocketManager:
                 await asyncio.sleep(30)  # Heartbeat every 30 seconds
 
                 if self._connections:
-                    await self.broadcast({
-                        "type": "heartbeat",
-                        "connections": self.connection_count,
-                    })
+                    await self.broadcast(
+                        {
+                            "type": "heartbeat",
+                            "connections": self.connection_count,
+                        }
+                    )
 
             except asyncio.CancelledError:
                 break
@@ -180,10 +180,13 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                 message = json.loads(data)
                 await _handle_client_message(websocket, message)
             except json.JSONDecodeError:
-                await ws_manager._send_to_client(websocket, {
-                    "type": "error",
-                    "message": "Invalid JSON",
-                })
+                await ws_manager._send_to_client(
+                    websocket,
+                    {
+                        "type": "error",
+                        "message": "Invalid JSON",
+                    },
+                )
 
     except WebSocketDisconnect:
         pass
@@ -193,9 +196,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
         await ws_manager.disconnect(websocket)
 
 
-async def _handle_client_message(
-    websocket: WebSocket, message: dict[str, Any]
-) -> None:
+async def _handle_client_message(websocket: WebSocket, message: dict[str, Any]) -> None:
     """Handle incoming messages from WebSocket clients.
 
     Supported message types:
@@ -206,35 +207,51 @@ async def _handle_client_message(
     msg_type = message.get("type", "")
 
     if msg_type == "ping":
-        await ws_manager._send_to_client(websocket, {
-            "type": "pong",
-            "timestamp": datetime.now(UTC).isoformat(),
-        })
+        await ws_manager._send_to_client(
+            websocket,
+            {
+                "type": "pong",
+                "timestamp": datetime.now(UTC).isoformat(),
+            },
+        )
 
     elif msg_type == "subscribe":
         # Future: Handle event type subscriptions
-        await ws_manager._send_to_client(websocket, {
-            "type": "subscribed",
-            "events": message.get("events", ["*"]),
-        })
+        await ws_manager._send_to_client(
+            websocket,
+            {
+                "type": "subscribed",
+                "events": message.get("events", ["*"]),
+            },
+        )
 
     elif msg_type == "get_stats":
         # Return current stats
         try:
             from ghoststorm.api.routes.metrics import get_metrics
+
             metrics = await get_metrics()
-            await ws_manager._send_to_client(websocket, {
-                "type": "stats",
-                "data": metrics.model_dump(),
-            })
+            await ws_manager._send_to_client(
+                websocket,
+                {
+                    "type": "stats",
+                    "data": metrics.model_dump(),
+                },
+            )
         except Exception as e:
-            await ws_manager._send_to_client(websocket, {
-                "type": "error",
-                "message": str(e),
-            })
+            await ws_manager._send_to_client(
+                websocket,
+                {
+                    "type": "error",
+                    "message": str(e),
+                },
+            )
 
     else:
-        await ws_manager._send_to_client(websocket, {
-            "type": "error",
-            "message": f"Unknown message type: {msg_type}",
-        })
+        await ws_manager._send_to_client(
+            websocket,
+            {
+                "type": "error",
+                "message": f"Unknown message type: {msg_type}",
+            },
+        )

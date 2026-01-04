@@ -18,6 +18,7 @@ def _get_orchestrator_stats() -> dict[str, Any]:
     """Get stats from orchestrator if available."""
     try:
         from ghoststorm.api.app import get_orchestrator
+
         orchestrator = get_orchestrator()
 
         return {
@@ -29,9 +30,7 @@ def _get_orchestrator_stats() -> dict[str, Any]:
                 else 0
             ),
             "workers_total": (
-                orchestrator.worker_pool.max_workers
-                if hasattr(orchestrator, "worker_pool")
-                else 0
+                orchestrator.worker_pool.max_workers if hasattr(orchestrator, "worker_pool") else 0
             ),
         }
     except (RuntimeError, AttributeError):
@@ -68,6 +67,7 @@ def _get_proxy_stats() -> dict[str, int]:
     """Get proxy statistics."""
     try:
         from ghoststorm.api.app import get_orchestrator
+
         orchestrator = get_orchestrator()
 
         if hasattr(orchestrator, "_proxy_provider") and orchestrator._proxy_provider:
@@ -132,11 +132,7 @@ async def get_summary_stats() -> dict[str, Any]:
     proxy_stats = _get_proxy_stats()
 
     total_tasks = sum(task_stats.values())
-    success_rate = (
-        (task_stats["tasks_completed"] / total_tasks * 100)
-        if total_tasks > 0
-        else 0.0
-    )
+    success_rate = (task_stats["tasks_completed"] / total_tasks * 100) if total_tasks > 0 else 0.0
 
     return {
         "timestamp": datetime.now(UTC).isoformat(),

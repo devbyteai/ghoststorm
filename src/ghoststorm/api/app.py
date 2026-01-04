@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -13,10 +12,26 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from ghoststorm.api.routes import algorithms, assistant, config, data, dom, engine, flows, health, llm, metrics, proxies, tasks, zefoy
+from ghoststorm.api.routes import (
+    algorithms,
+    assistant,
+    config,
+    data,
+    dom,
+    engine,
+    flows,
+    health,
+    llm,
+    metrics,
+    proxies,
+    tasks,
+    zefoy,
+)
 from ghoststorm.api.websocket import ws_manager
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     from ghoststorm.core.engine.orchestrator import Orchestrator
 
 logger = structlog.get_logger(__name__)
@@ -49,11 +64,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
             # Subscribe to events for WebSocket broadcast
             async def broadcast_event(event: Any) -> None:
-                await ws_manager.broadcast({
-                    "type": event.event_type.value if hasattr(event, "event_type") else "event",
-                    "data": event.data if hasattr(event, "data") else {},
-                    "timestamp": event.timestamp.isoformat() if hasattr(event, "timestamp") else None,
-                })
+                await ws_manager.broadcast(
+                    {
+                        "type": event.event_type.value if hasattr(event, "event_type") else "event",
+                        "data": event.data if hasattr(event, "data") else {},
+                        "timestamp": event.timestamp.isoformat()
+                        if hasattr(event, "timestamp")
+                        else None,
+                    }
+                )
 
             _orchestrator.event_bus.subscribe("*", broadcast_event)
             logger.info("Orchestrator started and event subscription active")
@@ -117,6 +136,7 @@ def create_app(orchestrator: Orchestrator | None = None) -> FastAPI:
 
     # WebSocket endpoint
     from ghoststorm.api.websocket import websocket_endpoint
+
     app.add_api_websocket_route("/ws/events", websocket_endpoint)
 
     # Static files for frontend

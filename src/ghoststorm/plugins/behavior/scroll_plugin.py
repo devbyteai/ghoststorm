@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import random
 from typing import Any
 
@@ -101,20 +102,16 @@ class ScrollBehavior:
             smooth: Use smooth scrolling animation
         """
         if not smooth:
-            try:
+            with contextlib.suppress(Exception):
                 await page.evaluate(f"window.scrollBy(0, {delta_y})")
-            except Exception:
-                pass
             return
 
         direction = 1 if delta_y > 0 else -1
         steps = self._generate_scroll_steps(delta_y, direction)
 
         for step in steps:
-            try:
+            with contextlib.suppress(Exception):
                 await page.evaluate(f"window.scrollBy(0, {step})")
-            except Exception:
-                pass
 
             delay = random.uniform(*self.step_delay_range)
             await asyncio.sleep(delay)

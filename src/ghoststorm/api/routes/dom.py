@@ -151,7 +151,7 @@ async def analyze_dom(request: dict[str, Any]) -> dict[str, Any]:
     Returns:
         Matching elements
     """
-    from ghoststorm.core.dom import DOMAnalyzer, DOMState, DOMNode, ElementInfo, BoundingBox
+    from ghoststorm.core.dom import BoundingBox, DOMAnalyzer, DOMNode, DOMState, ElementInfo
 
     dom_data = request.get("dom_state")
     query = request.get("query", "")
@@ -186,13 +186,15 @@ async def analyze_dom(request: dict[str, Any]) -> dict[str, Any]:
             if bbox_data:
                 node.bounding_box = BoundingBox.from_dict(bbox_data)
 
-            clickables.append(ElementInfo(
-                node=node,
-                selector=elem_data.get("selector", ""),
-                xpath=elem_data.get("xpath", ""),
-                description=elem_data.get("description", ""),
-                index=idx,
-            ))
+            clickables.append(
+                ElementInfo(
+                    node=node,
+                    selector=elem_data.get("selector", ""),
+                    xpath=elem_data.get("xpath", ""),
+                    description=elem_data.get("description", ""),
+                    index=idx,
+                )
+            )
 
         dom_state = DOMState(
             url=dom_data.get("url", ""),
@@ -214,7 +216,7 @@ async def analyze_dom(request: dict[str, Any]) -> dict[str, Any]:
         logger.exception("DOM analysis failed", error=str(e))
         raise HTTPException(
             status_code=500,
-            detail=f"Analysis failed: {str(e)}",
+            detail=f"Analysis failed: {e!s}",
         )
 
 

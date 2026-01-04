@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-import json
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -77,10 +77,12 @@ class TestWebSocketMessages:
         with api_test_client.websocket_connect("/ws") as websocket:
             websocket.receive_json()  # Welcome
 
-            websocket.send_json({
-                "type": "subscribe",
-                "events": ["task:created", "task:updated"],
-            })
+            websocket.send_json(
+                {
+                    "type": "subscribe",
+                    "events": ["task:created", "task:updated"],
+                }
+            )
             response = websocket.receive_json()
 
             assert response["type"] == "subscribed"
@@ -165,10 +167,12 @@ class TestWebSocketManager:
                 import asyncio
 
                 async def do_broadcast():
-                    await ws_manager.broadcast({
-                        "type": "test_broadcast",
-                        "data": "hello all",
-                    })
+                    await ws_manager.broadcast(
+                        {
+                            "type": "test_broadcast",
+                            "data": "hello all",
+                        }
+                    )
 
                 asyncio.get_event_loop().run_until_complete(do_broadcast())
 
@@ -189,18 +193,19 @@ class TestWebSocketEvents:
     def test_task_created_event(self, api_test_client: TestClient):
         """Test receiving task created event."""
         from ghoststorm.api.websocket import ws_manager
-        import asyncio
 
         with api_test_client.websocket_connect("/ws") as websocket:
             websocket.receive_json()  # Welcome
 
             # Simulate task creation event
             async def emit_event():
-                await ws_manager.broadcast({
-                    "type": "task:created",
-                    "task_id": "test-123",
-                    "url": "https://example.com",
-                })
+                await ws_manager.broadcast(
+                    {
+                        "type": "task:created",
+                        "task_id": "test-123",
+                        "url": "https://example.com",
+                    }
+                )
 
             asyncio.get_event_loop().run_until_complete(emit_event())
 
@@ -211,18 +216,19 @@ class TestWebSocketEvents:
     def test_task_progress_event(self, api_test_client: TestClient):
         """Test receiving task progress event."""
         from ghoststorm.api.websocket import ws_manager
-        import asyncio
 
         with api_test_client.websocket_connect("/ws") as websocket:
             websocket.receive_json()  # Welcome
 
             async def emit_event():
-                await ws_manager.broadcast({
-                    "type": "task:progress",
-                    "task_id": "test-123",
-                    "progress": 50,
-                    "views": 25,
-                })
+                await ws_manager.broadcast(
+                    {
+                        "type": "task:progress",
+                        "task_id": "test-123",
+                        "progress": 50,
+                        "views": 25,
+                    }
+                )
 
             asyncio.get_event_loop().run_until_complete(emit_event())
 
@@ -233,18 +239,19 @@ class TestWebSocketEvents:
     def test_task_completed_event(self, api_test_client: TestClient):
         """Test receiving task completed event."""
         from ghoststorm.api.websocket import ws_manager
-        import asyncio
 
         with api_test_client.websocket_connect("/ws") as websocket:
             websocket.receive_json()  # Welcome
 
             async def emit_event():
-                await ws_manager.broadcast({
-                    "type": "task:completed",
-                    "task_id": "test-123",
-                    "total_views": 100,
-                    "duration": 120.5,
-                })
+                await ws_manager.broadcast(
+                    {
+                        "type": "task:completed",
+                        "task_id": "test-123",
+                        "total_views": 100,
+                        "duration": 120.5,
+                    }
+                )
 
             asyncio.get_event_loop().run_until_complete(emit_event())
 
@@ -255,18 +262,19 @@ class TestWebSocketEvents:
     def test_flow_recording_event(self, api_test_client: TestClient):
         """Test receiving flow recording event."""
         from ghoststorm.api.websocket import ws_manager
-        import asyncio
 
         with api_test_client.websocket_connect("/ws") as websocket:
             websocket.receive_json()  # Welcome
 
             async def emit_event():
-                await ws_manager.broadcast({
-                    "type": "flow:step_recorded",
-                    "flow_id": "flow-123",
-                    "step_number": 3,
-                    "action": "click",
-                })
+                await ws_manager.broadcast(
+                    {
+                        "type": "flow:step_recorded",
+                        "flow_id": "flow-123",
+                        "step_number": 3,
+                        "action": "click",
+                    }
+                )
 
             asyncio.get_event_loop().run_until_complete(emit_event())
 
@@ -277,18 +285,19 @@ class TestWebSocketEvents:
     def test_error_event(self, api_test_client: TestClient):
         """Test receiving error event."""
         from ghoststorm.api.websocket import ws_manager
-        import asyncio
 
         with api_test_client.websocket_connect("/ws") as websocket:
             websocket.receive_json()  # Welcome
 
             async def emit_event():
-                await ws_manager.broadcast({
-                    "type": "error",
-                    "task_id": "test-123",
-                    "message": "Browser crashed",
-                    "recoverable": True,
-                })
+                await ws_manager.broadcast(
+                    {
+                        "type": "error",
+                        "task_id": "test-123",
+                        "message": "Browser crashed",
+                        "recoverable": True,
+                    }
+                )
 
             asyncio.get_event_loop().run_until_complete(emit_event())
 
@@ -317,17 +326,18 @@ class TestWebSocketHeartbeat:
     def test_heartbeat_contains_connection_count(self, api_test_client: TestClient):
         """Test heartbeat message structure."""
         from ghoststorm.api.websocket import ws_manager
-        import asyncio
 
         with api_test_client.websocket_connect("/ws") as websocket:
             websocket.receive_json()  # Welcome
 
             # Manually trigger heartbeat
             async def send_heartbeat():
-                await ws_manager.broadcast({
-                    "type": "heartbeat",
-                    "connections": ws_manager.connection_count,
-                })
+                await ws_manager.broadcast(
+                    {
+                        "type": "heartbeat",
+                        "connections": ws_manager.connection_count,
+                    }
+                )
 
             asyncio.get_event_loop().run_until_complete(send_heartbeat())
 
@@ -360,10 +370,12 @@ class TestWebSocketEdgeCases:
             websocket.receive_json()  # Welcome
 
             large_data = "x" * 10000
-            websocket.send_json({
-                "type": "ping",
-                "data": large_data,
-            })
+            websocket.send_json(
+                {
+                    "type": "ping",
+                    "data": large_data,
+                }
+            )
             response = websocket.receive_json()
 
             # Should still get pong

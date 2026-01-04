@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
 import string
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from ghoststorm.plugins.behavior.keyboard_plugin import KeyboardBehavior
-
 
 # ============================================================================
 # KEYBOARD BEHAVIOR INIT TESTS

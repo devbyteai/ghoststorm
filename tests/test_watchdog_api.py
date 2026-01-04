@@ -1,7 +1,8 @@
 """Tests for watchdog health API endpoints."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
 
 
@@ -76,7 +77,9 @@ class TestHealthAPIEndpoints:
         """Create test client with mocked orchestrator."""
         from ghoststorm.api.app import create_app
 
-        with patch("ghoststorm.api.routes.health._get_orchestrator", return_value=mock_orchestrator):
+        with patch(
+            "ghoststorm.api.routes.health._get_orchestrator", return_value=mock_orchestrator
+        ):
             app = create_app(mock_orchestrator)
             yield TestClient(app)
 
@@ -140,7 +143,9 @@ class TestHealthAPIWithoutOrchestrator:
         def raise_runtime_error():
             raise RuntimeError("Orchestrator not initialized")
 
-        with patch("ghoststorm.api.routes.health._get_orchestrator", side_effect=raise_runtime_error):
+        with patch(
+            "ghoststorm.api.routes.health._get_orchestrator", side_effect=raise_runtime_error
+        ):
             app = create_app(None)
             yield TestClient(app)
 

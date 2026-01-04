@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import Any, Protocol
 
 import structlog
 
@@ -18,9 +18,6 @@ from ghoststorm.core.dom.models import (
     ElementType,
 )
 from ghoststorm.core.dom.selector import SelectorGenerator
-
-if TYPE_CHECKING:
-    pass
 
 logger = structlog.get_logger(__name__)
 

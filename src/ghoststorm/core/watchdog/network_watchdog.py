@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 import structlog
 
-from ghoststorm.core.events.bus import Event
 from ghoststorm.core.events.types import EventType
 from ghoststorm.core.watchdog.base import BaseWatchdog
 from ghoststorm.core.watchdog.models import (
@@ -22,7 +21,7 @@ from ghoststorm.core.watchdog.models import (
 )
 
 if TYPE_CHECKING:
-    from ghoststorm.core.events.bus import AsyncEventBus
+    from ghoststorm.core.events.bus import AsyncEventBus, Event
 
 logger = structlog.get_logger(__name__)
 
@@ -245,9 +244,7 @@ class NetworkWatchdog(BaseWatchdog):
     async def check_health(self) -> HealthStatus:
         """Check network health status."""
         total_requests = self._successful_requests + self._failed_requests
-        success_rate = (
-            self._successful_requests / total_requests if total_requests > 0 else 1.0
-        )
+        success_rate = self._successful_requests / total_requests if total_requests > 0 else 1.0
 
         details = {
             "active_proxies": len(self._active_proxies),

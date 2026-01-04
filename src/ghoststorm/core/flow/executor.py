@@ -5,12 +5,11 @@ from __future__ import annotations
 import asyncio
 import random
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Callable
-from uuid import uuid4
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
+from ghoststorm.core.flow.storage import FlowStorage, get_flow_storage
 from ghoststorm.core.models.flow import (
     Checkpoint,
     FlowExecutionConfig,
@@ -18,7 +17,9 @@ from ghoststorm.core.models.flow import (
     RecordedFlow,
     VariationLevel,
 )
-from ghoststorm.core.flow.storage import FlowStorage, get_flow_storage
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = structlog.get_logger(__name__)
 
@@ -312,7 +313,6 @@ class FlowExecutor:
 
             if ctx.llm_controller:
                 # Use LLM AUTONOMOUS mode
-                from ghoststorm.core.llm.controller import TaskResult
 
                 result = await asyncio.wait_for(
                     ctx.llm_controller.execute_task(ctx.page, task),
@@ -335,7 +335,7 @@ class FlowExecutor:
             # Fallback: Simple execution without LLM
             return await self._execute_checkpoint_fallback(ctx, checkpoint)
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning("Checkpoint timed out", checkpoint_id=checkpoint.id)
             ctx.result.error = f"Checkpoint timed out: {checkpoint.goal}"
             return False
@@ -368,7 +368,9 @@ class FlowExecutor:
         if variation == VariationLevel.LOW:
             parts.append("Execute efficiently with minimal variation.")
         elif variation == VariationLevel.MEDIUM:
-            parts.append("Use natural browsing behavior with some variation in timing and approach.")
+            parts.append(
+                "Use natural browsing behavior with some variation in timing and approach."
+            )
         else:  # HIGH
             parts.append(
                 "Behave like a real human: take your time, maybe scroll around first, "

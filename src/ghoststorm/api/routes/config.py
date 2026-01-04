@@ -9,7 +9,6 @@ import structlog
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
-from ghoststorm.core.models.config import Config
 from ghoststorm.api.schemas import (
     PRESETS,
     AllPlatformsResponse,
@@ -23,6 +22,7 @@ from ghoststorm.api.schemas import (
     TikTokConfigSchema,
     YouTubeConfigSchema,
 )
+from ghoststorm.core.models.config import Config
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
@@ -172,7 +172,9 @@ async def get_all_config() -> dict[str, Any]:
 
 
 # User config file path - use project root
-_PROJECT_ROOT = Path(__file__).parent.parent.parent.parent.parent  # src/ghoststorm/api/routes -> project root
+_PROJECT_ROOT = Path(
+    __file__
+).parent.parent.parent.parent.parent  # src/ghoststorm/api/routes -> project root
 USER_CONFIG_PATH = _PROJECT_ROOT / "config" / "user_config.yaml"
 
 
@@ -219,7 +221,7 @@ async def save_config(settings: dict[str, Any]) -> dict[str, str]:
         logger.error("Failed to save config", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to save configuration: {str(e)}",
+            detail=f"Failed to save configuration: {e!s}",
         )
 
 
@@ -234,7 +236,7 @@ async def reset_config() -> dict[str, str]:
         logger.error("Failed to reset config", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to reset configuration: {str(e)}",
+            detail=f"Failed to reset configuration: {e!s}",
         )
 
 
@@ -400,15 +402,12 @@ async def get_dextools_behavior_weights() -> dict[str, Any]:
 
     Shows how visitors are distributed across behavior types in 'realistic' mode.
     """
-    from ghoststorm.plugins.automation.dextools import BEHAVIOR_WEIGHTS, VisitorBehavior
+    from ghoststorm.plugins.automation.dextools import BEHAVIOR_WEIGHTS
 
     return {
         "mode": "realistic",
         "description": "Distribution of visitor behavior types",
-        "weights": {
-            behavior.value: weight
-            for behavior, weight in BEHAVIOR_WEIGHTS.items()
-        },
+        "weights": {behavior.value: weight for behavior, weight in BEHAVIOR_WEIGHTS.items()},
         "explanations": {
             "passive": "60% - View page, light scroll, leave (most common real user behavior)",
             "light": "30% - View + 1 interaction (social click or tab)",

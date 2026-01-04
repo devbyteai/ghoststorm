@@ -10,6 +10,8 @@ Automates Zefoy.com to boost TikTok engagement:
 from __future__ import annotations
 
 import asyncio
+import builtins
+import contextlib
 import random
 import re
 from dataclasses import dataclass, field
@@ -249,7 +251,9 @@ class ZefoyAutomation:
                             placeholder = await inp.get_attribute("placeholder") or ""
                             inp_type = await inp.get_attribute("type") or ""
                             inp_class = await inp.get_attribute("class") or ""
-                            logger.info(f"[ZEFOY] Input {i}: visible={is_visible}, type={inp_type}, placeholder={placeholder[:30]}, class={inp_class[:30]}")
+                            logger.info(
+                                f"[ZEFOY] Input {i}: visible={is_visible}, type={inp_type}, placeholder={placeholder[:30]}, class={inp_class[:30]}"
+                            )
                         except Exception:
                             pass
 
@@ -369,7 +373,11 @@ class ZefoyAutomation:
                         # Look for success/error/cooldown keywords
                         if "successfully" in page_text.lower():
                             logger.info("[ZEFOY] Found 'successfully' in page text")
-                        if "wait" in page_text.lower() or "second" in page_text.lower() or "minute" in page_text.lower():
+                        if (
+                            "wait" in page_text.lower()
+                            or "second" in page_text.lower()
+                            or "minute" in page_text.lower()
+                        ):
                             logger.info("[ZEFOY] Found cooldown keywords in page text")
                         if "error" in page_text.lower() or "invalid" in page_text.lower():
                             logger.info("[ZEFOY] Found error keywords in page text")
@@ -587,7 +595,15 @@ class ZefoyAutomation:
 
             # GOAL CHECK: Are we on services page?
             # Look for multiple service keywords - if we see these, we're on the main page
-            service_keywords = ["followers", "hearts", "views", "shares", "favorites", "comments hearts", "live stream"]
+            service_keywords = [
+                "followers",
+                "hearts",
+                "views",
+                "shares",
+                "favorites",
+                "comments hearts",
+                "live stream",
+            ]
             matches = sum(1 for s in service_keywords if s in page_text_lower)
             if matches >= 2:  # At least 2 service names visible = we're on services page
                 logger.debug(f"[ZEFOY] Found {matches} service keywords on page")
@@ -612,13 +628,19 @@ class ZefoyAutomation:
                 if await captcha_input.is_visible() and await captcha_img.is_visible():
                     # Verify we can actually interact
                     try:
-                        await captcha_input.click(timeout=2000, trial=True)  # trial=True just checks
+                        await captcha_input.click(
+                            timeout=2000, trial=True
+                        )  # trial=True just checks
                         return {"type": "CAPTCHA", "detail": "Captcha interactable"}
                     except Exception:
                         # Something blocking - find and report it
                         blocker = await self._find_blocker()
                         if blocker:
-                            return {"type": "BLOCKED", "detail": blocker["type"], "blocker": blocker}
+                            return {
+                                "type": "BLOCKED",
+                                "detail": blocker["type"],
+                                "blocker": blocker,
+                            }
 
             # Check for LOADING
             if "loading" in page_text_lower and len(page_text) < 500:
@@ -648,7 +670,9 @@ class ZefoyAutomation:
                             bbox = await item.bounding_box()
                             # Only consider large visible ad iframes as blockers
                             if bbox and bbox["width"] > 200 and bbox["height"] > 200:
-                                logger.debug(f"[ZEFOY] Found ad blocker: {selector} size={bbox['width']}x{bbox['height']}")
+                                logger.debug(
+                                    f"[ZEFOY] Found ad blocker: {selector} size={bbox['width']}x{bbox['height']}"
+                                )
                                 return {"type": blocker_type, "selector": selector, "bbox": bbox}
             except Exception:
                 pass
@@ -678,7 +702,9 @@ class ZefoyAutomation:
         """Check if we can actually click on service buttons."""
         service_selectors = [
             "xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button",
-            "button:has-text('Followers')", "button:has-text('Views')", "button:has-text('Hearts')"
+            "button:has-text('Followers')",
+            "button:has-text('Views')",
+            "button:has-text('Hearts')",
         ]
         for sel in service_selectors:
             try:
@@ -704,8 +730,12 @@ class ZefoyAutomation:
 
         # Strategy 3: Click close button if visible
         close_selectors = [
-            "button.close", ".btn-close", "[aria-label='Close']",
-            "button:has-text('×')", "button:has-text('X')", "button:has-text('Close')"
+            "button.close",
+            ".btn-close",
+            "[aria-label='Close']",
+            "button:has-text('×')",
+            "button:has-text('X')",
+            "button:has-text('Close')",
         ]
         for sel in close_selectors:
             try:
@@ -725,7 +755,7 @@ class ZefoyAutomation:
                 viewport = self._page.viewport_size
                 if viewport:
                     for x_offset in [30, 50, 20]:
-                        await self._page.mouse.click(viewport['width'] - x_offset, x_offset)
+                        await self._page.mouse.click(viewport["width"] - x_offset, x_offset)
                         await asyncio.sleep(0.5)
             except Exception:
                 pass
@@ -769,7 +799,7 @@ class ZefoyAutomation:
                 try:
                     viewport = self._page.viewport_size
                     if viewport:
-                        await self._page.mouse.click(viewport['width'] - 30, 30)
+                        await self._page.mouse.click(viewport["width"] - 30, 30)
                 except Exception:
                     pass
 
@@ -800,7 +830,9 @@ class ZefoyAutomation:
             logger.info(f"[ZEFOY] OCR solution: {solution}")
 
             # Fill input
-            captcha_input = self._page.locator("#captchatoken, input.form-control[type='text']").first
+            captcha_input = self._page.locator(
+                "#captchatoken, input.form-control[type='text']"
+            ).first
             if await captcha_input.count() and await captcha_input.is_visible():
                 await captcha_input.clear()
                 await captcha_input.fill(solution.lower())
@@ -810,7 +842,9 @@ class ZefoyAutomation:
                 await self._hide_ad_overlays()
 
                 # Click submit
-                submit_btn = self._page.locator("button.submit-captcha, button[type='submit']").first
+                submit_btn = self._page.locator(
+                    "button.submit-captcha, button[type='submit']"
+                ).first
                 if await submit_btn.count():
                     try:
                         await submit_btn.click(force=True, timeout=5000)
@@ -846,7 +880,11 @@ class ZefoyAutomation:
                     await asyncio.sleep(3)
                 else:
                     # Try alternative selectors
-                    for sel in ["button:has-text('View')", "a:has-text('View')", "button:has-text('ad')"]:
+                    for sel in [
+                        "button:has-text('View')",
+                        "a:has-text('View')",
+                        "button:has-text('ad')",
+                    ]:
                         try:
                             btn = self._page.locator(sel).first
                             if await btn.count() and await btn.is_visible():
@@ -863,7 +901,9 @@ class ZefoyAutomation:
                 # The captcha input has id="captchatoken" or class="form-control"
                 # The captcha image has class="img-thumbnail"
                 try:
-                    captcha_input = self._page.locator("#captchatoken, input.form-control[type='text']").first
+                    captcha_input = self._page.locator(
+                        "#captchatoken, input.form-control[type='text']"
+                    ).first
                     captcha_img = self._page.locator("img.img-thumbnail").first
 
                     if await captcha_input.count() and await captcha_input.is_visible():
@@ -875,7 +915,9 @@ class ZefoyAutomation:
 
                 # Check if we see service buttons (even better - means already solved!)
                 try:
-                    service_btn = self._page.locator("xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button")
+                    service_btn = self._page.locator(
+                        "xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button"
+                    )
                     if await service_btn.count() and await service_btn.is_visible():
                         logger.info("[ZEFOY] SAW: Services visible! Already solved.")
                         return  # Exit _handle_ads
@@ -903,10 +945,12 @@ class ZefoyAutomation:
                         if await close_btn.count() and await close_btn.is_visible():
                             bbox = await close_btn.bounding_box()
                             if bbox:
-                                x = bbox['x'] + bbox['width'] / 2
-                                y = bbox['y'] + bbox['height'] / 2
+                                x = bbox["x"] + bbox["width"] / 2
+                                y = bbox["y"] + bbox["height"] / 2
                                 await self._page.mouse.click(x, y)
-                                logger.info(f"[ZEFOY] CLICKED close on main page at ({x:.0f}, {y:.0f})")
+                                logger.info(
+                                    f"[ZEFOY] CLICKED close on main page at ({x:.0f}, {y:.0f})"
+                                )
                                 close_clicked = True
                                 await asyncio.sleep(2)
                                 break
@@ -930,10 +974,12 @@ class ZefoyAutomation:
                                     if await close_btn.count() and await close_btn.is_visible():
                                         bbox = await close_btn.bounding_box()
                                         if bbox:
-                                            x = bbox['x'] + bbox['width'] / 2
-                                            y = bbox['y'] + bbox['height'] / 2
+                                            x = bbox["x"] + bbox["width"] / 2
+                                            y = bbox["y"] + bbox["height"] / 2
                                             await self._page.mouse.click(x, y)
-                                            logger.info(f"[ZEFOY] CLICKED close in IFRAME at ({x:.0f}, {y:.0f})")
+                                            logger.info(
+                                                f"[ZEFOY] CLICKED close in IFRAME at ({x:.0f}, {y:.0f})"
+                                            )
                                             close_clicked = True
                                             await asyncio.sleep(2)
                                             break
@@ -952,7 +998,7 @@ class ZefoyAutomation:
                         viewport = self._page.viewport_size
                         if viewport:
                             # X button is in top-right corner (about 30px from edges)
-                            x_pos = viewport['width'] - 30
+                            x_pos = viewport["width"] - 30
                             y_pos = 30
                             logger.info(f"[ZEFOY] Clicking TOP-RIGHT X at ({x_pos}, {y_pos})")
                             await self._page.mouse.click(x_pos, y_pos)
@@ -988,10 +1034,12 @@ class ZefoyAutomation:
                                     el = els.nth(idx)
                                     if await el.is_visible():
                                         bbox = await el.bounding_box()
-                                        if bbox and bbox['x'] > 1000:  # Right side of screen
-                                            x = bbox['x'] + bbox['width'] / 2
-                                            y = bbox['y'] + bbox['height'] / 2
-                                            logger.info(f"[ZEFOY] Found top-right element: {sel} at ({x:.0f}, {y:.0f})")
+                                        if bbox and bbox["x"] > 1000:  # Right side of screen
+                                            x = bbox["x"] + bbox["width"] / 2
+                                            y = bbox["y"] + bbox["height"] / 2
+                                            logger.info(
+                                                f"[ZEFOY] Found top-right element: {sel} at ({x:.0f}, {y:.0f})"
+                                            )
                                             await self._page.mouse.click(x, y)
                                             close_clicked = True
                                             await asyncio.sleep(2)
@@ -1017,7 +1065,9 @@ class ZefoyAutomation:
                         logger.info("[ZEFOY] Saved HTML at 30s: /tmp/zefoy_ad_30sec.html")
 
                         # Find ALL clickable elements and log them
-                        clickables = await self._page.locator("button, a, [onclick], [role='button'], svg, [class*='close'], [class*='dismiss']").all()
+                        clickables = await self._page.locator(
+                            "button, a, [onclick], [role='button'], svg, [class*='close'], [class*='dismiss']"
+                        ).all()
                         logger.info(f"[ZEFOY] Found {len(clickables)} clickable elements")
 
                         for idx, el in enumerate(clickables[:30]):  # First 30
@@ -1027,12 +1077,12 @@ class ZefoyAutomation:
                                     tag = await el.evaluate("el => el.tagName")
                                     classes = await el.get_attribute("class") or ""
                                     text = ""
-                                    try:
+                                    with contextlib.suppress(builtins.BaseException):
                                         text = (await el.inner_text())[:30]
-                                    except:
-                                        pass
                                     if bbox:
-                                        logger.info(f"[ZEFOY] Element {idx}: {tag} class='{classes[:50]}' text='{text}' at ({bbox['x']:.0f},{bbox['y']:.0f})")
+                                        logger.info(
+                                            f"[ZEFOY] Element {idx}: {tag} class='{classes[:50]}' text='{text}' at ({bbox['x']:.0f},{bbox['y']:.0f})"
+                                        )
                             except:
                                 pass
                     except Exception as e:
@@ -1056,7 +1106,7 @@ class ZefoyAutomation:
     async def _close_modals(self) -> None:
         """Close any modal overlays like #gpq that block interaction."""
         # Try multiple times as modals may have animations
-        for attempt in range(5):
+        for _attempt in range(5):
             closed_any = False
 
             # Broad search for ANY close/X button on the page
@@ -1102,7 +1152,7 @@ class ZefoyAutomation:
                         closed_any = True
                         await asyncio.sleep(1)
                         break
-                except Exception as e:
+                except Exception:
                     pass
 
             # Try to find close button by looking at all visible buttons
@@ -1116,9 +1166,12 @@ class ZefoyAutomation:
                             text = await btn.inner_text()
                             classes = await btn.get_attribute("class") or ""
                             # Check if it looks like a close button
-                            if any(x in text.lower() for x in ['×', '✕', 'x', 'close']) or \
-                               any(x in classes.lower() for x in ['close', 'dismiss']):
-                                logger.info(f"[ZEFOY] Found close-like button: text='{text}' class='{classes}'")
+                            if any(x in text.lower() for x in ["×", "✕", "x", "close"]) or any(
+                                x in classes.lower() for x in ["close", "dismiss"]
+                            ):
+                                logger.info(
+                                    f"[ZEFOY] Found close-like button: text='{text}' class='{classes}'"
+                                )
                                 await btn.click(timeout=3000)
                                 logger.info("[ZEFOY] Clicked close-like button")
                                 closed_any = True
@@ -1136,7 +1189,9 @@ class ZefoyAutomation:
 
             # Check if captcha or services are visible now (success condition)
             try:
-                service_btn = self._page.locator("xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button")
+                service_btn = self._page.locator(
+                    "xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button"
+                )
                 if await service_btn.count() and await service_btn.is_visible():
                     logger.info("[ZEFOY] Services visible, modal handling complete")
                     return
@@ -1173,12 +1228,16 @@ class ZefoyAutomation:
             if "minute" in text.lower():
                 parts = text.lower().split("minute")
                 num_part = parts[0].split()[-1]
-                minutes = int(re.search(r"\d+", num_part).group()) if re.search(r"\d+", num_part) else 0
+                minutes = (
+                    int(re.search(r"\d+", num_part).group()) if re.search(r"\d+", num_part) else 0
+                )
             # Extract seconds
             if "second" in text.lower():
                 parts = text.lower().split("second")
                 num_part = parts[0].split()[-1]
-                seconds = int(re.search(r"\d+", num_part).group()) if re.search(r"\d+", num_part) else 0
+                seconds = (
+                    int(re.search(r"\d+", num_part).group()) if re.search(r"\d+", num_part) else 0
+                )
             return minutes * 60 + seconds + 5  # +5 buffer
         except Exception:
             return 60  # Default 60s
@@ -1242,9 +1301,12 @@ class ZefoyAutomation:
         try:
             # Look for "View a short ad" button inside fc-dialog and click it
             fc_buttons = [
-                ".fc-button", ".fc-cta-consent", ".fc-primary-button",
-                "button:has-text('View')", "button:has-text('Accept')",
-                ".fc-dialog button"
+                ".fc-button",
+                ".fc-cta-consent",
+                ".fc-primary-button",
+                "button:has-text('View')",
+                "button:has-text('Accept')",
+                ".fc-dialog button",
             ]
             for sel in fc_buttons:
                 try:
@@ -1285,7 +1347,9 @@ class ZefoyAutomation:
 
             # Check if services visible (captcha already solved)
             try:
-                service_btn = self._page.locator("xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button")
+                service_btn = self._page.locator(
+                    "xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button"
+                )
                 if await service_btn.count() and await service_btn.is_visible():
                     logger.info("[ZEFOY] Services already visible, captcha passed")
                     return True
@@ -1322,7 +1386,9 @@ class ZefoyAutomation:
                 captcha_input = None
 
                 # Try XPath first
-                xpath_input = self._page.locator(f"xpath={CAPTCHA_BOX_XPATH}//input[@type='text']").first
+                xpath_input = self._page.locator(
+                    f"xpath={CAPTCHA_BOX_XPATH}//input[@type='text']"
+                ).first
                 if await xpath_input.count() and await xpath_input.is_visible():
                     captcha_input = xpath_input
 
@@ -1378,13 +1444,20 @@ class ZefoyAutomation:
                         services_visible = False
 
                         # Method 1: XPath for service button
-                        service_btn = self._page.locator("xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button")
+                        service_btn = self._page.locator(
+                            "xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button"
+                        )
                         if await service_btn.count() and await service_btn.is_visible():
                             services_visible = True
 
                         # Method 2: Look for service-specific elements
                         if not services_visible:
-                            service_ids = ["#t-followers-button", "#t-views-button", "#t-hearts-button", "#t-shares-button"]
+                            service_ids = [
+                                "#t-followers-button",
+                                "#t-views-button",
+                                "#t-hearts-button",
+                                "#t-shares-button",
+                            ]
                             for sid in service_ids:
                                 try:
                                     btn = self._page.locator(sid)
@@ -1397,7 +1470,9 @@ class ZefoyAutomation:
 
                         # Method 3: Look for input field to enter TikTok URL (means we're past captcha)
                         if not services_visible:
-                            url_input = self._page.locator("input[placeholder*='tiktok'], input[placeholder*='video'], input[name*='url']")
+                            url_input = self._page.locator(
+                                "input[placeholder*='tiktok'], input[placeholder*='video'], input[name*='url']"
+                            )
                             if await url_input.count() and await url_input.is_visible():
                                 services_visible = True
                                 logger.info("[ZEFOY] Found TikTok URL input - past captcha!")
@@ -1416,7 +1491,9 @@ class ZefoyAutomation:
 
             # Try to reload captcha for fresh image
             try:
-                reload_btn = self._page.locator("a:has-text('reload'), button:has-text('Reload'), .reload-captcha").first
+                reload_btn = self._page.locator(
+                    "a:has-text('reload'), button:has-text('Reload'), .reload-captcha"
+                ).first
                 if await reload_btn.count():
                     await reload_btn.click()
                     await asyncio.sleep(1)
@@ -1459,11 +1536,15 @@ class ZefoyAutomation:
             # Success indicators in page text
             if "successfully" in page_text_lower:
                 return True
-            if "sent" in page_text_lower and ("heart" in page_text_lower or "like" in page_text_lower):
+            if "sent" in page_text_lower and (
+                "heart" in page_text_lower or "like" in page_text_lower
+            ):
                 return True
 
             # Cooldown message means it worked previously
-            if "please wait" in page_text_lower and ("second" in page_text_lower or "minute" in page_text_lower):
+            if "please wait" in page_text_lower and (
+                "second" in page_text_lower or "minute" in page_text_lower
+            ):
                 return True
 
             if "before trying again" in page_text_lower:
@@ -1500,9 +1581,7 @@ async def check_zefoy_services() -> dict[str, bool]:
     except ImportError:
         from playwright.async_api import async_playwright
 
-    from ghoststorm.plugins.captcha.zefoy_ocr import ZefoyOCRSolver
-
-    status = {service: False for service in ZEFOY_SERVICES}
+    status = dict.fromkeys(ZEFOY_SERVICES, False)
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
@@ -1543,9 +1622,13 @@ async def check_zefoy_services() -> dict[str, bool]:
                         is_enabled = await btn.is_enabled()
                         # Also check if it has disabled class or style
                         classes = await btn.get_attribute("class") or ""
-                        is_disabled_class = "disabled" in classes.lower() or "nonec" in classes.lower()
+                        is_disabled_class = (
+                            "disabled" in classes.lower() or "nonec" in classes.lower()
+                        )
                         status[service] = is_enabled and not is_disabled_class
-                        logger.debug(f"[ZEFOY_CHECK] {service}: enabled={is_enabled}, disabled_class={is_disabled_class}")
+                        logger.debug(
+                            f"[ZEFOY_CHECK] {service}: enabled={is_enabled}, disabled_class={is_disabled_class}"
+                        )
                     else:
                         status[service] = False
                 except Exception as e:
@@ -1565,7 +1648,7 @@ async def check_zefoy_services() -> dict[str, bool]:
 
 async def _close_modals_standalone(page) -> None:
     """Close any modal overlays (standalone version)."""
-    for attempt in range(5):
+    for _attempt in range(5):
         closed_any = False
 
         # Broad search for ANY close/X button
@@ -1608,8 +1691,9 @@ async def _close_modals_standalone(page) -> None:
                     if await btn.is_visible():
                         text = await btn.inner_text()
                         classes = await btn.get_attribute("class") or ""
-                        if any(x in text.lower() for x in ['×', '✕', 'x', 'close']) or \
-                           any(x in classes.lower() for x in ['close', 'dismiss']):
+                        if any(x in text.lower() for x in ["×", "✕", "x", "close"]) or any(
+                            x in classes.lower() for x in ["close", "dismiss"]
+                        ):
                             logger.info(f"[ZEFOY_CHECK] Found close-like button: '{text}'")
                             await btn.click(timeout=3000)
                             closed_any = True
@@ -1627,7 +1711,9 @@ async def _close_modals_standalone(page) -> None:
 
         # Check if services or captcha visible (success)
         try:
-            service_btn = page.locator("xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button")
+            service_btn = page.locator(
+                "xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button"
+            )
             if await service_btn.count() and await service_btn.is_visible():
                 logger.info("[ZEFOY_CHECK] Services visible, modal closed")
                 return
@@ -1673,7 +1759,7 @@ async def _handle_ads_standalone(page) -> None:
 
     if ad_clicked:
         logger.info("[ZEFOY_CHECK] Waiting for ad to complete...")
-        for i in range(60):
+        for _i in range(60):
             # Check if captcha or service visible
             try:
                 captcha_visible = await page.locator(f"xpath={CAPTCHA_BOX_XPATH}").count()
@@ -1684,7 +1770,9 @@ async def _handle_ads_standalone(page) -> None:
                 pass
 
             try:
-                service_btn = page.locator("xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button")
+                service_btn = page.locator(
+                    "xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button"
+                )
                 if await service_btn.count():
                     logger.info("[ZEFOY_CHECK] Ad done, services visible")
                     break
@@ -1721,7 +1809,9 @@ async def _solve_captcha_standalone(page, max_attempts: int = 5) -> bool:
 
         try:
             # Check if services already visible
-            service_btn = page.locator("xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button")
+            service_btn = page.locator(
+                "xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button"
+            )
             if await service_btn.count() and await service_btn.is_visible():
                 logger.info("[ZEFOY_CHECK] Services visible, captcha passed")
                 return True
@@ -1754,7 +1844,9 @@ async def _solve_captcha_standalone(page, max_attempts: int = 5) -> bool:
             # Enter solution
             input_field = page.locator(f"xpath={CAPTCHA_BOX_XPATH}//input").first
             if not await input_field.count():
-                input_field = page.locator("input[placeholder*='captcha' i], .captcha-form input").first
+                input_field = page.locator(
+                    "input[placeholder*='captcha' i], .captcha-form input"
+                ).first
 
             if await input_field.count():
                 await input_field.clear()
@@ -1771,7 +1863,9 @@ async def _solve_captcha_standalone(page, max_attempts: int = 5) -> bool:
                     await asyncio.sleep(2)
 
                     # Check if solved
-                    service_btn = page.locator("xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button")
+                    service_btn = page.locator(
+                        "xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button"
+                    )
                     if await service_btn.count():
                         logger.info("[ZEFOY_CHECK] Captcha solved!")
                         return True

@@ -13,34 +13,38 @@ class UTMConfig:
 
     enabled: bool = True
 
-    sources: list[str] = field(default_factory=lambda: [
-        "google",
-        "facebook",
-        "twitter",
-        "instagram",
-        "bing",
-        "yahoo",
-        "linkedin",
-        "reddit",
-        "pinterest",
-        "tiktok",
-        "youtube",
-        "duckduckgo",
-        "baidu",
-        "yandex",
-    ])
+    sources: list[str] = field(
+        default_factory=lambda: [
+            "google",
+            "facebook",
+            "twitter",
+            "instagram",
+            "bing",
+            "yahoo",
+            "linkedin",
+            "reddit",
+            "pinterest",
+            "tiktok",
+            "youtube",
+            "duckduckgo",
+            "baidu",
+            "yandex",
+        ]
+    )
 
-    mediums: list[str] = field(default_factory=lambda: [
-        "cpc",
-        "organic",
-        "referral",
-        "social",
-        "email",
-        "display",
-        "affiliate",
-        "banner",
-        "ppc",
-    ])
+    mediums: list[str] = field(
+        default_factory=lambda: [
+            "cpc",
+            "organic",
+            "referral",
+            "social",
+            "email",
+            "display",
+            "affiliate",
+            "banner",
+            "ppc",
+        ]
+    )
 
     campaigns: list[str] = field(default_factory=list)
     terms: list[str] = field(default_factory=list)
@@ -84,9 +88,21 @@ class UTMInjector:
 
     # Common search terms for organic traffic simulation
     DEFAULT_TERMS = [
-        "best", "top", "review", "guide", "how to",
-        "what is", "vs", "compare", "buy", "price",
-        "cheap", "discount", "free", "online", "near me",
+        "best",
+        "top",
+        "review",
+        "guide",
+        "how to",
+        "what is",
+        "vs",
+        "compare",
+        "buy",
+        "price",
+        "cheap",
+        "discount",
+        "free",
+        "online",
+        "near me",
     ]
 
     def __init__(self, config: UTMConfig | None = None) -> None:
@@ -193,10 +209,7 @@ class UTMInjector:
             existing_params = parse_qs(parsed.query, keep_blank_values=True)
 
             # Filter out UTM params
-            filtered = {
-                k: v for k, v in existing_params.items()
-                if not k.startswith("utm_")
-            }
+            filtered = {k: v for k, v in existing_params.items() if not k.startswith("utm_")}
 
             # Flatten and rebuild
             flat_params = {k: v[0] if len(v) == 1 else v for k, v in filtered.items()}
@@ -220,7 +233,7 @@ class UTMInjector:
         try:
             parsed = urlparse(url)
             params = parse_qs(parsed.query)
-            return any(k.startswith("utm_") for k in params.keys())
+            return any(k.startswith("utm_") for k in params)
         except Exception:
             return False
 
@@ -237,9 +250,7 @@ class UTMInjector:
             parsed = urlparse(url)
             params = parse_qs(parsed.query)
             return {
-                k: v[0] if len(v) == 1 else v
-                for k, v in params.items()
-                if k.startswith("utm_")
+                k: v[0] if len(v) == 1 else v for k, v in params.items() if k.startswith("utm_")
             }
         except Exception:
             return {}

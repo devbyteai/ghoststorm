@@ -99,7 +99,9 @@ class CaptchaSolverConfig:
 
     # LLM settings
     ollama_model: str = "llava:7b"  # Vision-capable LLM
-    ollama_host: str = field(default_factory=lambda: os.getenv("OLLAMA_HOST", "http://localhost:11434"))
+    ollama_host: str = field(
+        default_factory=lambda: os.getenv("OLLAMA_HOST", "http://localhost:11434")
+    )
 
     # Provider preferences
     preferred_provider: SolverProvider = SolverProvider.AUTO
@@ -290,7 +292,7 @@ class YOLOSolver(SolverBackend):
         selected_cells = set()
 
         # Check each detection
-        for i, box in enumerate(result.boxes):
+        for _i, box in enumerate(result.boxes):
             class_id = int(box.cls[0])
             class_name = result.names[class_id].lower()
             confidence = float(box.conf[0])
@@ -311,7 +313,7 @@ class YOLOSolver(SolverBackend):
                     if 0 <= cell_index < grid_size[0] * grid_size[1]:
                         selected_cells.add(cell_index)
 
-        return sorted(list(selected_cells))
+        return sorted(selected_cells)
 
 
 class LLMSolver(SolverBackend):
@@ -375,11 +377,14 @@ class LLMSolver(SolverBackend):
                 "stream": False,
             }
 
-            async with aiohttp.ClientSession() as session, session.post(
-                f"{self.host}/api/generate",
-                json=payload,
-                timeout=aiohttp.ClientTimeout(total=60),
-            ) as response:
+            async with (
+                aiohttp.ClientSession() as session,
+                session.post(
+                    f"{self.host}/api/generate",
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=60),
+                ) as response,
+            ):
                 if response.status != 200:
                     error_text = await response.text()
                     return CaptchaResult(
@@ -468,9 +473,7 @@ class WhisperSolver(SolverBackend):
             self._loaded = True
             logger.info("Whisper model loaded", model=self.model_name)
         except ImportError:
-            logger.error(
-                "openai-whisper not installed. Install with: pip install openai-whisper"
-            )
+            logger.error("openai-whisper not installed. Install with: pip install openai-whisper")
             raise
         except Exception as e:
             logger.error("Failed to load Whisper model", error=str(e))

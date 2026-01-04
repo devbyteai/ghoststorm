@@ -149,17 +149,19 @@ class TLSClientConfig:
 
     # Default headers (merged with request headers)
     # Note: Accept-Language is randomized per-request in _merge_headers()
-    default_headers: dict[str, str] = field(default_factory=lambda: {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Cache-Control": "no-cache",
-        "Pragma": "no-cache",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "none",
-        "Sec-Fetch-User": "?1",
-        "Upgrade-Insecure-Requests": "1",
-    })
+    default_headers: dict[str, str] = field(
+        default_factory=lambda: {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
+            "Upgrade-Insecure-Requests": "1",
+        }
+    )
 
     # Cookie jar persistence
     persist_cookies: bool = True
@@ -227,9 +229,7 @@ class TLSClient:
         try:
             from curl_cffi.requests import AsyncSession
         except ImportError:
-            logger.error(
-                "curl_cffi not installed. Install with: pip install curl_cffi"
-            )
+            logger.error("curl_cffi not installed. Install with: pip install curl_cffi")
             raise ImportError("curl_cffi is required but not installed")
 
         session_kwargs: dict[str, Any] = {
@@ -285,7 +285,7 @@ class TLSClient:
             text=response.text,
             content=response.content,
             url=str(response.url),
-            cookies={k: v for k, v in response.cookies.items()},
+            cookies=dict(response.cookies.items()),
             elapsed=elapsed,
             http_version=getattr(response, "http_version", "HTTP/2"),
         )
@@ -313,6 +313,7 @@ class TLSClient:
             await self.init()
 
         import time
+
         start = time.monotonic()
 
         response = await self._session.get(
@@ -351,6 +352,7 @@ class TLSClient:
             await self.init()
 
         import time
+
         start = time.monotonic()
 
         response = await self._session.post(
@@ -379,6 +381,7 @@ class TLSClient:
             await self.init()
 
         import time
+
         start = time.monotonic()
 
         response = await self._session.put(
@@ -405,6 +408,7 @@ class TLSClient:
             await self.init()
 
         import time
+
         start = time.monotonic()
 
         response = await self._session.delete(
@@ -429,6 +433,7 @@ class TLSClient:
             await self.init()
 
         import time
+
         start = time.monotonic()
 
         response = await self._session.head(

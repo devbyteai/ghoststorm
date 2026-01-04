@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
-from unittest.mock import MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -41,9 +43,17 @@ class TestMetricsAPI:
         data = response.json()
 
         # All count fields should be non-negative
-        for key in ["tasks_pending", "tasks_running", "tasks_completed", "tasks_failed",
-                    "proxies_total", "proxies_healthy", "proxies_failed",
-                    "workers_active", "workers_total"]:
+        for key in [
+            "tasks_pending",
+            "tasks_running",
+            "tasks_completed",
+            "tasks_failed",
+            "proxies_total",
+            "proxies_healthy",
+            "proxies_failed",
+            "workers_active",
+            "workers_total",
+        ]:
             assert data[key] >= 0, f"{key} should be non-negative"
 
 
@@ -63,7 +73,9 @@ class TestMetricsHealthAPI:
         assert "timestamp" in data
         assert data["status"] == "healthy"
 
-    def test_health_check_contains_orchestrator_info(self, api_test_client: TestClient, mock_orchestrator):
+    def test_health_check_contains_orchestrator_info(
+        self, api_test_client: TestClient, mock_orchestrator
+    ):
         """Test health check includes orchestrator info."""
         response = api_test_client.get("/api/health")
 

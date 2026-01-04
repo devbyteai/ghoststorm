@@ -7,7 +7,6 @@ across TikTok, Instagram, and YouTube platforms.
 from __future__ import annotations
 
 import random
-from typing import TYPE_CHECKING
 
 import pytest
 
@@ -22,9 +21,6 @@ from ghoststorm.plugins.automation.social_media_behavior import (
     VideoWatchBehavior,
     WatchDistribution,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 
 class TestWatchDistribution:
@@ -384,7 +380,7 @@ class TestStoryWatchBehavior:
         """generate_view_duration uses provided story duration."""
         random.seed(42)
         story = StoryWatchBehavior()
-        duration, action = story.generate_view_duration(story_duration=10.0)
+        duration, _action = story.generate_view_duration(story_duration=10.0)
 
         assert isinstance(duration, float)
         assert duration > 0
@@ -559,17 +555,11 @@ class TestInAppBrowserBehavior:
         trials = 1000
 
         # Short time spent
-        short_returns = sum(
-            browser.should_return_to_app(time_spent=10.0)
-            for _ in range(trials)
-        )
+        short_returns = sum(browser.should_return_to_app(time_spent=10.0) for _ in range(trials))
 
         # Long time spent
         random.seed(42)
-        long_returns = sum(
-            browser.should_return_to_app(time_spent=120.0)
-            for _ in range(trials)
-        )
+        long_returns = sum(browser.should_return_to_app(time_spent=120.0) for _ in range(trials))
 
         # Longer time should result in more returns
         assert long_returns > short_returns
@@ -580,10 +570,7 @@ class TestInAppBrowserBehavior:
         browser = InAppBrowserBehavior()
 
         # Very long time spent (10 minutes)
-        returns = sum(
-            browser.should_return_to_app(time_spent=600.0)
-            for _ in range(1000)
-        )
+        returns = sum(browser.should_return_to_app(time_spent=600.0) for _ in range(1000))
         rate = returns / 1000
 
         # Should be capped around 90%, allow some tolerance

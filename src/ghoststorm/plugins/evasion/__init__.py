@@ -11,13 +11,13 @@ from ghoststorm.plugins.evasion.font_defender import (
 from ghoststorm.plugins.evasion.stealth_plugin import StealthPlugin
 
 __all__ = [
-    # Stealth
-    "StealthPlugin",
     # Font Defense
     "FontDefender",
     "FontDefenderConfig",
     "FontDefenderPlugin",
     "FontProfile",
     "OSType",
+    # Stealth
+    "StealthPlugin",
     "get_font_defender",
 ]

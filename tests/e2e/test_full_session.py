@@ -6,8 +6,6 @@ Marked with @pytest.mark.e2e and @pytest.mark.slow.
 
 from __future__ import annotations
 
-import asyncio
-from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -146,12 +144,14 @@ class TestYouTubeFullSession:
     Tests are skipped until source code is fixed.
     """
 
-    @pytest.mark.skip(reason="YouTubeAutomation is abstract - missing click_bio_link implementation")
+    @pytest.mark.skip(
+        reason="YouTubeAutomation is abstract - missing click_bio_link implementation"
+    )
     @pytest.mark.asyncio
     async def test_youtube_shorts_session_complete(self, mock_page: MagicMock) -> None:
         """Test complete YouTube shorts session."""
-        from ghoststorm.plugins.automation.youtube import YouTubeAutomation, YouTubeConfig
         from ghoststorm.plugins.automation.view_tracking import reset_view_tracker
+        from ghoststorm.plugins.automation.youtube import YouTubeAutomation, YouTubeConfig
 
         reset_view_tracker()
 
@@ -170,17 +170,16 @@ class TestYouTubeFullSession:
         assert result.success
         assert result.videos_watched >= 5
 
-    @pytest.mark.skip(reason="YouTubeAutomation is abstract - missing click_bio_link implementation")
+    @pytest.mark.skip(
+        reason="YouTubeAutomation is abstract - missing click_bio_link implementation"
+    )
     @pytest.mark.asyncio
-    async def test_youtube_video_watch_with_30s_minimum(
-        self, mock_page: MagicMock
-    ) -> None:
+    async def test_youtube_video_watch_with_30s_minimum(self, mock_page: MagicMock) -> None:
         """Test YouTube video watch respects 30 second minimum for views."""
-        from ghoststorm.plugins.automation.youtube import YouTubeAutomation, YouTubeConfig
         from ghoststorm.plugins.automation.view_tracking import (
             reset_view_tracker,
-            get_view_tracker,
         )
+        from ghoststorm.plugins.automation.youtube import YouTubeAutomation, YouTubeConfig
 
         reset_view_tracker()
 
@@ -204,16 +203,16 @@ class TestYouTubeFullSession:
 class TestCrossPlatformSession:
     """Test sessions spanning multiple platforms."""
 
-    @pytest.mark.skip(reason="YouTubeAutomation is abstract - missing click_bio_link implementation")
+    @pytest.mark.skip(
+        reason="YouTubeAutomation is abstract - missing click_bio_link implementation"
+    )
     @pytest.mark.asyncio
-    async def test_multi_platform_sequential_sessions(
-        self, mock_page: MagicMock
-    ) -> None:
+    async def test_multi_platform_sequential_sessions(self, mock_page: MagicMock) -> None:
         """Test running sessions on multiple platforms sequentially."""
-        from ghoststorm.plugins.automation.tiktok import TikTokAutomation, TikTokConfig
         from ghoststorm.plugins.automation.instagram import InstagramAutomation, InstagramConfig
-        from ghoststorm.plugins.automation.youtube import YouTubeAutomation, YouTubeConfig
+        from ghoststorm.plugins.automation.tiktok import TikTokAutomation, TikTokConfig
         from ghoststorm.plugins.automation.view_tracking import reset_view_tracker
+        from ghoststorm.plugins.automation.youtube import YouTubeAutomation, YouTubeConfig
 
         reset_view_tracker()
 
@@ -267,12 +266,12 @@ class TestSessionWithCoherence:
     async def test_session_with_persona(self, mock_page: MagicMock) -> None:
         """Test session using coherence engine persona."""
         from ghoststorm.plugins.automation.tiktok import TikTokAutomation, TikTokConfig
+        from ghoststorm.plugins.automation.view_tracking import reset_view_tracker
         from ghoststorm.plugins.behavior.coherence_engine import (
-            CoherenceEngine,
             CoherenceConfig,
+            CoherenceEngine,
             UserPersona,
         )
-        from ghoststorm.plugins.automation.view_tracking import reset_view_tracker
 
         reset_view_tracker()
 
@@ -318,9 +317,7 @@ class TestErrorRecovery:
     """Test session error recovery scenarios."""
 
     @pytest.mark.asyncio
-    async def test_session_recovers_from_navigation_error(
-        self, mock_page: MagicMock
-    ) -> None:
+    async def test_session_recovers_from_navigation_error(self, mock_page: MagicMock) -> None:
         """Test that session handles navigation error gracefully."""
         from ghoststorm.plugins.automation.tiktok import TikTokAutomation, TikTokConfig
 
@@ -355,9 +352,7 @@ class TestErrorRecovery:
                 pass
 
     @pytest.mark.asyncio
-    async def test_session_handles_element_not_found(
-        self, mock_page: MagicMock
-    ) -> None:
+    async def test_session_handles_element_not_found(self, mock_page: MagicMock) -> None:
         """Test that session handles missing elements gracefully."""
         from ghoststorm.plugins.automation.tiktok import TikTokAutomation, TikTokConfig
 

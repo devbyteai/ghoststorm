@@ -209,25 +209,29 @@ class DeviceProfilesGenerator(IFingerprintGenerator):
             }
             valid_devices = device_map.get(os_lower, [os_lower])
             candidates = [
-                p for p in candidates
+                p
+                for p in candidates
                 if p.get("General", {}).get("Device", "").lower() in valid_devices
             ]
 
         if device_category == "mobile":
             candidates = [
-                p for p in candidates
+                p
+                for p in candidates
                 if p.get("Emulation", {}).get("Mobile", {}).get("Mobile_emulation", False)
             ]
         elif device_category == "desktop":
             candidates = [
-                p for p in candidates
+                p
+                for p in candidates
                 if not p.get("Emulation", {}).get("Mobile", {}).get("Mobile_emulation", False)
             ]
 
         if browser_filter:
             browser_lower = browser_filter.lower()
             candidates = [
-                p for p in candidates
+                p
+                for p in candidates
                 if browser_lower in p.get("Navigator", {}).get("User_agent", "").lower()
             ]
 

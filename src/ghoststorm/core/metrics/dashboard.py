@@ -13,14 +13,17 @@ Uses Server-Sent Events (SSE) for real-time updates.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import time
-from collections.abc import AsyncIterator
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 logger = structlog.get_logger(__name__)
 
@@ -223,10 +226,8 @@ class Dashboard:
 
         if self._update_task:
             self._update_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._update_task
-            except asyncio.CancelledError:
-                pass
 
         logger.info("Dashboard stopped")
 

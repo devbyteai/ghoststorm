@@ -15,18 +15,18 @@ from ghoststorm.core.dom.selector import SelectorGenerator
 from ghoststorm.core.dom.service import DOMService
 
 __all__ = [
-    # Main service
-    "DOMService",
+    "BoundingBox",
+    "ClickableDetector",
     # Components
     "DOMAnalyzer",
-    "ClickableDetector",
-    "SelectorGenerator",
     # Models
     "DOMConfig",
-    "DOMState",
     "DOMNode",
+    # Main service
+    "DOMService",
+    "DOMState",
     "ElementInfo",
-    "BoundingBox",
     "ElementType",
     "InteractionType",
+    "SelectorGenerator",
 ]

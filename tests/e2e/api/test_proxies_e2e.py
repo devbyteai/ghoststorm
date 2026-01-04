@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -231,11 +233,13 @@ class TestProxyImportExportAPI:
                 with patch("pathlib.Path.mkdir"):
                     response = api_test_client.post(
                         "/api/proxies/import",
-                        json={"proxies": [
-                            "1.2.3.4:8080",  # valid
-                            "not-valid",     # invalid
-                            "5.6.7.8:3128",  # valid
-                        ]},
+                        json={
+                            "proxies": [
+                                "1.2.3.4:8080",  # valid
+                                "not-valid",  # invalid
+                                "5.6.7.8:3128",  # valid
+                            ]
+                        },
                     )
 
                     assert response.status_code == 200
@@ -415,9 +419,8 @@ class TestProxyTorAPI:
 
     def test_tor_test_timeout(self, api_test_client: TestClient):
         """Test Tor connection timeout."""
-        import asyncio
 
-        with patch("asyncio.wait_for", side_effect=asyncio.TimeoutError()):
+        with patch("asyncio.wait_for", side_effect=TimeoutError()):
             response = api_test_client.post("/api/proxies/providers/tor/test")
 
             assert response.status_code == 200

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import time
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
@@ -111,10 +112,8 @@ class AsyncEventBus:
         # Cancel processing task
         if self._processing_task:
             self._processing_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._processing_task
-            except asyncio.CancelledError:
-                pass
             self._processing_task = None
 
         logger.info("Event bus stopped", stats=self._stats)

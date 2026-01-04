@@ -4,15 +4,16 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import contextlib
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, TypedDict
-from uuid import uuid4
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import structlog
 
+from ghoststorm.core.flow.storage import FlowStorage, get_flow_storage
 from ghoststorm.core.models.flow import (
     Checkpoint,
     CheckpointType,
@@ -20,7 +21,9 @@ from ghoststorm.core.models.flow import (
     RecordedFlow,
     TimingConfig,
 )
-from ghoststorm.core.flow.storage import FlowStorage, get_flow_storage
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = structlog.get_logger(__name__)
 
@@ -542,13 +545,15 @@ class FlowRecorder:
 
             # WebRTC protection
             if stealth and stealth.get("block_webrtc"):
-                browser_args.extend([
-                    "--disable-webrtc",
-                    "--disable-webrtc-encryption",
-                    "--disable-webrtc-hw-decoding",
-                    "--disable-webrtc-hw-encoding",
-                    "--webrtc-ip-handling-policy=disable_non_proxied_udp",
-                ])
+                browser_args.extend(
+                    [
+                        "--disable-webrtc",
+                        "--disable-webrtc-encryption",
+                        "--disable-webrtc-hw-decoding",
+                        "--disable-webrtc-hw-encoding",
+                        "--webrtc-ip-handling-policy=disable_non_proxied_udp",
+                    ]
+                )
                 logger.info("WebRTC protection enabled")
 
             # Canvas/WebGL noise (via preferences)
@@ -653,8 +658,7 @@ class FlowRecorder:
             if proxy_file.exists():
                 lines = proxy_file.read_text().strip().splitlines()
                 valid_proxies = [
-                    line.strip() for line in lines
-                    if line.strip() and not line.startswith("#")
+                    line.strip() for line in lines if line.strip() and not line.startswith("#")
                 ]
                 if valid_proxies:
                     proxy_str = random.choice(valid_proxies)
@@ -826,18 +830,14 @@ class FlowRecorder:
                     await self._handle_checkpoint(checkpoint_data)
 
                 # Check for stop signal
-                should_stop = await page.evaluate(
-                    "() => window.__ghoststorm_stop_recording"
-                )
+                should_stop = await page.evaluate("() => window.__ghoststorm_stop_recording")
 
                 if should_stop:
                     await self.stop_recording()
                     break
 
                 # Check paused state
-                is_paused = await page.evaluate(
-                    "() => window.__ghoststorm_recording_paused"
-                )
+                is_paused = await page.evaluate("() => window.__ghoststorm_recording_paused")
                 self._active_session.is_paused = is_paused
 
             except Exception as e:
@@ -858,9 +858,7 @@ class FlowRecorder:
             # Take screenshot
             screenshot_b64 = None
             try:
-                screenshot_bytes = await self._active_session.page.screenshot(
-                    type="png"
-                )
+                screenshot_bytes = await self._active_session.page.screenshot(type="png")
                 screenshot_b64 = base64.b64encode(screenshot_bytes).decode("utf-8")
             except Exception as e:
                 logger.warning("Failed to capture screenshot", error=str(e))
@@ -963,10 +961,8 @@ class FlowRecorder:
         # Cancel poll task
         if self._poll_task:
             self._poll_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._poll_task
-            except asyncio.CancelledError:
-                pass
 
         # Finalize flow
         flow = session.flow
@@ -1015,10 +1011,8 @@ class FlowRecorder:
         # Cancel poll task
         if self._poll_task:
             self._poll_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._poll_task
-            except asyncio.CancelledError:
-                pass
 
         # Close browser
         try:

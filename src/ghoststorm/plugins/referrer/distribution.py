@@ -15,7 +15,6 @@ This module generates realistic referrer patterns with variance to avoid detecti
 from __future__ import annotations
 
 import random
-import re
 from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import quote_plus, urlparse
@@ -171,7 +170,7 @@ class ReferrerDistribution:
     def __post_init__(self) -> None:
         """Initialize sources from preset or custom weights."""
         self._initialize_sources()
-        self._stats = {source: 0 for source in self._current_sources}
+        self._stats = dict.fromkeys(self._current_sources, 0)
 
     def _initialize_sources(self) -> None:
         """Initialize traffic sources from preset or custom config."""
@@ -273,17 +272,13 @@ class ReferrerDistribution:
     def _generate_social_referrer(self, target_url: str) -> str:
         """Generate a social media referrer URL."""
         # Filter to configured platforms
-        available = {
-            p: w for p, w in SOCIAL_PLATFORMS.items() if p in self.social_platforms
-        }
+        available = {p: w for p, w in SOCIAL_PLATFORMS.items() if p in self.social_platforms}
 
         if not available:
             available = {"twitter": 1.0}
 
         # Weighted selection
-        platform = random.choices(
-            list(available.keys()), weights=list(available.values())
-        )[0]
+        platform = random.choices(list(available.keys()), weights=list(available.values()))[0]
 
         # Platform-specific referrer formats
         referrers = {
@@ -391,7 +386,7 @@ class ReferrerDistribution:
 
     def reset_stats(self) -> None:
         """Reset distribution statistics."""
-        self._stats = {source: 0 for source in self._current_sources}
+        self._stats = dict.fromkeys(self._current_sources, 0)
 
     @classmethod
     def from_config(cls, config: dict[str, Any]) -> ReferrerDistribution:

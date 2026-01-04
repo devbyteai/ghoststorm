@@ -6,18 +6,14 @@ ghoststorm.plugins.automation.tiktok
 
 from __future__ import annotations
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from ghoststorm.plugins.automation.base import (
-    BioClickResult,
     SessionResult,
     SocialPlatform,
-    SwipeResult,
     VideoWatchOutcome,
-    WatchResult,
 )
 from ghoststorm.plugins.automation.tiktok import (
     TikTokAction,
@@ -25,7 +21,6 @@ from ghoststorm.plugins.automation.tiktok import (
     TikTokConfig,
     TikTokSelectors,
 )
-
 
 # ============================================================================
 # TikTokConfig DATACLASS TESTS
@@ -674,8 +669,12 @@ class TestSimulateFypSession:
         # Patch behavior methods to make session deterministic
         with patch.object(automation.watch_behavior, "generate_session_length", return_value=2):
             with patch.object(automation.watch_behavior, "should_take_break", return_value=False):
-                with patch.object(automation.watch_behavior, "should_visit_profile", return_value=False):
-                    with patch.object(automation.watch_behavior, "should_scroll_back", return_value=False):
+                with patch.object(
+                    automation.watch_behavior, "should_visit_profile", return_value=False
+                ):
+                    with patch.object(
+                        automation.watch_behavior, "should_scroll_back", return_value=False
+                    ):
                         result = await automation.simulate_fyp_session(
                             mock_page,
                             videos_to_watch=2,
@@ -696,8 +695,12 @@ class TestSimulateFypSession:
 
         with patch.object(automation.watch_behavior, "generate_session_length", return_value=1):
             with patch.object(automation.watch_behavior, "should_take_break", return_value=False):
-                with patch.object(automation.watch_behavior, "should_visit_profile", return_value=False):
-                    with patch.object(automation.watch_behavior, "should_scroll_back", return_value=False):
+                with patch.object(
+                    automation.watch_behavior, "should_visit_profile", return_value=False
+                ):
+                    with patch.object(
+                        automation.watch_behavior, "should_scroll_back", return_value=False
+                    ):
                         await automation.simulate_fyp_session(mock_page, videos_to_watch=1)
 
         # Should have navigated to FYP
@@ -716,8 +719,12 @@ class TestSimulateFypSession:
 
         with patch.object(automation.watch_behavior, "generate_session_length", return_value=1):
             with patch.object(automation.watch_behavior, "should_take_break", return_value=False):
-                with patch.object(automation.watch_behavior, "should_visit_profile", return_value=False):
-                    with patch.object(automation.watch_behavior, "should_scroll_back", return_value=False):
+                with patch.object(
+                    automation.watch_behavior, "should_visit_profile", return_value=False
+                ):
+                    with patch.object(
+                        automation.watch_behavior, "should_scroll_back", return_value=False
+                    ):
                         result = await automation.simulate_fyp_session(
                             mock_page,
                             target_profile="targetuser",
@@ -736,8 +743,12 @@ class TestSimulateFypSession:
 
         with patch.object(automation.watch_behavior, "generate_session_length", return_value=1):
             with patch.object(automation.watch_behavior, "should_take_break", return_value=False):
-                with patch.object(automation.watch_behavior, "should_visit_profile", return_value=False):
-                    with patch.object(automation.watch_behavior, "should_scroll_back", return_value=False):
+                with patch.object(
+                    automation.watch_behavior, "should_visit_profile", return_value=False
+                ):
+                    with patch.object(
+                        automation.watch_behavior, "should_scroll_back", return_value=False
+                    ):
                         result = await automation.simulate_fyp_session(
                             mock_page,
                             videos_to_watch=1,
@@ -760,8 +771,12 @@ class TestSimulateFypSession:
 
         with patch.object(automation.watch_behavior, "generate_session_length", return_value=100):
             with patch.object(automation.watch_behavior, "should_take_break", return_value=False):
-                with patch.object(automation.watch_behavior, "should_visit_profile", return_value=False):
-                    with patch.object(automation.watch_behavior, "should_scroll_back", return_value=False):
+                with patch.object(
+                    automation.watch_behavior, "should_visit_profile", return_value=False
+                ):
+                    with patch.object(
+                        automation.watch_behavior, "should_scroll_back", return_value=False
+                    ):
                         result = await automation.simulate_fyp_session(
                             mock_page,
                             videos_to_watch=100,  # Request more than max
@@ -792,8 +807,12 @@ class TestTikTokAutomationIntegration:
         mock_page.set_locator_duration("video", 5.0)
 
         with patch.object(automation.watch_behavior, "should_take_break", return_value=False):
-            with patch.object(automation.watch_behavior, "should_visit_profile", return_value=False):
-                with patch.object(automation.watch_behavior, "should_scroll_back", return_value=False):
+            with patch.object(
+                automation.watch_behavior, "should_visit_profile", return_value=False
+            ):
+                with patch.object(
+                    automation.watch_behavior, "should_scroll_back", return_value=False
+                ):
                     result = await automation.run(mock_page)
 
         assert isinstance(result, SessionResult)

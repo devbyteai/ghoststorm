@@ -11,7 +11,7 @@ Reusable automation engine with:
 from __future__ import annotations
 
 import asyncio
-import re
+import contextlib
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
@@ -44,11 +44,13 @@ class EngineConfig:
 
     # Captcha
     solve_captcha: bool = True
-    captcha_selectors: dict[str, str] = field(default_factory=lambda: {
-        "image": "img.img-thumbnail, img[src*='captcha'], canvas",
-        "input": "#captchatoken, input[name='captcha'], input[placeholder*='captcha' i]",
-        "submit": "button[type='submit'], .btn-primary, button:has-text('Submit')",
-    })
+    captcha_selectors: dict[str, str] = field(
+        default_factory=lambda: {
+            "image": "img.img-thumbnail, img[src*='captcha'], canvas",
+            "input": "#captchatoken, input[name='captcha'], input[placeholder*='captcha' i]",
+            "submit": "button[type='submit'], .btn-primary, button:has-text('Submit')",
+        }
+    )
 
     # Timeouts
     page_load_timeout: int = 30000
@@ -285,7 +287,12 @@ class AutomationEngine:
         for name, selectors in self.config.selectors.items():
             element = await self._find_element(selectors)
             if element:
-                return {"type": "CLICKABLE", "detail": f"Found {name}", "element": element, "name": name}
+                return {
+                    "type": "CLICKABLE",
+                    "detail": f"Found {name}",
+                    "element": element,
+                    "name": name,
+                }
 
         return {"type": "UNKNOWN", "detail": page_text_lower[:100]}
 
@@ -314,7 +321,7 @@ class AutomationEngine:
 
     async def _hide_blockers(self) -> None:
         """Hide/remove blocking elements."""
-        try:
+        with contextlib.suppress(Exception):
             await self._page.evaluate("""
                 () => {
                     // Hide ad iframes
@@ -334,8 +341,6 @@ class AutomationEngine:
                     });
                 }
             """)
-        except Exception:
-            pass
 
         # Try clicking common close buttons
         close_selectors = [
@@ -411,6 +416,7 @@ class AutomationEngine:
 
         try:
             from ghoststorm.plugins.captcha.zefoy_ocr import ZefoyOCRSolver
+
             solver = ZefoyOCRSolver()
         except ImportError:
             self._log("OCR solver not available")
@@ -484,5 +490,6 @@ class AutomationEngine:
     async def _random_delay(self) -> None:
         """Random human-like delay."""
         import random
+
         delay = random.uniform(self.config.delay_min, self.config.delay_max)
         await asyncio.sleep(delay)

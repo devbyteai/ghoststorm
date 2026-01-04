@@ -30,17 +30,17 @@ from tests.pytest_plugins.mock_services import (
 
 # Re-export for pytest discovery
 __all__ = [
-    "pytest_addoption",
-    "pytest_configure",
-    "pytest_collection_modifyitems",
-    "MockOllamaService",
     "MockDockerService",
+    "MockOllamaService",
     "create_mock_orchestrator",
-    "mock_ollama_service",
     "mock_docker_service",
+    "mock_ollama_service",
     "mock_orchestrator",
-    "patch_ollama",
     "patch_docker",
+    "patch_ollama",
+    "pytest_addoption",
+    "pytest_collection_modifyitems",
+    "pytest_configure",
     "service_mode",
 ]
 
@@ -112,7 +112,7 @@ class MockLocator:
         return self._text
 
     @property
-    def first(self) -> "MockLocator":
+    def first(self) -> MockLocator:
         return self
 
 

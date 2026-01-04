@@ -19,7 +19,7 @@ import random
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import structlog
 
@@ -40,10 +40,12 @@ from ghoststorm.plugins.automation.social_media_behavior import (
 from ghoststorm.plugins.automation.view_tracking import (
     get_view_tracker,
 )
-from ghoststorm.plugins.behavior.coherence_engine import (
-    CoherenceEngine,
-)
-from ghoststorm.plugins.network.rate_limiter import RateLimiter
+
+if TYPE_CHECKING:
+    from ghoststorm.plugins.behavior.coherence_engine import (
+        CoherenceEngine,
+    )
+    from ghoststorm.plugins.network.rate_limiter import RateLimiter
 
 logger = structlog.get_logger(__name__)
 
@@ -255,6 +257,7 @@ class YouTubeAutomation(SocialMediaAutomation):
         """Generate a realistic device ID."""
         import hashlib
         import uuid
+
         return hashlib.md5(str(uuid.uuid4()).encode()).hexdigest()
 
     def _generate_visitor_id(self) -> str:
@@ -274,10 +277,12 @@ class YouTubeAutomation(SocialMediaAutomation):
             await page.add_init_script(js_code)
 
             # Set mobile viewport
-            await page.set_viewport_size({
-                "width": self.config.viewport_width,
-                "height": self.config.viewport_height,
-            })
+            await page.set_viewport_size(
+                {
+                    "width": self.config.viewport_width,
+                    "height": self.config.viewport_height,
+                }
+            )
 
             # Set extra headers
             headers = YOUTUBE_HEADERS.copy()
@@ -330,6 +335,7 @@ class YouTubeAutomation(SocialMediaAutomation):
         else:
             # Fallback - use hash of URL
             import hashlib
+
             video_id = hashlib.md5(url.encode()).hexdigest()[:16]
 
         return video_id
@@ -366,9 +372,7 @@ class YouTubeAutomation(SocialMediaAutomation):
 
             # Apply coherence modifiers
             if self._session_state:
-                modifiers = self.coherence_engine.get_behavior_modifiers(
-                    self._session_state
-                )
+                modifiers = self.coherence_engine.get_behavior_modifiers(self._session_state)
                 watch_time *= modifiers.get("dwell_time_factor", 1.0)
 
             logger.info(
@@ -384,9 +388,7 @@ class YouTubeAutomation(SocialMediaAutomation):
             await asyncio.sleep(watch_time)
 
             # Calculate completion rate
-            completion_rate = (
-                watch_time / video_duration if video_duration else 1.0
-            )
+            completion_rate = watch_time / video_duration if video_duration else 1.0
 
             # Determine outcome
             outcome = self._determine_watch_outcome(watch_time, video_duration)
@@ -520,7 +522,7 @@ class YouTubeAutomation(SocialMediaAutomation):
                     watch_time = max(watch_time, min_watch + random.uniform(0.5, 2.0))
                 else:
                     # Regular videos need at least 30 seconds for view to count
-                    watch_time, outcome_str = self.watch_behavior.generate_watch_duration(
+                    watch_time, _outcome_str = self.watch_behavior.generate_watch_duration(
                         video_duration=video_duration,
                         content_interest=random.uniform(0.5, 0.9),
                     )
@@ -528,13 +530,10 @@ class YouTubeAutomation(SocialMediaAutomation):
                     watch_time = max(watch_time, min_watch + random.uniform(5.0, 15.0))
             else:
                 watch_time = watch_duration
-                outcome_str = "full"
 
             # Apply coherence modifiers
             if self._session_state:
-                modifiers = self.coherence_engine.get_behavior_modifiers(
-                    self._session_state
-                )
+                modifiers = self.coherence_engine.get_behavior_modifiers(self._session_state)
                 watch_time *= modifiers.get("dwell_time_factor", 1.0)
 
             logger.info(
@@ -711,19 +710,16 @@ class YouTubeAutomation(SocialMediaAutomation):
 
             # Generate watch duration
             if duration is None:
-                watch_time, outcome_str = self.watch_behavior.generate_watch_duration(
+                watch_time, _outcome_str = self.watch_behavior.generate_watch_duration(
                     video_duration=video_duration,
                     content_interest=random.uniform(0.3, 0.8),
                 )
             else:
                 watch_time = duration
-                outcome_str = "full"
 
             # Apply coherence modifiers
             if self._session_state:
-                modifiers = self.coherence_engine.get_behavior_modifiers(
-                    self._session_state
-                )
+                modifiers = self.coherence_engine.get_behavior_modifiers(self._session_state)
                 watch_time *= modifiers.get("dwell_time_factor", 1.0)
 
             logger.info(
@@ -931,9 +927,7 @@ class YouTubeAutomation(SocialMediaAutomation):
             await self._random_delay(1.0, 2.0)
 
             if self._session_state:
-                self.coherence_engine.record_action(
-                    self._session_state, "click", target_url
-                )
+                self.coherence_engine.record_action(self._session_state, "click", target_url)
 
             logger.info(
                 "[YOUTUBE_DESC_CLICK] Description link click completed",
@@ -993,9 +987,7 @@ class YouTubeAutomation(SocialMediaAutomation):
             self._channels_visited += 1
 
             if self._session_state:
-                self.coherence_engine.record_action(
-                    self._session_state, "navigate", page.url
-                )
+                self.coherence_engine.record_action(self._session_state, "navigate", page.url)
 
             logger.info(
                 "[YOUTUBE_CHANNEL] Channel visit successful",
@@ -1048,7 +1040,7 @@ class YouTubeAutomation(SocialMediaAutomation):
             await self._wait_for_navigation(page)
             await self._random_delay(*self.config.page_load_delay)
 
-            for i in range(shorts_to_watch):
+            for _i in range(shorts_to_watch):
                 # Check for break
                 if self.watch_behavior.should_take_break():
                     break_duration = self.watch_behavior.generate_break_duration()
@@ -1139,7 +1131,7 @@ class YouTubeAutomation(SocialMediaAutomation):
         # Setup context
         await self._setup_context(page)
         start_time = datetime.now(UTC)
-        session = self._create_session()
+        self._create_session()
 
         # PRIORITY 1: If target URLs are configured, watch them directly
         if total_target_urls > 0:

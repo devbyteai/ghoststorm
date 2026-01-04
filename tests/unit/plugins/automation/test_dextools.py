@@ -6,9 +6,7 @@ ghoststorm.plugins.automation.dextools
 
 from __future__ import annotations
 
-import asyncio
 from collections import Counter
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -18,8 +16,8 @@ from ghoststorm.plugins.automation.dextools import (
     DEXToolsAutomation,
     DEXToolsConfig,
     DEXToolsSelectors,
-    VisitResult,
     VisitorBehavior,
+    VisitResult,
 )
 from ghoststorm.plugins.automation.dextools_campaign import (
     CampaignConfig,
@@ -28,7 +26,6 @@ from ghoststorm.plugins.automation.dextools_campaign import (
     CampaignStatus,
     DEXToolsTrendingCampaign,
 )
-
 
 # ============================================================================
 # DEXToolsConfig DATACLASS TESTS
@@ -107,7 +104,10 @@ class TestDEXToolsSelectors:
         """DEXToolsSelectors should have social link selectors."""
         selectors = DEXToolsSelectors()
 
-        assert "twitter.com" in selectors.social_link_twitter or "x.com" in selectors.social_link_twitter
+        assert (
+            "twitter.com" in selectors.social_link_twitter
+            or "x.com" in selectors.social_link_twitter
+        )
         assert "t.me" in selectors.social_link_telegram
         assert "discord" in selectors.social_link_discord
 
@@ -133,7 +133,10 @@ class TestDEXToolsSelectors:
 
         assert selectors.social_link_1_xpath is not None
         assert selectors.social_link_2_xpath is not None
-        assert "xpath" in selectors.social_link_1_xpath.lower() or "//" in selectors.social_link_1_xpath
+        assert (
+            "xpath" in selectors.social_link_1_xpath.lower()
+            or "//" in selectors.social_link_1_xpath
+        )
 
     def test_custom_selectors(self):
         """DEXToolsSelectors should accept custom values."""
@@ -239,7 +242,9 @@ class TestDEXToolsAutomationInit:
         )
         automation = DEXToolsAutomation(config=config)
 
-        assert automation.config.pair_url == "https://www.dextools.io/app/ether/pair-explorer/0xtest"
+        assert (
+            automation.config.pair_url == "https://www.dextools.io/app/ether/pair-explorer/0xtest"
+        )
         assert automation.config.behavior_mode == "passive"
 
     def test_init_with_selectors(self):
@@ -280,7 +285,7 @@ class TestPickBehavior:
         engaged_pct = counter[VisitorBehavior.ENGAGED] / 1000
 
         assert 0.50 <= passive_pct <= 0.70  # ~60% +/- 10%
-        assert 0.20 <= light_pct <= 0.40    # ~30% +/- 10%
+        assert 0.20 <= light_pct <= 0.40  # ~30% +/- 10%
         assert 0.05 <= engaged_pct <= 0.20  # ~10% +/- 10%
 
     def test_forced_passive_mode(self):
@@ -529,8 +534,7 @@ class TestTestSelectors:
         automation = DEXToolsAutomation()
 
         result = await automation.test_selectors(
-            mock_page,
-            "https://www.dextools.io/app/ether/pair-explorer/0xtest"
+            mock_page, "https://www.dextools.io/app/ether/pair-explorer/0xtest"
         )
 
         assert "status" in result
@@ -550,9 +554,7 @@ class TestCampaignConfig:
 
     def test_default_values(self):
         """CampaignConfig should have correct default values."""
-        config = CampaignConfig(
-            pair_url="https://www.dextools.io/app/ether/pair-explorer/0xtest"
-        )
+        config = CampaignConfig(pair_url="https://www.dextools.io/app/ether/pair-explorer/0xtest")
 
         assert config.pair_url == "https://www.dextools.io/app/ether/pair-explorer/0xtest"
         assert config.num_visitors == 100
@@ -702,7 +704,7 @@ class TestDEXToolsTrendingCampaign:
 
         assert len(schedule) == 10
         # All delays should be non-negative
-        for visitor_id, delay in schedule:
+        for _visitor_id, delay in schedule:
             assert delay >= 0
 
     def test_create_visit_schedule_natural(self):

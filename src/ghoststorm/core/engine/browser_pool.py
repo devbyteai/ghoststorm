@@ -28,6 +28,7 @@ logger = structlog.get_logger(__name__)
 
 class PoolItemState(str, Enum):
     """State of a pooled item."""
+
     AVAILABLE = "available"
     IN_USE = "in_use"
     RECYCLING = "recycling"
@@ -55,9 +56,7 @@ class BrowserInstance:
         if self.errors >= 10:
             return True
         age = (datetime.now() - self.created_at).total_seconds() / 60
-        if age >= max_age_minutes:
-            return True
-        return False
+        return age >= max_age_minutes
 
 
 @dataclass
@@ -198,8 +197,7 @@ class BrowserPool:
                 if browser.state == PoolItemState.AVAILABLE:
                     # Check if needs recycling
                     if browser.should_recycle(
-                        self._recycle_after_tasks,
-                        self._recycle_after_minutes
+                        self._recycle_after_tasks, self._recycle_after_minutes
                     ):
                         await self._recycle_browser(browser)
                         continue
@@ -239,10 +237,7 @@ class BrowserPool:
                 self._stats["total_errors"] += 1
 
             # Check if needs recycling
-            if browser.should_recycle(
-                self._recycle_after_tasks,
-                self._recycle_after_minutes
-            ):
+            if browser.should_recycle(self._recycle_after_tasks, self._recycle_after_minutes):
                 await self._recycle_browser(browser)
             else:
                 browser.state = PoolItemState.AVAILABLE
@@ -401,7 +396,8 @@ class ContextPool:
 
             # Count contexts for this browser
             browser_contexts = sum(
-                1 for c in self._contexts.values()
+                1
+                for c in self._contexts.values()
                 if c.browser_id == browser.id and c.state != PoolItemState.DEAD
             )
 

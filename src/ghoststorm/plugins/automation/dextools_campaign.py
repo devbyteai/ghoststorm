@@ -6,22 +6,23 @@ Coordinates multiple visitors over time for DEXTools trending push.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import random
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
-from ghoststorm.core.models.proxy import Proxy
 from ghoststorm.plugins.automation.dextools import (
     DEXToolsAutomation,
     DEXToolsConfig,
-    VisitResult,
     VisitorBehavior,
+    VisitResult,
 )
 
 if TYPE_CHECKING:
     from ghoststorm.core.interfaces.proxy import IProxyProvider
+    from ghoststorm.core.models.proxy import Proxy
 
 
 class CampaignStatus(Enum):
@@ -234,6 +235,7 @@ class DEXToolsTrendingCampaign:
 
         # Generate campaign ID
         import uuid
+
         self.campaign_id = str(uuid.uuid4())[:8]
 
         # State
@@ -307,12 +309,9 @@ class DEXToolsTrendingCampaign:
             # Wait for delay
             if delay > 0:
                 try:
-                    await asyncio.wait_for(
-                        self._cancel_event.wait(),
-                        timeout=delay
-                    )
+                    await asyncio.wait_for(self._cancel_event.wait(), timeout=delay)
                     break  # Cancelled during wait
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     pass  # Normal - delay completed
 
             # Launch visitor task
@@ -377,10 +376,7 @@ class DEXToolsTrendingCampaign:
             for i in range(num_visitors):
                 delay = i * interval
                 # Add some randomness
-                delay += random.uniform(
-                    -interval * 0.2,
-                    interval * 0.2
-                )
+                delay += random.uniform(-interval * 0.2, interval * 0.2)
                 schedule.append((i, max(0, delay)))
 
         elif self.config.distribution_mode == "burst":
@@ -388,14 +384,13 @@ class DEXToolsTrendingCampaign:
             num_bursts = max(1, num_visitors // 10)
             visitors_per_burst = num_visitors // num_bursts
 
-            burst_starts = sorted([
-                random.uniform(0, total_seconds * 0.9)
-                for _ in range(num_bursts)
-            ])
+            burst_starts = sorted(
+                [random.uniform(0, total_seconds * 0.9) for _ in range(num_bursts)]
+            )
 
             visitor_id = 0
             for burst_start in burst_starts:
-                for j in range(visitors_per_burst):
+                for _j in range(visitors_per_burst):
                     if visitor_id >= num_visitors:
                         break
                     # Visitors within burst are close together
@@ -438,8 +433,8 @@ class DEXToolsTrendingCampaign:
                 delay,
                 random.uniform(
                     self.config.min_delay_between_visitors_s,
-                    self.config.max_delay_between_visitors_s
-                )
+                    self.config.max_delay_between_visitors_s,
+                ),
             )
             result.append((visitor_id, delay))
             prev_time = abs_time
@@ -524,10 +519,8 @@ class DEXToolsTrendingCampaign:
 
             # Trigger progress callback
             if self._on_progress:
-                try:
+                with contextlib.suppress(Exception):
                     self._on_progress(self._stats)
-                except Exception:
-                    pass
 
     async def _execute_visit(
         self,
@@ -585,20 +578,14 @@ class DEXToolsTrendingCampaign:
         finally:
             # Cleanup
             if page:
-                try:
+                with contextlib.suppress(Exception):
                     await page.close()
-                except Exception:
-                    pass
             if context:
-                try:
+                with contextlib.suppress(Exception):
                     await context.close()
-                except Exception:
-                    pass
             if browser:
-                try:
+                with contextlib.suppress(Exception):
                     await browser.close()
-                except Exception:
-                    pass
 
 
 async def run_dextools_campaign(

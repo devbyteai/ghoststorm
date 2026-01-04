@@ -6,12 +6,15 @@ import asyncio
 import random
 import time
 from collections import defaultdict
-from collections.abc import AsyncIterator
+from typing import TYPE_CHECKING
 
 import structlog
 
 from ghoststorm.core.models.proxy import Proxy, ProxyHealth, RotationStrategy
 from ghoststorm.plugins.proxies.file_provider import FileProxyProvider, NoProxyAvailableError
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 logger = structlog.get_logger(__name__)
 
@@ -226,10 +229,7 @@ class RotatingProxyProvider:
 
         now = time.time()
         last_used = self._last_used.get(proxy.id, 0)
-        if now - last_used < self._cooldown_seconds:
-            return False
-
-        return True
+        return not now - last_used < self._cooldown_seconds
 
     async def mark_success(self, proxy: Proxy, latency_ms: float) -> None:
         """Mark proxy as successful."""

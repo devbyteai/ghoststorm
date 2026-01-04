@@ -10,11 +10,13 @@ This test simulates a complete user journey:
 
 from __future__ import annotations
 
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -95,42 +97,44 @@ class TestFlowRecordPlaybackJourney:
                 }
                 MockRecorder.return_value = mock_recorder
 
-                stop_response = api_test_client.post(f"/api/flows/stop/{session_id}")
+                api_test_client.post(f"/api/flows/stop/{session_id}")
 
         # Step 4: Save the flow
-        with patch("builtins.open", MagicMock()):
-            with patch("pathlib.Path.mkdir"):
-                with patch("json.dump"):
-                    save_response = api_test_client.post(
-                        "/api/flows",
-                        json={
-                            "name": "Test Flow",
-                            "description": "A test automation flow",
-                            "platform": "generic",
-                            "actions": [
-                                {"type": "navigate", "url": "https://example.com"},
-                                {"type": "click", "selector": "button"},
-                            ],
-                            "checkpoints": [
-                                {"name": "Page Loaded"},
-                                {"name": "Button Clicked"},
-                            ],
-                        },
-                    )
+        with patch("builtins.open", MagicMock()), patch("pathlib.Path.mkdir"):
+            with patch("json.dump"):
+                save_response = api_test_client.post(
+                    "/api/flows",
+                    json={
+                        "name": "Test Flow",
+                        "description": "A test automation flow",
+                        "platform": "generic",
+                        "actions": [
+                            {"type": "navigate", "url": "https://example.com"},
+                            {"type": "click", "selector": "button"},
+                        ],
+                        "checkpoints": [
+                            {"name": "Page Loaded"},
+                            {"name": "Button Clicked"},
+                        ],
+                    },
+                )
 
-                    assert save_response.status_code == 200
-                    flow_data = save_response.json()
-                    flow_id = flow_data.get("id") or flow_data.get("flow_id")
+                assert save_response.status_code == 200
+                flow_data = save_response.json()
+                flow_id = flow_data.get("id") or flow_data.get("flow_id")
 
         # Step 5: Verify flow was saved
         if flow_id:
             with patch("pathlib.Path.exists", return_value=True):
                 with patch("builtins.open", MagicMock()):
-                    with patch("json.load", return_value={
-                        "id": flow_id,
-                        "name": "Test Flow",
-                        "actions": [],
-                    }):
+                    with patch(
+                        "json.load",
+                        return_value={
+                            "id": flow_id,
+                            "name": "Test Flow",
+                            "actions": [],
+                        },
+                    ):
                         get_response = api_test_client.get(f"/api/flows/{flow_id}")
                         assert get_response.status_code in [200, 404]
 
@@ -222,7 +226,9 @@ class TestFlowCheckpoints:
 
     def test_checkpoint_with_assertions(self, api_test_client: TestClient):
         """Test checkpoints with element assertions."""
-        with patch("ghoststorm.api.routes.flows._recording_sessions", {"test-session": MagicMock()}):
+        with patch(
+            "ghoststorm.api.routes.flows._recording_sessions", {"test-session": MagicMock()}
+        ):
             response = api_test_client.post(
                 "/api/flows/test-session/checkpoint",
                 json={
@@ -239,7 +245,9 @@ class TestFlowCheckpoints:
 
     def test_checkpoint_with_screenshot(self, api_test_client: TestClient):
         """Test checkpoint with screenshot capture."""
-        with patch("ghoststorm.api.routes.flows._recording_sessions", {"test-session": MagicMock()}):
+        with patch(
+            "ghoststorm.api.routes.flows._recording_sessions", {"test-session": MagicMock()}
+        ):
             response = api_test_client.post(
                 "/api/flows/test-session/checkpoint",
                 json={
@@ -269,11 +277,14 @@ class TestFlowManagement:
         """Test duplicating a flow."""
         with patch("pathlib.Path.exists", return_value=True):
             with patch("builtins.open", MagicMock()):
-                with patch("json.load", return_value={
-                    "id": "original",
-                    "name": "Original Flow",
-                    "actions": [],
-                }):
+                with patch(
+                    "json.load",
+                    return_value={
+                        "id": "original",
+                        "name": "Original Flow",
+                        "actions": [],
+                    },
+                ):
                     with patch("json.dump"):
                         response = api_test_client.post(
                             "/api/flows/original/duplicate",
@@ -285,39 +296,40 @@ class TestFlowManagement:
         """Test exporting a flow."""
         with patch("pathlib.Path.exists", return_value=True):
             with patch("builtins.open", MagicMock()):
-                with patch("json.load", return_value={
-                    "id": "test-flow",
-                    "name": "Test Flow",
-                    "actions": [],
-                }):
+                with patch(
+                    "json.load",
+                    return_value={
+                        "id": "test-flow",
+                        "name": "Test Flow",
+                        "actions": [],
+                    },
+                ):
                     response = api_test_client.get("/api/flows/test-flow/export")
 
                     assert response.status_code in [200, 404]
 
     def test_import_flow(self, api_test_client: TestClient):
         """Test importing a flow."""
-        with patch("builtins.open", MagicMock()):
-            with patch("pathlib.Path.mkdir"):
-                with patch("json.dump"):
-                    response = api_test_client.post(
-                        "/api/flows/import",
-                        json={
-                            "name": "Imported Flow",
-                            "actions": [
-                                {"type": "navigate", "url": "https://example.com"},
-                            ],
-                        },
-                    )
+        with patch("builtins.open", MagicMock()), patch("pathlib.Path.mkdir"):
+            with patch("json.dump"):
+                response = api_test_client.post(
+                    "/api/flows/import",
+                    json={
+                        "name": "Imported Flow",
+                        "actions": [
+                            {"type": "navigate", "url": "https://example.com"},
+                        ],
+                    },
+                )
 
-                    assert response.status_code in [200, 400]
+                assert response.status_code in [200, 400]
 
     def test_delete_flow(self, api_test_client: TestClient):
         """Test deleting a flow."""
-        with patch("pathlib.Path.exists", return_value=True):
-            with patch("pathlib.Path.unlink"):
-                response = api_test_client.delete("/api/flows/test-flow")
+        with patch("pathlib.Path.exists", return_value=True), patch("pathlib.Path.unlink"):
+            response = api_test_client.delete("/api/flows/test-flow")
 
-                assert response.status_code in [200, 404]
+            assert response.status_code in [200, 404]
 
 
 @pytest.mark.e2e

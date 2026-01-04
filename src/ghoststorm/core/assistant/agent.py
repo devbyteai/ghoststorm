@@ -15,7 +15,7 @@ import re
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, AsyncIterator, Callable
+from typing import TYPE_CHECKING, Any
 
 import httpx
 import structlog
@@ -26,11 +26,15 @@ from ghoststorm.core.assistant.sandbox import (
     FileSandbox,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Callable
+
 logger = structlog.get_logger(__name__)
 
 
 class ToolType(Enum):
     """Types of agent tools."""
+
     READ_FILE = "read_file"
     WRITE_FILE = "write_file"
     LIST_FILES = "list_files"
@@ -41,6 +45,7 @@ class ToolType(Enum):
 @dataclass
 class ToolCall:
     """Represents a tool call from the agent."""
+
     name: str
     arguments: dict[str, Any]
     requires_approval: bool = False
@@ -49,6 +54,7 @@ class ToolCall:
 @dataclass
 class ToolResult:
     """Result of a tool execution."""
+
     tool: str
     success: bool
     result: Any
@@ -58,6 +64,7 @@ class ToolResult:
 @dataclass
 class Message:
     """Chat message."""
+
     role: str  # "user", "assistant", "system", "tool"
     content: str
     tool_calls: list[ToolCall] | None = None
@@ -70,19 +77,22 @@ class Message:
 #   - deepseek-coder:33b  -> 24GB GPU (RTX 3090/4090)
 #   - deepseek-coder-v2:16b -> 12GB GPU (RTX 3060/4070)
 RECOMMENDED_MODELS = [
-    "qwen2.5-coder:32b",      # Best coding model (~20GB VRAM)
-    "deepseek-coder:33b",     # Excellent coding (~22GB VRAM)
+    "qwen2.5-coder:32b",  # Best coding model (~20GB VRAM)
+    "deepseek-coder:33b",  # Excellent coding (~22GB VRAM)
     "deepseek-coder-v2:16b",  # Great for 12GB cards (~10GB VRAM)
-    "qwen2.5-coder:14b",      # Good fallback (~10GB VRAM)
-    "qwen2.5-coder:7b",       # Budget option (~5GB VRAM)
-    "deepseek-coder:6.7b",    # Lightweight (~5GB VRAM)
+    "qwen2.5-coder:14b",  # Good fallback (~10GB VRAM)
+    "qwen2.5-coder:7b",  # Budget option (~5GB VRAM)
+    "deepseek-coder:6.7b",  # Lightweight (~5GB VRAM)
 ]
 
 
 @dataclass
 class AgentConfig:
     """Agent configuration."""
-    ollama_url: str = field(default_factory=lambda: os.getenv("OLLAMA_HOST", "http://localhost:11434"))
+
+    ollama_url: str = field(
+        default_factory=lambda: os.getenv("OLLAMA_HOST", "http://localhost:11434")
+    )
     model: str = "qwen2.5-coder:32b"  # Best local coding model
     temperature: float = 0.3  # Lower temp for more precise code
     max_tokens: int = 8192  # Larger context for code
@@ -422,7 +432,7 @@ class Agent:
 
         # If tools were called, yield the additional output
         if processed_response != full_response:
-            yield "\n" + processed_response[len(full_response):]
+            yield "\n" + processed_response[len(full_response) :]
 
         # Add to history
         self.messages.append(Message(role="assistant", content=processed_response))
@@ -492,10 +502,12 @@ class Agent:
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
         for msg in self.messages:
-            messages.append({
-                "role": msg.role,
-                "content": msg.content,
-            })
+            messages.append(
+                {
+                    "role": msg.role,
+                    "content": msg.content,
+                }
+            )
 
         return messages
 
@@ -596,7 +608,7 @@ class Agent:
         if content is None:
             return "Error: content is required"
 
-        success, error = await self.file_sandbox.write_file(path, content)
+        _success, error = await self.file_sandbox.write_file(path, content)
         if error:
             return f"Error: {error}"
 
@@ -624,9 +636,7 @@ class Agent:
         if not query:
             return "Error: query is required"
 
-        matches, error = await self.file_sandbox.search_files(
-            query, ".", file_pattern
-        )
+        matches, error = await self.file_sandbox.search_files(query, ".", file_pattern)
         if error:
             return f"Error: {error}"
 

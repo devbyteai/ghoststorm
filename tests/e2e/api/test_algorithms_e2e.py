@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -30,7 +32,7 @@ class TestAlgorithmsListAPI:
         assert response.status_code == 200
         data = response.json()
 
-        for name, algo in data["algorithms"].items():
+        for _name, algo in data["algorithms"].items():
             assert "name" in algo
             assert "platform" in algo
             assert "type" in algo
@@ -110,17 +112,16 @@ class TestAlgorithmFetchAPI:
                 return_value=mock_response
             )
 
-            with patch("builtins.open", MagicMock()):
-                with patch("pathlib.Path.mkdir"):
-                    with patch("ghoststorm.api.routes.algorithms.save_metadata"):
-                        with patch("ghoststorm.api.routes.algorithms.load_metadata", return_value={}):
-                            response = api_test_client.post(
-                                "/api/algorithms/tiktok_gorgon/fetch/github"
-                            )
+            with patch("builtins.open", MagicMock()), patch("pathlib.Path.mkdir"):
+                with patch("ghoststorm.api.routes.algorithms.save_metadata"):
+                    with patch("ghoststorm.api.routes.algorithms.load_metadata", return_value={}):
+                        response = api_test_client.post(
+                            "/api/algorithms/tiktok_gorgon/fetch/github"
+                        )
 
-                            assert response.status_code == 200
-                            data = response.json()
-                            assert data["success"] is True
+                        assert response.status_code == 200
+                        data = response.json()
+                        assert data["success"] is True
 
     def test_fetch_from_cdn(self, api_test_client: TestClient):
         """Test fetching algorithm from CDN."""
@@ -135,9 +136,7 @@ class TestAlgorithmFetchAPI:
             with patch("builtins.open", MagicMock()):
                 with patch("ghoststorm.api.routes.algorithms.save_metadata"):
                     with patch("ghoststorm.api.routes.algorithms.load_metadata", return_value={}):
-                        response = api_test_client.post(
-                            "/api/algorithms/tiktok_xbogus/fetch/cdn"
-                        )
+                        response = api_test_client.post("/api/algorithms/tiktok_xbogus/fetch/cdn")
 
                         # May succeed or fail based on CDN parsing
                         assert response.status_code in [200, 400, 500]
@@ -160,7 +159,7 @@ class TestAlgorithmTestAPI:
             response = api_test_client.post("/api/algorithms/tiktok_xbogus/test")
 
             assert response.status_code == 200
-            data = response.json()
+            response.json()
             # May succeed or fail based on code availability
 
     def test_test_python_algorithm(self, api_test_client: TestClient):

@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 import structlog
 from pydantic import BaseModel, Field
@@ -18,7 +19,6 @@ from ghoststorm.core.llm.prompts import (
     build_captcha_prompt,
     build_error_recovery_prompt,
 )
-from ghoststorm.core.llm.service import LLMService, ProviderType
 from ghoststorm.core.llm.vision import (
     VisionAnalysis,
     VisionConfig,
@@ -30,6 +30,7 @@ from ghoststorm.core.llm.vision import (
 if TYPE_CHECKING:
     from ghoststorm.core.browser.protocol import IPage
     from ghoststorm.core.dom.service import DOMService
+    from ghoststorm.core.llm.service import LLMService, ProviderType
 
 logger = structlog.get_logger(__name__)
 
@@ -211,7 +212,9 @@ class LLMController:
             screenshot = None
 
             if vision_mode == VisionMode.ALWAYS:
-                should_use_vision = hasattr(llm_provider, "supports_vision") and llm_provider.supports_vision
+                should_use_vision = (
+                    hasattr(llm_provider, "supports_vision") and llm_provider.supports_vision
+                )
             elif vision_mode == VisionMode.AUTO:
                 # We'll check confidence after DOM analysis
                 pass
@@ -279,7 +282,8 @@ class LLMController:
                 is_complete=analysis.is_complete,
                 next_action=analysis.next_action.type if analysis.next_action else None,
                 confidence=analysis.confidence,
-                used_vision=should_use_vision or (vision_mode == VisionMode.AUTO and screenshot is not None),
+                used_vision=should_use_vision
+                or (vision_mode == VisionMode.AUTO and screenshot is not None),
             )
 
             return analysis
@@ -308,7 +312,7 @@ class LLMController:
         llm_provider = self.llm_service.get_provider(provider)
 
         if not hasattr(llm_provider, "supports_vision") or not llm_provider.supports_vision:
-            raise ValueError(f"Provider does not support vision")
+            raise ValueError("Provider does not support vision")
 
         # Capture screenshot
         screenshot = await capture_screenshot(page, self.config.vision_config)
@@ -544,7 +548,9 @@ class LLMController:
                 case ActionType.TYPE:
                     if not action.selector or action.value is None:
                         raise ValueError("Type action requires selector and value")
-                    await page.fill(action.selector, action.value, timeout=self.config.timeout_per_step * 1000)
+                    await page.fill(
+                        action.selector, action.value, timeout=self.config.timeout_per_step * 1000
+                    )
 
                 case ActionType.SCROLL:
                     scroll_amount = int(action.value) if action.value else 300
@@ -584,10 +590,8 @@ class LLMController:
 
             screenshot = None
             if self.config.screenshot_on_error:
-                try:
+                with contextlib.suppress(Exception):
                     screenshot = await page.screenshot(type="png")
-                except Exception:
-                    pass
 
             return StepResult(
                 step_number=step_number,
@@ -696,6 +700,5 @@ class LLMController:
     def get_conversation_history(self) -> list[dict[str, str]]:
         """Get conversation history."""
         return [
-            {"role": msg.role.value, "content": msg.content}
-            for msg in self._conversation.messages
+            {"role": msg.role.value, "content": msg.content} for msg in self._conversation.messages
         ]

@@ -6,8 +6,6 @@ Tests the full automation flow with mocked browser.
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -115,7 +113,9 @@ class TestYouTubeAutomationPipeline:
     Tests are skipped until the source code is fixed.
     """
 
-    @pytest.mark.skip(reason="YouTubeAutomation is abstract - missing click_bio_link implementation")
+    @pytest.mark.skip(
+        reason="YouTubeAutomation is abstract - missing click_bio_link implementation"
+    )
     @pytest.mark.asyncio
     async def test_youtube_full_session_flow(self, mock_page: MagicMock) -> None:
         """Test complete YouTube shorts session."""
@@ -136,7 +136,9 @@ class TestYouTubeAutomationPipeline:
         assert result.success
         assert result.videos_watched >= 3
 
-    @pytest.mark.skip(reason="YouTubeAutomation is abstract - missing click_bio_link implementation")
+    @pytest.mark.skip(
+        reason="YouTubeAutomation is abstract - missing click_bio_link implementation"
+    )
     @pytest.mark.asyncio
     async def test_youtube_watch_enforces_30s_minimum(self, mock_page: MagicMock) -> None:
         """Test that YouTube watch respects 30 second minimum for views."""
@@ -210,7 +212,6 @@ class TestViewTrackingIntegration:
     async def test_tracking_across_sessions(self) -> None:
         """Test that view tracking persists across automation sessions."""
         from ghoststorm.plugins.automation.view_tracking import (
-            ViewTrackingManager,
             get_view_tracker,
             reset_view_tracker,
         )
@@ -252,7 +253,7 @@ class TestViewTrackingIntegration:
         assert not can_view_again
 
         # Different video should be allowed
-        can_view_different, reason = tracker.can_view(
+        can_view_different, _reason = tracker.can_view(
             video_id="different_video",
             platform=platform,
             proxy_id=proxy_id,
@@ -297,8 +298,8 @@ class TestBehaviorPluginIntegration:
     @pytest.mark.asyncio
     async def test_mouse_and_keyboard_coordination(self, mock_page: MagicMock) -> None:
         """Test mouse and keyboard working together."""
-        from ghoststorm.plugins.behavior.mouse_plugin import MouseBehavior
         from ghoststorm.plugins.behavior.keyboard_plugin import KeyboardBehavior
+        from ghoststorm.plugins.behavior.mouse_plugin import MouseBehavior
 
         mouse = MouseBehavior()
         keyboard = KeyboardBehavior()

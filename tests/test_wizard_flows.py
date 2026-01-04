@@ -3,7 +3,6 @@ Automated Wizard Flow Tests
 Simulates user clicking through Steps 1-6 with different configurations
 """
 
-import json
 import random
 from dataclasses import dataclass
 from typing import Any
@@ -86,6 +85,7 @@ def reset_state():
 
 
 # ============ SIMULATE USER ACTIONS ============
+
 
 def set_url(url: str):
     """Step 1: Enter URL."""
@@ -184,6 +184,7 @@ def set_execution(mode: str = "batch", **kwargs):
 
 # ============ COLLECT CONFIG (mirrors JS collectWizardConfig) ============
 
+
 def collect_wizard_config() -> dict[str, Any]:
     """Simulate collectWizardConfig() from app.js."""
     use_proxies = wizard_state["selectedProxyProvider"] != "none"
@@ -197,7 +198,6 @@ def collect_wizard_config() -> dict[str, Any]:
         # Target
         "url": form_values.get("url-input", ""),
         "platform": wizard_state["currentPlatform"],
-
         # Proxies
         "use_proxies": use_proxies,
         "proxy_provider": wizard_state["selectedProxyProvider"],
@@ -206,21 +206,18 @@ def collect_wizard_config() -> dict[str, Any]:
         "proxy_session_type": form_values.get("wizard-proxy-session", "rotating"),
         "tor_port": int(form_values.get("wizard-tor-port", 9050)),
         "tor_rotation": form_values.get("wizard-tor-rotation", "per_session"),
-
         # User Agents
         "use_user_agents": use_ua,
         "user_agent_mode": wizard_state["currentUAMode"],
         "user_agent_browser": form_values.get("ua-dynamic-browser", "chrome"),
         "user_agent_os": form_values.get("ua-dynamic-os", "windows"),
         "user_agent_pool_size": int(form_values.get("ua-dynamic-pool-size", 1000)),
-
         # Fingerprints
         "use_fingerprints": use_fp,
         "fingerprint_mode": wizard_state["currentFPMode"],
         "fingerprint_browser": form_values.get("fp-dynamic-browser", "chrome"),
         "fingerprint_os": form_values.get("fp-dynamic-os", "windows"),
         "fingerprint_pool_size": int(form_values.get("fp-dynamic-pool-size", 1000)),
-
         # Behavior
         "behavior": {
             "mode": behavior_mode,
@@ -257,12 +254,15 @@ def collect_wizard_config() -> dict[str, Any]:
                 "decision_frequency": form_values.get("llm-frequency", "key"),
                 "vision_enabled": form_values.get("llm-vision", False),
                 "temperature": int(form_values.get("llm-temperature", 3)) / 10,
-            } if include_llm else None,
+            }
+            if include_llm
+            else None,
         },
-
         # Execution
         "mode": wizard_state["currentMode"],
-        "workers": int(form_values.get("workers", 5)) if wizard_state["currentMode"] == "batch" else 1,
+        "workers": int(form_values.get("workers", 5))
+        if wizard_state["currentMode"] == "batch"
+        else 1,
         "repeat": int(form_values.get("repeat", 1)),
         "headless": form_values.get("headless", True),
         "browser_engine": form_values.get("browser-engine", "patchright"),
@@ -270,6 +270,7 @@ def collect_wizard_config() -> dict[str, Any]:
 
 
 # ============ TEST FLOWS ============
+
 
 @dataclass
 class FlowResult:
@@ -303,7 +304,7 @@ def validate_config(config: dict) -> tuple[bool, str | None]:
             "behavior": config["behavior"],
         }
 
-        task = TaskCreate(**payload)
+        TaskCreate(**payload)
         return True, None
     except Exception as e:
         return False, str(e)
@@ -319,6 +320,7 @@ def run_flow(name: str, steps: callable) -> FlowResult:
 
 
 # ============ DEFINE TEST FLOWS ============
+
 
 def flow_tiktok_full_stealth():
     """TikTok with all stealth options maxed."""
@@ -423,6 +425,7 @@ def flow_everything_enabled():
 
 # ============ MAIN TEST RUNNER ============
 
+
 def run_all_flows():
     """Run all test flows and report results."""
     flows = [
@@ -454,9 +457,15 @@ def run_all_flows():
             # Print key config summary
             c = result.config
             print(f"       URL: {c['url'][:40]}...")
-            print(f"       Proxy: {c['proxy_provider']} | UA: {c['user_agent_mode']} | FP: {c['fingerprint_mode']}")
-            print(f"       Behavior: {c['behavior']['mode']} | Mouse: {c['behavior']['interaction']['mouse_style']}")
-            print(f"       Workers: {c['workers']} x {c['repeat']} = {c['workers'] * c['repeat']} sessions")
+            print(
+                f"       Proxy: {c['proxy_provider']} | UA: {c['user_agent_mode']} | FP: {c['fingerprint_mode']}"
+            )
+            print(
+                f"       Behavior: {c['behavior']['mode']} | Mouse: {c['behavior']['interaction']['mouse_style']}"
+            )
+            print(
+                f"       Workers: {c['workers']} x {c['repeat']} = {c['workers'] * c['repeat']} sessions"
+            )
         print()
 
     # Summary
@@ -498,7 +507,14 @@ def run_random_combinations(count: int = 20):
     ua_modes = ["none", "dynamic", "file"]
     fp_modes = ["none", "dynamic", "file"]
     behavior_modes = ["preset", "llm", "hybrid"]
-    referrer_modes = ["realistic", "search_heavy", "social_viral", "brand_focused", "custom", "none"]
+    referrer_modes = [
+        "realistic",
+        "search_heavy",
+        "social_viral",
+        "brand_focused",
+        "custom",
+        "none",
+    ]
     mouse_styles = ["natural", "fast", "slow", "nervous", "confident", "random"]
     engagement_levels = ["passive", "active", "deep"]
     llm_providers = ["openai", "anthropic", "ollama"]
@@ -547,10 +563,10 @@ def run_random_combinations(count: int = 20):
 
         if valid:
             passed += 1
-            print(f"✓ #{i+1:02d} {combo} → {workers}x{repeat}={workers*repeat} sessions")
+            print(f"✓ #{i + 1:02d} {combo} → {workers}x{repeat}={workers * repeat} sessions")
         else:
             failed += 1
-            print(f"✗ #{i+1:02d} {combo} ERROR: {error}")
+            print(f"✗ #{i + 1:02d} {combo} ERROR: {error}")
 
     print("\n" + "-" * 60)
     print(f"  Random tests: {passed}/{count} passed")
@@ -560,6 +576,7 @@ def run_random_combinations(count: int = 20):
 
 if __name__ == "__main__":
     import sys
+
     sys.path.insert(0, "src")
 
     # Run defined flows

@@ -6,8 +6,12 @@ Run with: pytest tests/e2e/real/ --run-real -v
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.real
@@ -304,6 +308,7 @@ class TestFlowRecording:
 
             # Let it record for a moment
             import time
+
             time.sleep(2)
 
             # Stop recording

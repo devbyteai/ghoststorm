@@ -5,12 +5,12 @@ Tests complete user workflows for DEXTools automation.
 
 from __future__ import annotations
 
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
 
 import pytest
-from fastapi.testclient import TestClient
 
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 # ============================================================================
 # SINGLE VISIT JOURNEY TESTS
@@ -35,10 +35,7 @@ class TestDEXToolsSingleVisitJourney:
         # Step 1: Detect platform
         pair_url = "https://www.dextools.io/app/en/ether/pair-explorer/0xdac17f958d2ee523a2206206994597c13d831ec7"
 
-        detect_response = api_test_client.post(
-            "/api/tasks/detect",
-            json={"url": pair_url}
-        )
+        detect_response = api_test_client.post("/api/tasks/detect", json={"url": pair_url})
 
         assert detect_response.status_code == 200
         detect_data = detect_response.json()
@@ -67,8 +64,8 @@ class TestDEXToolsSingleVisitJourney:
                     "enable_natural_scroll": True,
                     "enable_chart_hover": True,
                     "enable_social_clicks": True,
-                }
-            }
+                },
+            },
         )
 
         assert create_response.status_code == 200
@@ -95,8 +92,8 @@ class TestDEXToolsSingleVisitJourney:
                     "behavior_mode": "passive",  # Force passive
                     "enable_social_clicks": False,
                     "enable_tab_clicks": False,
-                }
-            }
+                },
+            },
         )
 
         assert response.status_code == 200
@@ -115,8 +112,8 @@ class TestDEXToolsSingleVisitJourney:
                     "enable_tab_clicks": True,
                     "dwell_time_min": 60.0,
                     "dwell_time_max": 180.0,
-                }
-            }
+                },
+            },
         )
 
         assert response.status_code == 200
@@ -146,7 +143,7 @@ class TestDEXToolsCampaignJourney:
 
         weights = weights_response.json()["weights"]
         assert weights["passive"] == 60  # 60% will just view
-        assert weights["light"] == 30    # 30% will interact once
+        assert weights["light"] == 30  # 30% will interact once
         assert weights["engaged"] == 10  # 10% will be highly engaged
 
         # Step 2: Create campaign task
@@ -162,8 +159,8 @@ class TestDEXToolsCampaignJourney:
                     "duration_hours": 24.0,
                     "distribution_mode": "natural",
                     "behavior_mode": "realistic",
-                }
-            }
+                },
+            },
         )
 
         assert campaign_response.status_code == 200
@@ -182,8 +179,8 @@ class TestDEXToolsCampaignJourney:
                     "num_visitors": 50,
                     "duration_hours": 6.0,
                     "distribution_mode": "burst",  # Bursts of activity
-                }
-            }
+                },
+            },
         )
 
         assert response.status_code == 200
@@ -201,8 +198,8 @@ class TestDEXToolsCampaignJourney:
                     "num_visitors": 30,
                     "duration_hours": 12.0,
                     "distribution_mode": "even",  # Evenly spaced
-                }
-            }
+                },
+            },
         )
 
         assert response.status_code == 200
@@ -246,8 +243,8 @@ class TestDEXToolsBehaviorDistribution:
                 json={
                     "url": "https://www.dextools.io/app/en/ether/pair-explorer/0x123",
                     "workers": 1,
-                    "config": {"behavior_mode": mode}
-                }
+                    "config": {"behavior_mode": mode},
+                },
             )
 
             assert response.status_code == 200, f"Failed for mode: {mode}"
@@ -290,7 +287,7 @@ class TestDEXToolsSelectorHealthJourney:
             json={
                 "pair_url": "https://www.dextools.io/app/en/ether/pair-explorer/0xdac17f958d2ee523a2206206994597c13d831ec7",
                 "headless": True,
-            }
+            },
         )
 
         assert check_response.status_code == 200
@@ -311,27 +308,24 @@ class TestDEXToolsSelectorHealthJourney:
 class TestDEXToolsMultiChain:
     """Tests for DEXTools across different blockchain networks."""
 
-    @pytest.mark.parametrize("chain,pair_address", [
-        ("ether", "0xdac17f958d2ee523a2206206994597c13d831ec7"),
-        ("solana", "abc123def456"),
-        ("bsc", "0x789xyz"),
-        ("polygon", "0xpoly123"),
-        ("arbitrum", "0xarb456"),
-        ("base", "0xbase789"),
-    ])
+    @pytest.mark.parametrize(
+        "chain,pair_address",
+        [
+            ("ether", "0xdac17f958d2ee523a2206206994597c13d831ec7"),
+            ("solana", "abc123def456"),
+            ("bsc", "0x789xyz"),
+            ("polygon", "0xpoly123"),
+            ("arbitrum", "0xarb456"),
+            ("base", "0xbase789"),
+        ],
+    )
     def test_multi_chain_url_detection(
-        self,
-        api_test_client: TestClient,
-        chain: str,
-        pair_address: str
+        self, api_test_client: TestClient, chain: str, pair_address: str
     ):
         """DEXTools URLs for various chains should be detected."""
         url = f"https://www.dextools.io/app/en/{chain}/pair-explorer/{pair_address}"
 
-        response = api_test_client.post(
-            "/api/tasks/detect",
-            json={"url": url}
-        )
+        response = api_test_client.post("/api/tasks/detect", json={"url": url})
 
         assert response.status_code == 200
         data = response.json()
@@ -346,10 +340,7 @@ class TestDEXToolsMultiChain:
         ]
 
         for url in chains:
-            response = api_test_client.post(
-                "/api/tasks",
-                json={"url": url, "workers": 1}
-            )
+            response = api_test_client.post("/api/tasks", json={"url": url, "workers": 1})
             assert response.status_code == 200
             assert response.json()["platform"] == "dextools"
 
@@ -368,7 +359,7 @@ class TestDEXToolsErrorHandling:
         """Invalid DEXTools URL should not be detected as DEXTools."""
         response = api_test_client.post(
             "/api/tasks/detect",
-            json={"url": "https://www.dextools.io/about"}  # Not a pair URL
+            json={"url": "https://www.dextools.io/about"},  # Not a pair URL
         )
 
         assert response.status_code == 200
@@ -384,8 +375,8 @@ class TestDEXToolsErrorHandling:
                 "workers": 1,
                 "config": {
                     "dwell_time_min": -10.0,  # Invalid negative
-                }
-            }
+                },
+            },
         )
 
         # Should either reject or use defaults

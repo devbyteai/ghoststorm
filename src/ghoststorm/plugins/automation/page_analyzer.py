@@ -9,9 +9,9 @@ Scrapes and analyzes page state to make smart decisions:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
 
 import structlog
 
@@ -20,18 +20,20 @@ logger = structlog.get_logger(__name__)
 
 class PageState(Enum):
     """Detected page states."""
+
     UNKNOWN = "unknown"
-    AD_WALL = "ad_wall"           # "View a short ad" button visible
-    AD_PLAYING = "ad_playing"     # Ad video/content is playing
-    AD_CLOSEABLE = "ad_closeable" # Ad done, X/close button visible
-    CAPTCHA = "captcha"           # Captcha input visible
-    SERVICES = "services"         # Service buttons visible (success!)
-    ERROR = "error"               # Error message visible
+    AD_WALL = "ad_wall"  # "View a short ad" button visible
+    AD_PLAYING = "ad_playing"  # Ad video/content is playing
+    AD_CLOSEABLE = "ad_closeable"  # Ad done, X/close button visible
+    CAPTCHA = "captcha"  # Captcha input visible
+    SERVICES = "services"  # Service buttons visible (success!)
+    ERROR = "error"  # Error message visible
 
 
 @dataclass
 class PageElement:
     """A discovered page element."""
+
     selector: str
     text: str
     tag: str
@@ -46,6 +48,7 @@ class PageElement:
 @dataclass
 class PageAnalysis:
     """Results of page analysis."""
+
     state: PageState
     elements: list[PageElement] = field(default_factory=list)
     close_buttons: list[PageElement] = field(default_factory=list)
@@ -60,10 +63,10 @@ class PageAnalyzer:
     """Analyzes Zefoy page state by scraping DOM."""
 
     # Keywords that indicate close/dismiss buttons
-    CLOSE_KEYWORDS = ['×', '✕', '✖', 'x', 'close', 'dismiss', 'skip', 'cancel']
+    CLOSE_KEYWORDS = ["×", "✕", "✖", "x", "close", "dismiss", "skip", "cancel"]
 
     # Keywords that indicate ad-related elements
-    AD_KEYWORDS = ['ad', 'advertisement', 'sponsor', 'video', 'watch']
+    AD_KEYWORDS = ["ad", "advertisement", "sponsor", "video", "watch"]
 
     def __init__(self, page):
         self._page = page
@@ -133,7 +136,7 @@ class PageAnalyzer:
             ("[class*='btn']", "btn-class"),
         ]
 
-        for selector, element_type in selectors:
+        for selector, _element_type in selectors:
             try:
                 locator = self._page.locator(selector)
                 count = await locator.count()
@@ -149,10 +152,8 @@ class PageAnalyzer:
 
                         # Get element properties
                         text = ""
-                        try:
+                        with contextlib.suppress(Exception):
                             text = (await el.inner_text()).strip()[:100]
-                        except Exception:
-                            pass
 
                         classes = await el.get_attribute("class") or ""
                         tag = await el.evaluate("el => el.tagName.toLowerCase()")
@@ -170,24 +171,23 @@ class PageAnalyzer:
 
                         # Build selector for this element
                         el_id = await el.get_attribute("id")
-                        if el_id:
-                            sel = f"#{el_id}"
-                        else:
-                            sel = f"{selector}:nth-of-type({i+1})"
+                        sel = f"#{el_id}" if el_id else f"{selector}:nth-of-type({i + 1})"
 
-                        elements.append(PageElement(
-                            selector=sel,
-                            text=text,
-                            tag=tag,
-                            classes=classes,
-                            is_visible=is_visible,
-                            is_button=is_button,
-                            is_input=is_input,
-                            is_close_button=is_close,
-                            bounding_box=bbox,
-                        ))
+                        elements.append(
+                            PageElement(
+                                selector=sel,
+                                text=text,
+                                tag=tag,
+                                classes=classes,
+                                is_visible=is_visible,
+                                is_button=is_button,
+                                is_input=is_input,
+                                is_close_button=is_close,
+                                bounding_box=bbox,
+                            )
+                        )
 
-                    except Exception as e:
+                    except Exception:
                         continue
 
             except Exception as e:
@@ -206,25 +206,24 @@ class PageAnalyzer:
                 return True
 
         # Check classes
-        if any(kw in classes_lower for kw in ['close', 'dismiss', 'skip']):
+        if any(kw in classes_lower for kw in ["close", "dismiss", "skip"]):
             return True
 
         # Check for × character specifically
-        if '×' in text or '✕' in text or '✖' in text:
+        if "×" in text or "✕" in text or "✖" in text:
             return True
 
         # Single character 'X' or 'x'
-        if text.strip() in ['X', 'x']:
-            return True
-
-        return False
+        return text.strip() in ["X", "x"]
 
     async def _detect_state(self, elements: list[PageElement]) -> PageState:
         """Detect current page state based on elements."""
 
         # Check for service buttons FIRST (success state - we're done!)
         try:
-            service_btn = self._page.locator("xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button")
+            service_btn = self._page.locator(
+                "xpath=/html/body/div[5]/div[1]/div[3]/div[2]/div[1]/div/button"
+            )
             if await service_btn.count() and await service_btn.is_visible():
                 return PageState.SERVICES
         except Exception:
@@ -245,15 +244,19 @@ class PageAnalyzer:
         for el in elements:
             if el.is_button:
                 text_lower = el.text.lower()
-                if ("view" in text_lower and "ad" in text_lower) or \
-                   "unlock" in text_lower or \
-                   "watch" in text_lower:
+                if (
+                    ("view" in text_lower and "ad" in text_lower)
+                    or "unlock" in text_lower
+                    or "watch" in text_lower
+                ):
                     return PageState.AD_WALL
 
         # Check for captcha - must have VISIBLE captcha input, not hidden
         try:
             # Look for visible captcha input specifically
-            captcha_input = self._page.locator("input[type='text']:visible, input.form-control:visible")
+            captcha_input = self._page.locator(
+                "input[type='text']:visible, input.form-control:visible"
+            )
             captcha_form = self._page.locator("form:has(img)")
             if await captcha_input.count() and await captcha_form.count():
                 return PageState.CAPTCHA
@@ -331,7 +334,9 @@ class PageAnalyzer:
         # Try clicking the first visible close button
         for close_btn in analysis.close_buttons:
             try:
-                logger.info(f"[ANALYZER] Clicking close button: text='{close_btn.text}' classes='{close_btn.classes}'")
+                logger.info(
+                    f"[ANALYZER] Clicking close button: text='{close_btn.text}' classes='{close_btn.classes}'"
+                )
 
                 # Try multiple selector strategies
                 clicked = False
@@ -348,8 +353,8 @@ class PageAnalyzer:
                 # Strategy 2: Use bounding box click
                 if not clicked and close_btn.bounding_box:
                     try:
-                        x = close_btn.bounding_box['x'] + close_btn.bounding_box['width'] / 2
-                        y = close_btn.bounding_box['y'] + close_btn.bounding_box['height'] / 2
+                        x = close_btn.bounding_box["x"] + close_btn.bounding_box["width"] / 2
+                        y = close_btn.bounding_box["y"] + close_btn.bounding_box["height"] / 2
                         await self._page.mouse.click(x, y)
                         clicked = True
                         logger.info(f"[ANALYZER] Clicked at coordinates ({x}, {y})")
@@ -362,7 +367,9 @@ class PageAnalyzer:
                     # Verify the click worked
                     new_analysis = await self.analyze()
                     if new_analysis.state != analysis.state:
-                        logger.info(f"[ANALYZER] State changed: {analysis.state.value} -> {new_analysis.state.value}")
+                        logger.info(
+                            f"[ANALYZER] State changed: {analysis.state.value} -> {new_analysis.state.value}"
+                        )
                         return True
 
             except Exception as e:

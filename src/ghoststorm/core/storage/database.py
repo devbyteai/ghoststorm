@@ -9,12 +9,10 @@ Provides async database access with:
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from pathlib import Path
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import structlog
 from sqlalchemy import text
@@ -39,6 +37,10 @@ from ghoststorm.core.storage.models import (
 from ghoststorm.core.storage.models import (
     Session as SessionModel,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+    from pathlib import Path
 
 logger = structlog.get_logger(__name__)
 
@@ -485,9 +487,7 @@ class Database:
                 AND is_active = 1
                 AND (expires_at IS NULL OR expires_at > :now)
             """)
-            result = await session.execute(
-                query, {"key_hash": key_hash, "now": datetime.now(UTC)}
-            )
+            result = await session.execute(query, {"key_hash": key_hash, "now": datetime.now(UTC)})
             api_key = result.scalar_one_or_none()
 
             if api_key:

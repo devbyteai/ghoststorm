@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -16,6 +16,8 @@ from ghoststorm.core.watchdog.models import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from ghoststorm.core.events.bus import AsyncEventBus
     from ghoststorm.core.watchdog.base import BaseWatchdog
 
@@ -191,7 +193,7 @@ class WatchdogManager:
                     timeout=5.0,
                 )
                 health_checks.append((watchdog.name, health))
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 health_checks.append(
                     (
                         watchdog.name,
@@ -277,15 +279,9 @@ class WatchdogManager:
     def get_stats(self) -> dict[str, Any]:
         """Get aggregated statistics."""
         total_events = sum(w.state.total_events for w in self._watchdogs.values())
-        total_failures = sum(
-            w.state.failures_detected for w in self._watchdogs.values()
-        )
-        total_recoveries = sum(
-            w.state.recoveries_attempted for w in self._watchdogs.values()
-        )
-        successful_recoveries = sum(
-            w.state.recoveries_successful for w in self._watchdogs.values()
-        )
+        total_failures = sum(w.state.failures_detected for w in self._watchdogs.values())
+        total_recoveries = sum(w.state.recoveries_attempted for w in self._watchdogs.values())
+        successful_recoveries = sum(w.state.recoveries_successful for w in self._watchdogs.values())
 
         return {
             "running": self._running,

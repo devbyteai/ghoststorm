@@ -52,9 +52,7 @@ class CredentialStore:
     def _save(self) -> None:
         """Save credentials to file."""
         try:
-            self._credentials_file.write_text(
-                json.dumps(self._cache, indent=2, default=str)
-            )
+            self._credentials_file.write_text(json.dumps(self._cache, indent=2, default=str))
             logger.debug("Saved provider credentials")
         except Exception as e:
             logger.error("Failed to save credentials", error=str(e))

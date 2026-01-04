@@ -1,7 +1,7 @@
 """Tests for LLM module."""
 
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -35,7 +35,6 @@ from ghoststorm.core.llm.prompts import (
     build_extraction_prompt,
 )
 from ghoststorm.core.llm.service import LLMService, LLMServiceConfig, ProviderType
-
 
 # ============================================================================
 # Message Tests
@@ -458,9 +457,7 @@ class TestLLMController:
         assert controller.mode == ControllerMode.AUTONOMOUS
 
     def test_reset(self, controller):
-        controller._step_history.append(
-            StepResult(step_number=1, action=None, success=True)
-        )
+        controller._step_history.append(StepResult(step_number=1, action=None, success=True))
         controller.reset()
         assert len(controller._step_history) == 0
 
@@ -472,16 +469,18 @@ class TestLLMController:
         assert history is not controller._step_history  # Returns list copy
 
     def test_parse_analysis_valid_json(self, controller):
-        content = json.dumps({
-            "analysis": "Test page",
-            "is_complete": False,
-            "next_action": {
-                "type": "click",
-                "selector": "#btn",
-                "reason": "Click button",
-            },
-            "confidence": 0.9,
-        })
+        content = json.dumps(
+            {
+                "analysis": "Test page",
+                "is_complete": False,
+                "next_action": {
+                    "type": "click",
+                    "selector": "#btn",
+                    "reason": "Click button",
+                },
+                "confidence": 0.9,
+            }
+        )
         analysis = controller._parse_analysis(content)
         assert analysis.analysis == "Test page"
         assert not analysis.is_complete
@@ -663,11 +662,13 @@ class TestLLMIntegration:
         # Create mock service
         mock_service = MagicMock(spec=LLMService)
         mock_response = LLMResponse(
-            content=json.dumps({
-                "analysis": "Page loaded",
-                "is_complete": True,
-                "confidence": 1.0,
-            }),
+            content=json.dumps(
+                {
+                    "analysis": "Page loaded",
+                    "is_complete": True,
+                    "confidence": 1.0,
+                }
+            ),
             model="test",
             usage=LLMUsage(),
         )

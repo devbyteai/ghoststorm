@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from ghoststorm.core.llm.messages import LLMResponse, LLMUsage, Message
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 T = TypeVar("T")
 

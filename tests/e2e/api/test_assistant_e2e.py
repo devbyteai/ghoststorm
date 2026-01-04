@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -153,9 +155,7 @@ class TestAssistantFilesAPI:
         """Test reading a non-existent file."""
         with patch("ghoststorm.api.routes.assistant._get_agent") as mock_get_agent:
             mock_agent = MagicMock()
-            mock_agent.file_sandbox.read_file = AsyncMock(
-                return_value=(None, "File not found")
-            )
+            mock_agent.file_sandbox.read_file = AsyncMock(return_value=(None, "File not found"))
             mock_get_agent.return_value = mock_agent
 
             response = api_test_client.get(
@@ -381,7 +381,10 @@ class TestAssistantActionsAPI:
 
     def test_approve_action(self, api_test_client: TestClient):
         """Test approving a pending action."""
-        with patch("ghoststorm.api.routes.assistant._pending_actions", {"test-id": {"type": "execute", "command": "ls"}}):
+        with patch(
+            "ghoststorm.api.routes.assistant._pending_actions",
+            {"test-id": {"type": "execute", "command": "ls"}},
+        ):
             with patch("ghoststorm.api.routes.assistant._get_agent") as mock_get_agent:
                 mock_agent = MagicMock()
                 mock_result = MagicMock()
@@ -403,7 +406,10 @@ class TestAssistantActionsAPI:
 
     def test_reject_action(self, api_test_client: TestClient):
         """Test rejecting a pending action."""
-        with patch("ghoststorm.api.routes.assistant._pending_actions", {"test-id": {"type": "execute", "command": "ls"}}):
+        with patch(
+            "ghoststorm.api.routes.assistant._pending_actions",
+            {"test-id": {"type": "execute", "command": "ls"}},
+        ):
             response = api_test_client.post(
                 "/api/assistant/action/approve",
                 json={"action_id": "test-id", "approved": False},
@@ -424,7 +430,9 @@ class TestAssistantActionsAPI:
 
     def test_get_pending_actions(self, api_test_client: TestClient):
         """Test getting pending actions."""
-        with patch("ghoststorm.api.routes.assistant._pending_actions", {"id1": {"type": "execute"}}):
+        with patch(
+            "ghoststorm.api.routes.assistant._pending_actions", {"id1": {"type": "execute"}}
+        ):
             response = api_test_client.get("/api/assistant/pending")
 
             assert response.status_code == 200

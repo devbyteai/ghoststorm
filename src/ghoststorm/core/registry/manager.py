@@ -5,7 +5,6 @@ from __future__ import annotations
 import importlib
 import importlib.util
 import sys
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import pluggy
@@ -14,6 +13,8 @@ import structlog
 from ghoststorm.core.registry.hookspecs import GhostStormSpecs
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from ghoststorm.core.interfaces.browser import IBrowserEngine
     from ghoststorm.core.interfaces.captcha import ICaptchaSolver
     from ghoststorm.core.interfaces.fingerprint import IFingerprintGenerator
@@ -197,7 +198,6 @@ class PluginManager:
         Returns:
             The loaded plugin module
         """
-        module_name = f"ghoststorm_plugin_{path.name}"
 
         # Add parent to path temporarily
         parent = str(path.parent)

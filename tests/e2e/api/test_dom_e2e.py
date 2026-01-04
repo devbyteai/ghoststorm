@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -57,9 +59,7 @@ class TestDOMStateAPI:
         state = {
             "url": "https://example.com",
             "title": "Test Page",
-            "clickables": [
-                {"selector": "button.submit", "description": "Submit button"}
-            ],
+            "clickables": [{"selector": "button.submit", "description": "Submit button"}],
             "inputs": [],
             "links": [],
         }

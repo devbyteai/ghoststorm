@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import os
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
@@ -193,10 +194,8 @@ class Orchestrator:
         # Stop task processing
         if self._processing_task:
             self._processing_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._processing_task
-            except asyncio.CancelledError:
-                pass
             self._processing_task = None
 
         # Stop worker pool
@@ -463,8 +462,13 @@ class Orchestrator:
                             await self.plugin_manager.call_hook_async(
                                 "on_llm_decision",
                                 task=task,
-                                analysis={"analysis": analysis.analysis, "confidence": analysis.confidence},
-                                action=analysis.next_action.model_dump() if analysis.next_action else None,
+                                analysis={
+                                    "analysis": analysis.analysis,
+                                    "confidence": analysis.confidence,
+                                },
+                                action=analysis.next_action.model_dump()
+                                if analysis.next_action
+                                else None,
                             )
 
                     except Exception as e:
@@ -477,7 +481,7 @@ class Orchestrator:
                 # Take screenshot if configured
                 screenshot_path = None
                 if task.config.take_screenshot:
-                    screenshot_data = await page.screenshot(
+                    await page.screenshot(
                         full_page=task.config.screenshot_full_page,
                     )
                     # Save screenshot (simplified)
@@ -756,7 +760,8 @@ class Orchestrator:
                     anthropic_api_key=self.config.llm.anthropic.api_key,
                     anthropic_model=self.config.llm.anthropic.model or "claude-sonnet-4-20250514",
                     anthropic_base_url=self.config.llm.anthropic.base_url,
-                    ollama_host=self.config.llm.ollama.base_url or os.getenv("OLLAMA_HOST", "http://localhost:11434"),
+                    ollama_host=self.config.llm.ollama.base_url
+                    or os.getenv("OLLAMA_HOST", "http://localhost:11434"),
                     ollama_model=self.config.llm.ollama.model or "llama3",
                     temperature=self.config.llm.temperature,
                     max_tokens=self.config.llm.max_tokens,

@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 from typing import Any
 from uuid import uuid4
 
-
 # Timezone to compatible locale mapping for realistic fingerprints
 # An obvious mismatch (e.g., Asia/Tokyo + en-US) reveals fake fingerprints
 TIMEZONE_LOCALE_MAP: dict[str, list[str]] = {
@@ -198,7 +197,7 @@ class GeolocationConfig:
             "accuracy": self.accuracy,
         }
 
-    def with_jitter(self, meters: float = 50.0) -> "GeolocationConfig":
+    def with_jitter(self, meters: float = 50.0) -> GeolocationConfig:
         """Create a new GeolocationConfig with random coordinate jitter.
 
         Adds realistic variation to prevent static coordinate detection.
@@ -240,7 +239,7 @@ class GeolocationConfig:
         accuracy: float = 100.0,
         add_jitter: bool = True,
         jitter_meters: float = 50.0,
-    ) -> "GeolocationConfig":
+    ) -> GeolocationConfig:
         """Create GeolocationConfig from coordinates with optional jitter.
 
         Args:
@@ -543,7 +542,9 @@ class DeviceProfile:
             latitude=data.get("latitude"),
             longitude=data.get("longitude"),
             country_code=data.get("country_code", data.get("countryCode")),
-            hardware_concurrency=data.get("hardware_concurrency", data.get("hardwareConcurrency", 8)),
+            hardware_concurrency=data.get(
+                "hardware_concurrency", data.get("hardwareConcurrency", 8)
+            ),
             device_memory=data.get("device_memory", data.get("deviceMemory", 8)),
             max_touch_points=data.get("max_touch_points", data.get("maxTouchPoints", 0)),
             webgl_vendor=data.get("webgl_vendor", data.get("webglVendor", "Google Inc.")),

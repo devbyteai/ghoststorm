@@ -1,19 +1,19 @@
 """Tests for the watchdog system."""
 
 import asyncio
+
 import pytest
-from datetime import datetime
 
 # Test models
 from ghoststorm.core.watchdog.models import (
+    FailureInfo,
     HealthLevel,
     HealthStatus,
-    FailureInfo,
     RecoveryAction,
     RecoveryResult,
+    WatchdogAlert,
     WatchdogConfig,
     WatchdogState,
-    WatchdogAlert,
 )
 
 
@@ -210,6 +210,7 @@ class TestAsyncWatchdogComponents:
     def event_bus(self):
         """Create event bus for testing."""
         from ghoststorm.core.events.bus import AsyncEventBus
+
         return AsyncEventBus()
 
     @pytest.fixture
@@ -256,9 +257,9 @@ class TestAsyncWatchdogComponents:
     async def test_watchdog_manager_register(self, event_bus, watchdog_config):
         """Test registering watchdogs with manager."""
         from ghoststorm.core.watchdog import (
-            WatchdogManager,
             BrowserWatchdog,
             PageWatchdog,
+            WatchdogManager,
         )
 
         manager = WatchdogManager(event_bus, watchdog_config)
@@ -327,8 +328,8 @@ class TestAsyncWatchdogComponents:
     @pytest.mark.asyncio
     async def test_watchdog_event_handling(self, event_bus, watchdog_config):
         """Test watchdog receives and processes events."""
-        from ghoststorm.core.watchdog import BrowserWatchdog
         from ghoststorm.core.events.types import EventType
+        from ghoststorm.core.watchdog import BrowserWatchdog
 
         watchdog = BrowserWatchdog(event_bus, watchdog_config)
 
@@ -359,9 +360,9 @@ class TestAsyncWatchdogComponents:
     async def test_manager_aggregate_health(self, event_bus, watchdog_config):
         """Test WatchdogManager aggregates health from all watchdogs."""
         from ghoststorm.core.watchdog import (
-            WatchdogManager,
-            PageWatchdog,
             NetworkWatchdog,
+            PageWatchdog,
+            WatchdogManager,
         )
 
         manager = WatchdogManager(event_bus, watchdog_config)
@@ -383,7 +384,7 @@ class TestAsyncWatchdogComponents:
     @pytest.mark.asyncio
     async def test_manager_stats(self, event_bus, watchdog_config):
         """Test WatchdogManager stats collection."""
-        from ghoststorm.core.watchdog import WatchdogManager, PageWatchdog
+        from ghoststorm.core.watchdog import PageWatchdog, WatchdogManager
 
         manager = WatchdogManager(event_bus, watchdog_config)
         manager.register(PageWatchdog(event_bus, watchdog_config))
@@ -420,8 +421,8 @@ class TestWatchdogIntegration:
     @pytest.mark.asyncio
     async def test_orchestrator_has_watchdog_manager(self):
         """Test that Orchestrator initializes WatchdogManager."""
-        from ghoststorm.core.models.config import Config
         from ghoststorm.core.engine.orchestrator import Orchestrator
+        from ghoststorm.core.models.config import Config
 
         config = Config()
         orchestrator = Orchestrator(config)

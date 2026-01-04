@@ -5,9 +5,12 @@ from __future__ import annotations
 import asyncio
 import subprocess
 import time
-from typing import AsyncGenerator, Generator
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator, Generator
 
 # Check if playwright is available
 try:

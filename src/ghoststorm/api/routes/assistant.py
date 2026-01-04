@@ -40,12 +40,14 @@ def _get_agent() -> Agent:
 
 class ChatRequest(BaseModel):
     """Chat message request."""
+
     message: str = Field(description="User message")
     stream: bool = Field(default=False, description="Stream response")
 
 
 class ChatResponse(BaseModel):
     """Chat response."""
+
     content: str
     has_pending_actions: bool = False
     pending_action_id: str | None = None
@@ -53,29 +55,34 @@ class ChatResponse(BaseModel):
 
 class FileReadRequest(BaseModel):
     """File read request."""
+
     path: str = Field(description="File path to read")
 
 
 class FileReadResponse(BaseModel):
     """File read response."""
+
     content: str | None
     error: str | None = None
 
 
 class FileWriteRequest(BaseModel):
     """File write request."""
+
     path: str = Field(description="File path to write")
     content: str = Field(description="File content")
 
 
 class FileWriteResponse(BaseModel):
     """File write response."""
+
     success: bool
     error: str | None = None
 
 
 class ListFilesRequest(BaseModel):
     """List files request."""
+
     path: str = Field(default=".", description="Directory path")
     pattern: str = Field(default="*", description="Glob pattern")
     recursive: bool = Field(default=False)
@@ -83,17 +90,20 @@ class ListFilesRequest(BaseModel):
 
 class ListFilesResponse(BaseModel):
     """List files response."""
+
     files: list[str] | None
     error: str | None = None
 
 
 class ExecuteRequest(BaseModel):
     """Command execution request."""
+
     command: str = Field(description="Command to execute")
 
 
 class ExecuteResponse(BaseModel):
     """Command execution response."""
+
     status: str
     stdout: str
     stderr: str
@@ -103,12 +113,14 @@ class ExecuteResponse(BaseModel):
 
 class ActionApprovalRequest(BaseModel):
     """Action approval request."""
+
     action_id: str = Field(description="Action ID to approve/reject")
     approved: bool = Field(description="Whether to approve")
 
 
 class ContextResponse(BaseModel):
     """Context information response."""
+
     project_root: str
     model: str
     message_count: int
@@ -118,12 +130,14 @@ class ContextResponse(BaseModel):
 
 class SearchRequest(BaseModel):
     """Search request."""
+
     query: str = Field(description="Search query")
     file_pattern: str = Field(default="*.py", description="File pattern")
 
 
 class SearchResponse(BaseModel):
     """Search response."""
+
     matches: list[dict[str, Any]] | None
     error: str | None = None
 
@@ -137,6 +151,7 @@ async def chat(request: ChatRequest) -> ChatResponse | StreamingResponse:
     agent = _get_agent()
 
     if request.stream:
+
         async def generate():
             response = await agent.chat(request.message, stream=True)
             async for chunk in response:
@@ -214,6 +229,7 @@ async def execute_command(request: ExecuteRequest) -> ExecuteResponse:
     if requires_approval:
         # Store pending action
         import uuid
+
         action_id = str(uuid.uuid4())
         _pending_actions[action_id] = {
             "type": "execute",
@@ -385,7 +401,7 @@ async def pull_model(model: str) -> StreamingResponse:
                         if line:
                             yield line + "\n"
             except Exception as e:
-                yield f'{{"error": "{str(e)}"}}\n'
+                yield f'{{"error": "{e!s}"}}\n'
 
     return StreamingResponse(stream_pull(), media_type="application/x-ndjson")
 
@@ -406,7 +422,9 @@ async def delete_model(model_name: str) -> dict[str, str]:
             if response.status_code == 200:
                 return {"status": "ok", "deleted": model_name}
             else:
-                raise HTTPException(status_code=response.status_code, detail="Failed to delete model")
+                raise HTTPException(
+                    status_code=response.status_code, detail="Failed to delete model"
+                )
     except httpx.HTTPError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -452,6 +470,7 @@ DOCKER_IMAGE = "ollama/ollama:latest"
 
 class DockerStatusResponse(BaseModel):
     """Docker container status."""
+
     docker_available: bool
     container_exists: bool
     container_running: bool
@@ -462,7 +481,8 @@ class DockerStatusResponse(BaseModel):
 async def _run_docker_command(args: list[str]) -> tuple[str, str, int]:
     """Run a docker command and return stdout, stderr, exit_code."""
     proc = await asyncio.create_subprocess_exec(
-        "docker", *args,
+        "docker",
+        *args,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
@@ -492,10 +512,9 @@ async def get_docker_status() -> DockerStatusResponse:
         )
 
     # Check container status
-    stdout, _, code = await _run_docker_command([
-        "ps", "-a", "--filter", f"name={DOCKER_CONTAINER_NAME}",
-        "--format", "{{.ID}}|{{.Status}}"
-    ])
+    stdout, _, code = await _run_docker_command(
+        ["ps", "-a", "--filter", f"name={DOCKER_CONTAINER_NAME}", "--format", "{{.ID}}|{{.Status}}"]
+    )
 
     if not stdout.strip():
         return DockerStatusResponse(
@@ -542,29 +561,46 @@ async def start_ollama_container() -> dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Failed to pull image: {stderr}")
 
     # Run container with GPU support
-    _, stderr, code = await _run_docker_command([
-        "run", "-d",
-        "--name", DOCKER_CONTAINER_NAME,
-        "--gpus", "all",
-        "-v", "ollama_data:/root/.ollama",
-        "-p", "11434:11434",
-        "--restart", "unless-stopped",
-        DOCKER_IMAGE,
-    ])
+    _, stderr, code = await _run_docker_command(
+        [
+            "run",
+            "-d",
+            "--name",
+            DOCKER_CONTAINER_NAME,
+            "--gpus",
+            "all",
+            "-v",
+            "ollama_data:/root/.ollama",
+            "-p",
+            "11434:11434",
+            "--restart",
+            "unless-stopped",
+            DOCKER_IMAGE,
+        ]
+    )
 
     if code != 0:
         # If GPU failed, try without GPU
         if "gpu" in stderr.lower() or "nvidia" in stderr.lower():
-            _, stderr2, code2 = await _run_docker_command([
-                "run", "-d",
-                "--name", DOCKER_CONTAINER_NAME,
-                "-v", "ollama_data:/root/.ollama",
-                "-p", "11434:11434",
-                "--restart", "unless-stopped",
-                DOCKER_IMAGE,
-            ])
+            _, stderr2, code2 = await _run_docker_command(
+                [
+                    "run",
+                    "-d",
+                    "--name",
+                    DOCKER_CONTAINER_NAME,
+                    "-v",
+                    "ollama_data:/root/.ollama",
+                    "-p",
+                    "11434:11434",
+                    "--restart",
+                    "unless-stopped",
+                    DOCKER_IMAGE,
+                ]
+            )
             if code2 != 0:
-                raise HTTPException(status_code=500, detail=f"Failed to create container: {stderr2}")
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to create container: {stderr2}"
+                )
             return {"status": "created", "container": DOCKER_CONTAINER_NAME, "gpu": False}
 
         raise HTTPException(status_code=500, detail=f"Failed to create container: {stderr}")
@@ -612,9 +648,15 @@ async def remove_ollama_container() -> dict[str, str]:
 @router.get("/docker/logs")
 async def get_container_logs(tail: int = 100) -> StreamingResponse:
     """Stream container logs."""
+
     async def stream_logs():
         proc = await asyncio.create_subprocess_exec(
-            "docker", "logs", "-f", "--tail", str(tail), DOCKER_CONTAINER_NAME,
+            "docker",
+            "logs",
+            "-f",
+            "--tail",
+            str(tail),
+            DOCKER_CONTAINER_NAME,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
         )

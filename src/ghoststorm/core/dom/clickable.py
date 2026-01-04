@@ -181,9 +181,7 @@ class ClickableDetector:
             else:
                 elem_type = ElementType.INPUT
 
-            if input_type in ("checkbox", "radio"):
-                return elem_type, InteractionType.CLICK
-            elif input_type in ("submit", "button", "image"):
+            if input_type in ("checkbox", "radio") or input_type in ("submit", "button", "image"):
                 return elem_type, InteractionType.CLICK
             elif input_type == "file":
                 return ElementType.INPUT, InteractionType.UPLOAD
@@ -191,10 +189,7 @@ class ClickableDetector:
                 return elem_type, InteractionType.TYPE
 
         # Handle other tags
-        if tag in self.TAG_TO_TYPE:
-            elem_type = self.TAG_TO_TYPE[tag]
-        else:
-            elem_type = ElementType.UNKNOWN
+        elem_type = self.TAG_TO_TYPE.get(tag, ElementType.UNKNOWN)
 
         # Determine interaction type
         if tag in ("button", "a"):
@@ -253,9 +248,7 @@ class ClickableDetector:
         for child in node.children:
             self._find_recursive(child, results)
 
-    def filter_by_type(
-        self, nodes: list[DOMNode], element_type: ElementType
-    ) -> list[DOMNode]:
+    def filter_by_type(self, nodes: list[DOMNode], element_type: ElementType) -> list[DOMNode]:
         """Filter nodes by element type."""
         return [n for n in nodes if n.element_type == element_type]
 

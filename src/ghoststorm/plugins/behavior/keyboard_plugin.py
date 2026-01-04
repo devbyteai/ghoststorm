@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import random
 from typing import Any
 
@@ -172,27 +173,21 @@ class KeyboardBehavior:
                 typo = self._generate_typo(char)
                 if typo:
                     # Type wrong character
-                    try:
+                    with contextlib.suppress(Exception):
                         await page.keyboard.type(typo)
-                    except Exception:
-                        pass
                     await asyncio.sleep(delay)
 
                     # Brief pause (realizing mistake)
                     await asyncio.sleep(random.uniform(0.15, 0.4))
 
                     # Delete and retype
-                    try:
+                    with contextlib.suppress(Exception):
                         await page.keyboard.press("Backspace")
-                    except Exception:
-                        pass
                     await asyncio.sleep(random.uniform(0.08, 0.15))
 
             # Type the correct character
-            try:
+            with contextlib.suppress(Exception):
                 await page.keyboard.type(char)
-            except Exception:
-                pass
             await asyncio.sleep(delay)
 
             # Add pauses after spaces and punctuation
@@ -222,10 +217,8 @@ class KeyboardBehavior:
         # Press modifiers
         if modifiers:
             for mod in modifiers:
-                try:
+                with contextlib.suppress(Exception):
                     await page.keyboard.down(mod)
-                except Exception:
-                    pass
 
         # Press key
         if hold_time:
@@ -247,10 +240,8 @@ class KeyboardBehavior:
         # Release modifiers
         if modifiers:
             for mod in reversed(modifiers):
-                try:
+                with contextlib.suppress(Exception):
                     await page.keyboard.up(mod)
-                except Exception:
-                    pass
 
         # Small delay after key press
         await asyncio.sleep(random.uniform(0.05, 0.1))
@@ -264,7 +255,7 @@ class KeyboardBehavior:
         """
         try:
             # Set clipboard
-            await page.evaluate(f'navigator.clipboard.writeText({text!r})')
+            await page.evaluate(f"navigator.clipboard.writeText({text!r})")
             await asyncio.sleep(random.uniform(0.1, 0.2))
 
             # Paste

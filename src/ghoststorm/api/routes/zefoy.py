@@ -139,7 +139,6 @@ _service_status_cache: dict[str, Any] = {"status": {}, "last_check": None, "chec
 @router.get("/services/status")
 async def get_zefoy_services_status() -> dict:
     """Check real status of Zefoy services by visiting the site."""
-    from ghoststorm.plugins.automation.zefoy import check_zefoy_services
 
     # Return cached if checking
     if _service_status_cache["checking"]:
@@ -258,7 +257,10 @@ async def _run_zefoy_job(job_id: str) -> None:
                             "timeout": "⏱️",
                             "network": "🌐",
                         }.get(result.error_type, "❌")
-                        _add_job_log(job_id, f"{error_icon} {service} FAILED [{result.error_type or 'unknown'}]: {result.error}")
+                        _add_job_log(
+                            job_id,
+                            f"{error_icon} {service} FAILED [{result.error_type or 'unknown'}]: {result.error}",
+                        )
 
                     job["captchas_solved"] += result.captchas_solved
 
@@ -269,7 +271,7 @@ async def _run_zefoy_job(job_id: str) -> None:
 
                 except Exception as e:
                     job["failed_runs"] += 1
-                    _add_job_log(job_id, f"❌ {service} EXCEPTION: {str(e)}")
+                    _add_job_log(job_id, f"❌ {service} EXCEPTION: {e!s}")
 
                 # Delay between runs
                 if run_idx < config["repeat"] - 1 or service != job["services"][-1]:
@@ -293,7 +295,7 @@ async def _run_zefoy_job(job_id: str) -> None:
         job["status"] = "failed"
         job["error"] = str(e)
         _stats["failed"] += 1
-        _add_job_log(job_id, f"Job failed: {str(e)}")
+        _add_job_log(job_id, f"Job failed: {e!s}")
 
 
 def _add_job_log(job_id: str, message: str) -> None:

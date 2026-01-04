@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import time
-from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import structlog
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = structlog.get_logger(__name__)
 
@@ -119,9 +121,7 @@ class CircuitBreaker:
         async with self._lock:
             if not await self._can_execute():
                 self._stats.rejected_calls += 1
-                raise CircuitOpenError(
-                    f"Circuit '{self.name}' is open, request rejected"
-                )
+                raise CircuitOpenError(f"Circuit '{self.name}' is open, request rejected")
 
         self._stats.total_calls += 1
 

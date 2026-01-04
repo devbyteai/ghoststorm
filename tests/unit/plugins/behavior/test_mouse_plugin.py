@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
 import math
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
 from ghoststorm.plugins.behavior.mouse_plugin import MouseBehavior, Point
-
 
 # ============================================================================
 # POINT DATACLASS TESTS
@@ -207,7 +205,7 @@ class TestGenerateControlPoints:
 
         # Run multiple times due to randomness
         for _ in range(10):
-            c1, c2 = behavior._generate_control_points(start, end)
+            c1, _c2 = behavior._generate_control_points(start, end)
             # c1 should be around 25% of the way (100 +/- deviation)
             # Deviation is min(distance * 0.3, 100) = min(120, 100) = 100
             assert -100 <= c1.x <= 200  # 100 +/- 100
@@ -219,7 +217,7 @@ class TestGenerateControlPoints:
         end = Point(400.0, 0.0)
 
         for _ in range(10):
-            c1, c2 = behavior._generate_control_points(start, end)
+            _c1, c2 = behavior._generate_control_points(start, end)
             # c2 should be around 75% of the way (300 +/- deviation)
             assert 200 <= c2.x <= 400  # 300 +/- 100
 
@@ -236,8 +234,8 @@ class TestGenerateControlPoints:
         end_long = Point(1000.0, 0.0)  # distance = 1000, deviation = 100 (capped)
 
         # Both should produce valid control points
-        c1_short, c2_short = behavior._generate_control_points(start_short, end_short)
-        c1_long, c2_long = behavior._generate_control_points(start_long, end_long)
+        c1_short, _c2_short = behavior._generate_control_points(start_short, end_short)
+        c1_long, _c2_long = behavior._generate_control_points(start_long, end_long)
 
         assert isinstance(c1_short, Point)
         assert isinstance(c1_long, Point)
@@ -379,16 +377,10 @@ class TestApplyTremor:
             result_small = behavior_small._apply_tremor(original)
             result_large = behavior_large._apply_tremor(original)
             offsets_small.append(
-                math.sqrt(
-                    (result_small.x - original.x) ** 2
-                    + (result_small.y - original.y) ** 2
-                )
+                math.sqrt((result_small.x - original.x) ** 2 + (result_small.y - original.y) ** 2)
             )
             offsets_large.append(
-                math.sqrt(
-                    (result_large.x - original.x) ** 2
-                    + (result_large.y - original.y) ** 2
-                )
+                math.sqrt((result_large.x - original.x) ** 2 + (result_large.y - original.y) ** 2)
             )
 
         avg_small = sum(offsets_small) / len(offsets_small)
@@ -406,9 +398,7 @@ class TestMoveTo:
     """Tests for async move_to method."""
 
     @pytest.mark.asyncio
-    async def test_move_to_calls_mouse_move_multiple_times(
-        self, mock_page, mock_sleep
-    ):
+    async def test_move_to_calls_mouse_move_multiple_times(self, mock_page, mock_sleep):
         """Test that move_to calls page.mouse.move multiple times."""
         behavior = MouseBehavior(min_steps=10, overshoot_probability=0.0)
 
@@ -561,7 +551,7 @@ class TestDrag:
         await behavior.drag(mock_page, 50.0, 50.0, 150.0, 150.0)
 
         # First series of moves should approach start position
-        first_moves = mock_page.mouse.move.call_args_list[:behavior.min_steps]
+        first_moves = mock_page.mouse.move.call_args_list[: behavior.min_steps]
         # Moves should be heading towards (50, 50)
         assert len(first_moves) > 0
 
@@ -598,9 +588,7 @@ class TestDrag:
         assert mock_sleep.call_count > behavior.min_steps * 2
 
     @pytest.mark.asyncio
-    async def test_drag_handles_move_exception_during_drag(
-        self, mock_page, mock_sleep
-    ):
+    async def test_drag_handles_move_exception_during_drag(self, mock_page, mock_sleep):
         """Test that drag continues even if move fails during drag."""
         behavior = MouseBehavior(min_steps=5, overshoot_probability=0.0)
 

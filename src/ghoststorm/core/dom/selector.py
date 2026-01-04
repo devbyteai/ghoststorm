@@ -173,9 +173,8 @@ class SelectorGenerator:
             return f'{node.tag.lower()}[aria-label="{node.aria_label}"]'
 
         # Try role + other attributes
-        if node.role:
-            if node.attributes.get("aria-labelledby"):
-                return f'[role="{node.role}"][aria-labelledby="{node.attributes["aria-labelledby"]}"]'
+        if node.role and node.attributes.get("aria-labelledby"):
+            return f'[role="{node.role}"][aria-labelledby="{node.attributes["aria-labelledby"]}"]'
 
         return None
 
@@ -193,10 +192,7 @@ class SelectorGenerator:
             return None
 
         # Filter out utility classes and common names
-        meaningful_classes = [
-            c for c in classes
-            if not self._is_utility_class(c)
-        ]
+        meaningful_classes = [c for c in classes if not self._is_utility_class(c)]
 
         if not meaningful_classes:
             return None
@@ -267,10 +263,7 @@ class SelectorGenerator:
             return False
 
         # Must not contain certain characters
-        if any(c in id_value for c in " .:[]()"):
-            return False
-
-        return True
+        return not any(c in id_value for c in " .:[]()")
 
     def _is_utility_class(self, class_name: str) -> bool:
         """Check if class is a utility class (Tailwind, Bootstrap, etc.)."""
@@ -283,13 +276,11 @@ class SelectorGenerator:
             r"^[a-z]{1,2}-\d+$",  # Short utilities like "p-4"
         ]
 
-        for pattern in utility_patterns:
-            if re.match(pattern, class_name, re.IGNORECASE):
-                return True
+        return any(re.match(pattern, class_name, re.IGNORECASE) for pattern in utility_patterns)
 
-        return False
-
-    def generate_all(self, node: DOMNode, parent_chain: list[DOMNode] | None = None) -> dict[str, str]:
+    def generate_all(
+        self, node: DOMNode, parent_chain: list[DOMNode] | None = None
+    ) -> dict[str, str]:
         """
         Generate multiple selector types for an element.
 

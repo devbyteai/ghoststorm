@@ -33,14 +33,14 @@ def register(manager: PluginManager) -> None:
 
 
 __all__ = [
-    # Engines
-    "CamoufoxEngine",
-    "PatchrightEngine",
-    "PlaywrightEngine",
     # Camoufox types
     "CamoufoxConfig",
-    "CamoufoxPage",
     "CamoufoxContext",
+    # Engines
+    "CamoufoxEngine",
+    "CamoufoxPage",
+    "PatchrightEngine",
+    "PlaywrightEngine",
     # Registration
     "register",
 ]

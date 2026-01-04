@@ -159,7 +159,9 @@ class WorkerPool:
             for _ in range(int(timeout)):
                 await asyncio.sleep(1)
                 async with self._lock:
-                    busy_count = sum(1 for w in self._workers.values() if w.state == WorkerState.BUSY)
+                    busy_count = sum(
+                        1 for w in self._workers.values() if w.state == WorkerState.BUSY
+                    )
                 if busy_count == 0:
                     break
 

@@ -19,10 +19,10 @@ from typing import Any
 
 import pytest
 
-
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
+
 
 def parse_view_count(text: str | None) -> int | None:
     """Parse view count text like '1.5K', '1,234', '1.5M' to integer.
@@ -228,6 +228,7 @@ async def launch_stealth_browser(headless: bool = False, proxy_url: str | None =
 # TEST CLASS
 # ============================================================================
 
+
 @pytest.mark.real
 @pytest.mark.slow
 class TestTikTokRealViews:
@@ -295,7 +296,9 @@ class TestTikTokRealViews:
         try:
             # Go to TikTok For You page to find a video
             print("  Navigating to TikTok For You page...")
-            await page.goto("https://www.tiktok.com/foryou", wait_until="domcontentloaded", timeout=30000)
+            await page.goto(
+                "https://www.tiktok.com/foryou", wait_until="domcontentloaded", timeout=30000
+            )
             await asyncio.sleep(5)  # Wait for videos to load
 
             # Try to find and click on a video
@@ -333,7 +336,9 @@ class TestTikTokRealViews:
             if view_count is not None:
                 print(f"\n  SUCCESS: Extracted view count: {view_count:,}")
             else:
-                print("\n  WARNING: Could not extract view count (may need login or different approach)")
+                print(
+                    "\n  WARNING: Could not extract view count (may need login or different approach)"
+                )
                 # Take screenshot for debugging
                 await page.screenshot(path="tiktok_debug.png")
                 print("  Saved debug screenshot to tiktok_debug.png")
@@ -361,7 +366,9 @@ class TestTikTokRealViews:
         try:
             # Step 1: Navigate to TikTok For You page
             print("\n  [Step 1] Navigating to TikTok...")
-            await page.goto("https://www.tiktok.com/foryou", wait_until="domcontentloaded", timeout=30000)
+            await page.goto(
+                "https://www.tiktok.com/foryou", wait_until="domcontentloaded", timeout=30000
+            )
             await asyncio.sleep(5)
 
             # Step 2: Get initial view count (if visible)

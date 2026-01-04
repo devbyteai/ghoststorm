@@ -5,8 +5,6 @@ from __future__ import annotations
 import time
 from unittest.mock import patch
 
-import pytest
-
 from ghoststorm.plugins.automation.view_tracking import (
     PLATFORM_REQUIREMENTS,
     ViewTrackingManager,
@@ -42,7 +40,9 @@ class TestPlatformRequirements:
     def test_all_platforms_require_unique_fingerprint_by_default(self) -> None:
         """All platforms require unique fingerprint by default."""
         for platform, reqs in PLATFORM_REQUIREMENTS.items():
-            assert reqs.requires_unique_fingerprint is True, f"{platform} should require unique fingerprint"
+            assert reqs.requires_unique_fingerprint is True, (
+                f"{platform} should require unique fingerprint"
+            )
 
 
 class TestViewTrackingManagerCanView:
@@ -335,7 +335,7 @@ class TestDuplicateFingerprintBlocked:
         with patch("ghoststorm.plugins.automation.view_tracking.time") as mock_time:
             mock_time.time.return_value = base_time + 400
 
-            can_view, reason = manager.can_view(
+            can_view, _reason = manager.can_view(
                 video_id="video_xyz",
                 platform="tiktok",
                 proxy_id="proxy_002",
@@ -382,7 +382,7 @@ class TestDifferentVideoAllowed:
         for i in range(5):
             video_id = f"video_{i}"
 
-            can_view, reason = manager.can_view(
+            can_view, _reason = manager.can_view(
                 video_id=video_id,
                 platform="tiktok",
                 proxy_id=proxy_id,
@@ -428,7 +428,7 @@ class TestMaxViewsPerHour:
         # The issue is YouTube has 1 hour cooldown AND 1 hour rate limit window - they're the same
         # So we test with tiktok which has 5 min cooldown but counts views per hour
         # Actually, let's test by checking view immediately - it will be blocked by cooldown OR rate limit
-        can_view, reason = manager.can_view(
+        can_view, _reason = manager.can_view(
             video_id=video_id,
             platform=platform,
             proxy_id="proxy_new",
@@ -750,7 +750,7 @@ class TestCooldownPeriods:
         with patch("ghoststorm.plugins.automation.view_tracking.time") as mock_time:
             mock_time.time.return_value = base_time + 400  # 6+ minutes
 
-            can_view, reason = manager.can_view(
+            can_view, _reason = manager.can_view(
                 video_id="cooldown_video",
                 platform="tiktok",
                 proxy_id="proxy_002",

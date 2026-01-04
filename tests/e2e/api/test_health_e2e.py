@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
+
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
 
 
 @pytest.mark.e2e
@@ -33,7 +35,10 @@ class TestHealthAPI:
 
     def test_health_without_orchestrator(self, api_test_client: TestClient):
         """Test health when orchestrator not initialized."""
-        with patch("ghoststorm.api.routes.health._get_orchestrator", side_effect=RuntimeError("Not initialized")):
+        with patch(
+            "ghoststorm.api.routes.health._get_orchestrator",
+            side_effect=RuntimeError("Not initialized"),
+        ):
             response = api_test_client.get("/api/health")
 
             assert response.status_code == 200
@@ -69,7 +74,7 @@ class TestWatchdogsAPI:
         list_response = api_test_client.get("/api/health/watchdogs")
 
         if list_response.json()["watchdogs"]:
-            watchdog_name = list(list_response.json()["watchdogs"].keys())[0]
+            watchdog_name = next(iter(list_response.json()["watchdogs"].keys()))
 
             response = api_test_client.get(f"/api/health/watchdogs/{watchdog_name}")
 

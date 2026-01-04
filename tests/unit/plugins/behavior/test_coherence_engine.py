@@ -5,8 +5,6 @@ from __future__ import annotations
 import time
 from unittest.mock import patch
 
-import pytest
-
 from ghoststorm.plugins.behavior.coherence_engine import (
     CIRCADIAN_PROFILES,
     AttentionState,
@@ -179,17 +177,17 @@ class TestCircadianProfiles:
 
     def test_activity_level_range(self) -> None:
         """Test that activity levels are within 0-1 range."""
-        for hour, profile in CIRCADIAN_PROFILES.items():
+        for _hour, profile in CIRCADIAN_PROFILES.items():
             assert 0 <= profile.activity_level <= 1
 
     def test_speed_factor_range(self) -> None:
         """Test that speed factors are within reasonable range."""
-        for hour, profile in CIRCADIAN_PROFILES.items():
+        for _hour, profile in CIRCADIAN_PROFILES.items():
             assert 0.3 <= profile.speed_factor <= 1.5
 
     def test_error_rate_range(self) -> None:
         """Test that error rates are within reasonable range."""
-        for hour, profile in CIRCADIAN_PROFILES.items():
+        for _hour, profile in CIRCADIAN_PROFILES.items():
             assert 0 <= profile.error_rate <= 0.2
 
 
@@ -493,9 +491,7 @@ class TestGetBehaviorModifiers:
 
     def test_attention_state_affects_modifiers(self) -> None:
         """Test attention state affects behavior modifiers."""
-        engine = CoherenceEngine(
-            CoherenceConfig(circadian_enabled=False, fatigue_enabled=False)
-        )
+        engine = CoherenceEngine(CoherenceConfig(circadian_enabled=False, fatigue_enabled=False))
         state_focused = engine.create_session(persona=UserPersona.CASUAL)
         state_focused.attention_state = AttentionState.FOCUSED
         state_idle = engine.create_session(persona=UserPersona.CASUAL)
@@ -558,7 +554,7 @@ class TestRecordAction:
         """Test multiple click actions accumulate."""
         engine = CoherenceEngine()
         state = engine.create_session()
-        for i in range(5):
+        for _i in range(5):
             engine.record_action(state, "click")
         assert state.total_clicks == 5
 
@@ -566,7 +562,7 @@ class TestRecordAction:
         """Test multiple keypress actions accumulate."""
         engine = CoherenceEngine()
         state = engine.create_session()
-        for i in range(10):
+        for _i in range(10):
             engine.record_action(state, "keypress")
         assert state.total_keystrokes == 10
 
