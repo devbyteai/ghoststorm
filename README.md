@@ -24,6 +24,7 @@ AI-powered browser automation with vision, local LLMs, and enterprise stealth.
 |---|---|
 | 🌐 **Universal Automation** | Works on ANY website — not locked to specific platforms |
 | 👁️ **AI Vision** | Sees and understands pages via screenshot analysis |
+| 🔒 **Total Privacy** | Hide your real IP, device, location — browse like a ghost |
 | 🤖 **Local LLM** | Ollama integration — 100% private, no API costs |
 | 🛡️ **Undetectable** | 20+ anti-fingerprinting vectors, 0% detection rate |
 | 🔄 **47,000+ Proxies** | Built-in aggregator with automatic rotation |
@@ -56,6 +57,7 @@ docker compose up -d
 | Feature | Other Tools | GhostStorm |
 |---------|-------------|------------|
 | Works on any site | ❌ Platform-specific | ✅ **Universal** |
+| Privacy protection | ⚠️ IP only | ✅ **Full identity (IP, device, location)** |
 | Vision AI | ❌ DOM only | ✅ **Screenshot analysis** |
 | Local LLM | ❌ Cloud API required | ✅ **Ollama built-in** |
 | Bot detection | ⚠️ Often detected | ✅ **Undetectable** |
@@ -64,26 +66,49 @@ docker compose up -d
 
 ---
 
+## 🔒 Private Browsing
+
+Browse without exposing anything real:
+
+| Protected | How |
+|-----------|-----|
+| **Real IP** | 47K+ proxies, Tor, residential IPs |
+| **Device Profile** | 2,500+ fingerprints (OS, screen, GPU, fonts) |
+| **Location** | Timezone + geolocation spoofing |
+| **Browser Identity** | Canvas, WebGL, Audio fingerprint randomization |
+| **Network Leaks** | DNS-over-HTTPS, WebRTC blocked, IPv6 disabled |
+| **Behavior Pattern** | Human-like mouse, scroll, typing simulation |
+
+**Zero trace. Zero detection.**
+
+---
+
 ## 🎯 Use Cases
 
 <table>
 <tr>
-<td align="center" width="33%">
+<td align="center" width="25%">
 
-### Traffic Generation
-Generate organic-looking visits with unique fingerprints and IPs
-
-</td>
-<td align="center" width="33%">
-
-### DEXTools Trending
-Push tokens to trending with realistic visitor patterns
+### 🔒 Private Browsing
+Access any site anonymously with full identity protection
 
 </td>
-<td align="center" width="33%">
+<td align="center" width="25%">
 
-### Platform Engagement
-TikTok, Instagram, YouTube automation with human behavior
+### 📊 Traffic Generation
+Organic visits with unique fingerprints and IPs
+
+</td>
+<td align="center" width="25%">
+
+### 📈 DEXTools Trending
+Push tokens with realistic visitor patterns
+
+</td>
+<td align="center" width="25%">
+
+### 🎬 Platform Engagement
+TikTok, Instagram, YouTube with human behavior
 
 </td>
 </tr>
