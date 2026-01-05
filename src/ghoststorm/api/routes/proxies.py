@@ -774,6 +774,39 @@ async def _scrape_with_camoufox(url: str, browser_context) -> set[str]:
     return proxies
 
 
+async def _test_batch_and_save(proxies: set[str], proxy_dir: Path) -> set[str]:
+    """Test proxies and immediately save alive ones to file."""
+    alive: set[str] = set()
+    proxies_list = list(proxies)
+
+    # Use semaphore to limit concurrent tests (prevent resource exhaustion)
+    semaphore = asyncio.Semaphore(30)  # Max 30 concurrent tests
+
+    async def test_with_limit(proxy: str) -> tuple[str, bool]:
+        async with semaphore:
+            result = await _test_single_proxy(proxy, timeout=3.0)
+            return proxy, result
+
+    # Test in batches of 50 with semaphore limiting actual concurrency to 30
+    for i in range(0, len(proxies_list), 50):
+        batch = proxies_list[i : i + 50]
+        results = await asyncio.gather(*[test_with_limit(p) for p in batch])
+        for proxy, is_alive in results:
+            if is_alive:
+                alive.add(proxy)
+
+    # Save alive immediately (append to file)
+    if alive:
+        existing_alive = read_proxies(proxy_dir / "alive_proxies.txt")
+        new_alive = alive - existing_alive
+        if new_alive:
+            with open(proxy_dir / "alive_proxies.txt", "a") as f:
+                for proxy in sorted(new_alive):
+                    f.write(proxy + "\n")
+
+    return alive
+
+
 async def _run_scrape_job(job_id: str) -> None:
     """Background task - 10-TIER CASCADE for maximum proxy extraction."""
     job = _jobs[job_id]
@@ -900,6 +933,16 @@ async def _run_scrape_job(job_id: str) -> None:
             new_proxies = proxies - existing - all_proxies
             all_proxies.update(proxies)
 
+            # === INLINE TEST: Test new proxies from this source immediately ===
+            alive_from_source: set[str] = set()
+            if new_proxies:
+                job["status"] = "testing"
+                job["testing_source"] = source["name"]
+                alive_from_source = await _test_batch_and_save(new_proxies, proxy_dir)
+                job["alive_total"] = job.get("alive_total", 0) + len(alive_from_source)
+                job["tested_total"] = job.get("tested_total", 0) + len(new_proxies)
+                job["status"] = "scraping"
+
             job["results"].append(
                 {
                     "name": source["name"],
@@ -907,6 +950,7 @@ async def _run_scrape_job(job_id: str) -> None:
                     "new": len(new_proxies),
                     "method": method_used,
                     "success": True,
+                    "alive": len(alive_from_source),
                 }
             )
         except Exception as e:
@@ -918,6 +962,7 @@ async def _run_scrape_job(job_id: str) -> None:
                     "method": method_used,
                     "success": False,
                     "error": str(e)[:100],
+                    "alive": 0,
                 }
             )
 
@@ -944,47 +989,19 @@ async def _run_scrape_job(job_id: str) -> None:
                 f.write(proxy + "\n")
 
     job["new_added"] = len(new_proxies)
-
-    # === AUTO-TEST PHASE ===
-    if new_proxies:
-        job["status"] = "testing"
-        job["test_total"] = len(new_proxies)
-        job["test_done"] = 0
-        job["test_alive"] = 0
-
-        alive_proxies: set[str] = set()
-        proxies_list = list(new_proxies)
-
-        # Test in batches of 50
-        batch_size = 50
-        for i in range(0, len(proxies_list), batch_size):
-            batch = proxies_list[i : i + batch_size]
-            results = await asyncio.gather(*[_test_single_proxy(p) for p in batch])
-
-            for proxy, is_alive in zip(batch, results):
-                if is_alive:
-                    alive_proxies.add(proxy)
-
-            job["test_done"] = min(i + batch_size, len(proxies_list))
-            job["test_alive"] = len(alive_proxies)
-
-        # Save alive proxies
-        new_alive: set[str] = set()
-        if alive_proxies:
-            existing_alive = read_proxies(proxy_dir / "alive_proxies.txt")
-            new_alive = alive_proxies - existing_alive
-            if new_alive:
-                with open(proxy_dir / "alive_proxies.txt", "a") as f:
-                    for proxy in sorted(new_alive):
-                        f.write(proxy + "\n")
-
-        job["alive_added"] = len(new_alive)  # Fixed: was len(alive_proxies)
-
-        # NOTE: Scraping does NOT update tested_count - only TEST job does that
-        # The .tested_count file tracks how many proxies have been TESTED, not scraped
+    # Testing happens inline (per-source) - alive_total already updated
 
     job["status"] = "completed"
     job["completed_at"] = datetime.now(UTC).isoformat()
+
+
+@router.get("/scrape/active")
+async def get_active_scrape_job() -> dict:
+    """Get currently running scrape job, if any."""
+    for job_id, job in _jobs.items():
+        if job.get("type") == "scrape" and job.get("status") in ("running", "testing"):
+            return {"job_id": job_id, **job}
+    return {"job_id": None}
 
 
 @router.get("/scrape/{job_id}")
@@ -1055,13 +1072,15 @@ async def start_test(
 
 
 async def _test_single_proxy(proxy: str, timeout: float = 5.0) -> bool:
-    """Test if a single proxy is alive using httpx."""
+    """Test if a single proxy is alive using httpx with HTTPS (CONNECT tunnel)."""
     try:
         async with httpx.AsyncClient(
-            proxies={"http://": f"http://{proxy}", "https://": f"http://{proxy}"},
+            proxy=f"http://{proxy}",
             timeout=timeout,
+            verify=False,  # Skip SSL verification for speed
         ) as client:
-            response = await client.get("http://httpbin.org/ip")
+            # Use HTTPS to test CONNECT tunnel support (needed for browsers)
+            response = await client.get("https://httpbin.org/ip")
             return response.status_code == 200
     except Exception:
         return False
@@ -1124,22 +1143,26 @@ async def _run_test_job(job_id: str) -> None:
         alive_proxies: set[str] = set()
         job["total"] = len(all_proxies)  # Update total for accurate progress
 
-        # Use job settings
+        # Use job settings with safe limits
         use_browser = job.get("browser_test", False)
-        batch_size = job.get("concurrent", 100)
+        batch_size = min(job.get("concurrent", 50), 50)  # Cap at 50
         timeout = job.get("timeout", 5.0)
+
+        # Semaphore to prevent resource exhaustion
+        max_concurrent = 5 if use_browser else 30
+        semaphore = asyncio.Semaphore(max_concurrent)
 
         # Browser tests are slower, use smaller batches
         if use_browser:
-            batch_size = min(batch_size, 10)  # Max 10 concurrent browser instances
+            batch_size = min(batch_size, 5)  # Max 5 concurrent browser instances
 
             async def test_func(p):
-                return await _test_proxy_browser(p, timeout)
-
+                async with semaphore:
+                    return await _test_proxy_browser(p, timeout)
         else:
-
             async def test_func(p):
-                return await _test_single_proxy(p, timeout)
+                async with semaphore:
+                    return await _test_single_proxy(p, timeout)
 
         start_time = time.time()
         tested = 0
@@ -1245,15 +1268,20 @@ async def clear_dead_proxies(source_file: str = "alive") -> dict:
             "remaining": 0,
         }
 
-    # Test all proxies
+    # Test all proxies with rate limiting
     alive_proxies: set[str] = set()
-    batch_size = 100
+    batch_size = 50
+    semaphore = asyncio.Semaphore(30)  # Max 30 concurrent
+
+    async def test_with_limit(proxy: str) -> tuple[str, bool]:
+        async with semaphore:
+            return proxy, await _test_single_proxy(proxy)
 
     for i in range(0, len(all_proxies), batch_size):
         batch = all_proxies[i : i + batch_size]
-        results = await asyncio.gather(*[_test_single_proxy(p) for p in batch])
+        results = await asyncio.gather(*[test_with_limit(p) for p in batch])
 
-        for proxy, is_alive in zip(batch, results):
+        for proxy, is_alive in results:
             if is_alive:
                 alive_proxies.add(proxy)
 

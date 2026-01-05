@@ -67,7 +67,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadTasks();
     loadMetrics();
     setupPlatformChips();
+    checkActiveScrapeJob();
+    setupStealthCheckboxListeners();
 });
+
+function setupStealthCheckboxListeners() {
+    // Update identity preview when stealth checkboxes are toggled manually
+    const proxyEl = document.getElementById('record-use-proxy');
+    const fingerprintEl = document.getElementById('record-use-fingerprint');
+
+    if (proxyEl) {
+        proxyEl.addEventListener('change', updateIdentityPreviewVisibility);
+    }
+    if (fingerprintEl) {
+        fingerprintEl.addEventListener('change', updateIdentityPreviewVisibility);
+    }
+}
+
+async function checkActiveScrapeJob() {
+    try {
+        const response = await fetch('/api/proxies/scrape/active');
+        const data = await response.json();
+
+        if (data.job_id) {
+            // Restore the scrape job popup
+            currentScrapeJobId = data.job_id;
+            document.getElementById('scrape-sources-total').textContent = data.sources_total;
+            document.getElementById('scrape-sources-done').textContent = data.sources_done;
+            document.getElementById('scrape-proxies-found').textContent = data.proxies_found.toLocaleString();
+            document.getElementById('scrape-tested-count').textContent = (data.tested_total || 0).toLocaleString();
+            document.getElementById('scrape-alive-count').textContent = (data.alive_total || 0).toLocaleString();
+            document.getElementById('scrape-current-source').textContent = data.current_source || 'Processing...';
+
+            const progress = (data.sources_done / data.sources_total) * 100;
+            document.getElementById('scrape-progress-bar').style.width = progress + '%';
+
+            // Show minimized floating popup (less intrusive on page load)
+            document.getElementById('scrape-floating').classList.remove('hidden');
+            updateFloatingProgress(data);
+
+            // Start polling
+            scrapePollingInterval = setInterval(pollScrapeJob, 500);
+            addEvent('info', 'Reconnected to running scrape job');
+        }
+    } catch (error) {
+        // No active scrape job or error - that's fine
+    }
+}
 
 async function loadPages() {
     const pages = ['tasks', 'proxies', 'data', 'settings', 'zefoy', 'engine', 'algorithms', 'llm'];
@@ -2052,12 +2098,18 @@ function renderProxySources(filteredSources = null) {
         const isDone = status.status === 'done';
         const found = status.found || 0;
 
+        const alive = status.alive || 0;
+
         let statusBadge = '';
         if (isActive) {
             statusBadge = `<span class="px-2 py-0.5 rounded text-xs bg-yellow-500/30 text-yellow-400 animate-pulse">Scraping...</span>`;
         } else if (isDone) {
-            const color = found > 0 ? 'bg-green-500/30 text-green-400' : 'bg-gray-500/30 text-gray-400';
-            statusBadge = `<span class="px-2 py-0.5 rounded text-xs ${color}">${found} found</span>`;
+            const foundColor = found > 0 ? 'bg-blue-500/30 text-blue-400' : 'bg-gray-500/30 text-gray-400';
+            const aliveColor = alive > 0 ? 'bg-green-500/30 text-green-400' : 'bg-gray-500/30 text-gray-400';
+            statusBadge = `
+                <span class="px-2 py-0.5 rounded text-xs ${foundColor}">${found}</span>
+                <span class="px-2 py-0.5 rounded text-xs ${aliveColor}">${alive} alive</span>
+            `;
         } else {
             statusBadge = `<span class="px-2 py-0.5 rounded text-xs ${typeColors[source.type] || 'bg-gray-500/20 text-gray-400'}">${source.type}</span>`;
         }
@@ -2085,7 +2137,12 @@ function updateSourceStatus(currentSource, results) {
     sourcesScrapeStatus = {};
     if (results) {
         results.forEach(r => {
-            sourcesScrapeStatus[r.name] = { status: 'done', found: r.found, method: r.method };
+            sourcesScrapeStatus[r.name] = {
+                status: 'done',
+                found: r.found,
+                method: r.method,
+                alive: r.alive || 0
+            };
         });
     }
     if (currentSource && !sourcesScrapeStatus[currentSource]) {
@@ -2177,6 +2234,8 @@ async function startScrapeJob() {
         document.getElementById('scrape-progress-bar').style.width = '0%';
         document.getElementById('scrape-sources-done').textContent = '0';
         document.getElementById('scrape-proxies-found').textContent = '0';
+        document.getElementById('scrape-tested-count').textContent = '0';
+        document.getElementById('scrape-alive-count').textContent = '0';
         document.getElementById('scrape-current-source').textContent = 'Starting...';
 
         scrapePollingInterval = setInterval(pollScrapeJob, 500);
@@ -2198,9 +2257,15 @@ async function pollScrapeJob() {
             return;
         }
 
-        document.getElementById('scrape-current-source').textContent = job.current_source || 'Processing...';
+        // Update status text based on current phase
+        const statusText = job.status === 'testing'
+            ? `Testing: ${job.testing_source || 'proxies'}...`
+            : (job.current_source || 'Processing...');
+        document.getElementById('scrape-current-source').textContent = statusText;
         document.getElementById('scrape-sources-done').textContent = job.sources_done;
         document.getElementById('scrape-proxies-found').textContent = job.proxies_found.toLocaleString();
+        document.getElementById('scrape-tested-count').textContent = (job.tested_total || 0).toLocaleString();
+        document.getElementById('scrape-alive-count').textContent = (job.alive_total || 0).toLocaleString();
 
         const progress = (job.sources_done / job.sources_total) * 100;
         document.getElementById('scrape-progress-bar').style.width = progress + '%';
@@ -2219,10 +2284,11 @@ async function pollScrapeJob() {
             // Show summary and OK button
             document.getElementById('scrape-summary').classList.remove('hidden');
             document.getElementById('scrape-ok-btn').classList.remove('hidden');
+            const aliveCount = job.alive_total || 0;
             document.getElementById('scrape-summary-text').textContent =
-                `${job.proxies_found.toLocaleString()} proxies from ${job.sources_done} sources saved to aggregated.txt`;
+                `${job.proxies_found.toLocaleString()} found, ${aliveCount.toLocaleString()} ALIVE and ready to use!`;
 
-            addEvent('success', `Done! ${job.proxies_found.toLocaleString()} proxies found`);
+            addEvent('success', `Done! ${aliveCount.toLocaleString()} alive proxies ready`);
             loadProxyStats();
         }
     } catch (error) {
@@ -2255,10 +2321,12 @@ function maximizeScrapeModal() {
 function updateFloatingProgress(job) {
     const status = document.getElementById('scrape-floating-status');
     const count = document.getElementById('scrape-floating-count');
+    const alive = document.getElementById('scrape-floating-alive');
     const bar = document.getElementById('scrape-floating-bar');
 
     if (status) status.textContent = `${job.sources_done}/${job.sources_total} sources`;
     if (count) count.textContent = job.proxies_found.toLocaleString();
+    if (alive) alive.textContent = `${(job.alive_total || 0).toLocaleString()} alive`;
     if (bar) {
         const progress = (job.sources_done / job.sources_total) * 100;
         bar.style.width = progress + '%';
@@ -2689,11 +2757,39 @@ async function exportProxies() {
     }
 }
 
-async function clearDeadProxies() {
+function clearDeadProxies() {
+    // Open the modal instead of using confirm()
+    const modal = document.getElementById('clear-dead-modal');
+    const confirmSection = document.getElementById('clear-dead-confirm');
+    const progressSection = document.getElementById('clear-dead-progress');
+    const resultSection = document.getElementById('clear-dead-result');
+
+    // Reset to initial state
+    confirmSection.classList.remove('hidden');
+    progressSection.classList.add('hidden');
+    resultSection.classList.add('hidden');
+
+    // Sync dropdown selection to modal radio buttons
     const sourceFile = document.getElementById('clear-source-file')?.value || 'alive';
+    const radio = document.querySelector(`input[name="clear-source"][value="${sourceFile}"]`);
+    if (radio) radio.checked = true;
+
+    modal.classList.remove('hidden');
+}
+
+function closeClearDeadModal() {
+    document.getElementById('clear-dead-modal').classList.add('hidden');
+}
+
+async function confirmClearDead() {
+    const sourceFile = document.querySelector('input[name="clear-source"]:checked')?.value || 'alive';
     const fileName = sourceFile === 'alive' ? 'alive_proxies.txt' : 'aggregated.txt';
 
-    if (!confirm(`This will test all proxies in ${fileName} and remove dead ones. Continue?`)) return;
+    // Show progress state
+    document.getElementById('clear-dead-confirm').classList.add('hidden');
+    document.getElementById('clear-dead-progress').classList.remove('hidden');
+    document.getElementById('clear-dead-result').classList.add('hidden');
+    document.getElementById('clear-dead-status').textContent = `Testing proxies in ${fileName}...`;
 
     addEvent('info', `Testing and clearing dead from ${fileName}...`);
 
@@ -2701,14 +2797,64 @@ async function clearDeadProxies() {
         const response = await fetch(`/api/proxies/clear-dead?source_file=${sourceFile}`, { method: 'POST' });
         const data = await response.json();
 
+        // Show result state
+        document.getElementById('clear-dead-progress').classList.add('hidden');
+        document.getElementById('clear-dead-result').classList.remove('hidden');
+
+        const resultContent = document.getElementById('clear-dead-result-content');
+
         if (data.error) {
+            resultContent.innerHTML = `
+                <div class="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                    <svg class="w-8 h-8 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <div>
+                        <div class="font-medium text-red-400">Error</div>
+                        <div class="text-sm text-gray-400">${data.error}</div>
+                    </div>
+                </div>
+            `;
             addEvent('error', data.error);
             return;
         }
 
+        resultContent.innerHTML = `
+            <div class="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+                <svg class="w-8 h-8 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div>
+                    <div class="font-medium text-green-400">Complete!</div>
+                    <div class="text-sm text-gray-400">Tested ${data.tested} proxies</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3 mt-4">
+                <div class="text-center p-3 bg-surface-light rounded-lg">
+                    <div class="text-2xl font-bold text-blue-400">${data.tested}</div>
+                    <div class="text-xs text-gray-400">Tested</div>
+                </div>
+                <div class="text-center p-3 bg-surface-light rounded-lg">
+                    <div class="text-2xl font-bold text-red-400">${data.removed}</div>
+                    <div class="text-xs text-gray-400">Removed</div>
+                </div>
+                <div class="text-center p-3 bg-surface-light rounded-lg">
+                    <div class="text-2xl font-bold text-green-400">${data.remaining}</div>
+                    <div class="text-xs text-gray-400">Alive</div>
+                </div>
+            </div>
+        `;
+
         addEvent('success', `Tested ${data.tested}, removed ${data.removed} dead, ${data.remaining} alive`);
         loadProxyStats();
     } catch (error) {
+        document.getElementById('clear-dead-progress').classList.add('hidden');
+        document.getElementById('clear-dead-result').classList.remove('hidden');
+        document.getElementById('clear-dead-result-content').innerHTML = `
+            <div class="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                <svg class="w-8 h-8 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div>
+                    <div class="font-medium text-red-400">Error</div>
+                    <div class="text-sm text-gray-400">${error.message}</div>
+                </div>
+            </div>
+        `;
         addEvent('error', 'Failed to clear dead: ' + error.message);
     }
 }
@@ -3071,16 +3217,13 @@ async function saveSettings() {
 
         if (response.ok) {
             addEvent('success', 'Settings saved successfully');
-            showToast('Settings saved', 'success');
         } else {
             const error = await response.json();
             addEvent('error', `Failed to save settings: ${error.detail}`);
-            showToast('Failed to save settings', 'error');
         }
     } catch (err) {
         console.error('Save settings error:', err);
         addEvent('error', 'Failed to save settings');
-        showToast('Failed to save settings', 'error');
     }
 }
 
@@ -3091,13 +3234,11 @@ async function resetSettings() {
         });
 
         if (response.ok) {
-            addEvent('info', 'Settings reset to defaults');
-            showToast('Settings reset to defaults', 'success');
+            addEvent('success', 'Settings reset to defaults');
             // Reload settings to show defaults
             await loadSettings();
         } else {
             addEvent('error', 'Failed to reset settings');
-            showToast('Failed to reset settings', 'error');
         }
     } catch (err) {
         console.error('Reset settings error:', err);
@@ -4666,19 +4807,87 @@ function clearEngineLogs() {
 // ============================================================================
 
 // Record Flow Modal
-function openRecordFlowModal() {
+let currentIdentityPreview = null;  // Store current identity for use when starting
+
+async function openRecordFlowModal() {
     const modal = document.getElementById('record-flow-modal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     document.getElementById('record-flow-name').value = '';
     document.getElementById('record-flow-url').value = '';
     document.getElementById('record-flow-description').value = '';
+
+    // Hide error/stuck sections from previous attempts
+    document.getElementById('recording-error-section')?.classList.add('hidden');
+    document.getElementById('recording-stuck-section')?.classList.add('hidden');
+
+    // Check if recording is stuck (is_recording=true but no browser window)
+    try {
+        const response = await fetch('/api/flows/record/status');
+        const status = await response.json();
+        if (status.is_recording) {
+            document.getElementById('recording-stuck-section')?.classList.remove('hidden');
+        }
+    } catch (e) {}
+
+    // Check if any stealth options are enabled and load identity preview
+    updateIdentityPreviewVisibility();
 }
 
 function closeRecordFlowModal() {
     const modal = document.getElementById('record-flow-modal');
     modal.classList.add('hidden');
     modal.classList.remove('flex');
+    currentIdentityPreview = null;
+}
+
+async function forceResetRecording() {
+    try {
+        const response = await fetch('/api/flows/record/cancel', { method: 'POST' });
+        if (response.ok) {
+            document.getElementById('recording-stuck-section')?.classList.add('hidden');
+            addEvent('success', 'Recording session reset');
+        } else {
+            addEvent('error', 'Failed to reset recording');
+        }
+    } catch (error) {
+        addEvent('error', 'Failed to reset: ' + error.message);
+    }
+}
+
+function updateIdentityPreviewVisibility() {
+    const useProxy = document.getElementById('record-use-proxy')?.checked;
+    const useFingerprint = document.getElementById('record-use-fingerprint')?.checked;
+    const section = document.getElementById('identity-preview-section');
+
+    if (useProxy || useFingerprint) {
+        section?.classList.remove('hidden');
+        refreshIdentityPreview();
+    } else {
+        section?.classList.add('hidden');
+    }
+}
+
+async function refreshIdentityPreview() {
+    const section = document.getElementById('identity-preview-section');
+    if (!section || section.classList.contains('hidden')) return;
+
+    try {
+        const response = await fetch('/api/flows/record/preview-identity');
+        const data = await response.json();
+        currentIdentityPreview = data;
+
+        // Update UI
+        document.getElementById('identity-proxy').textContent = data.proxy || 'No proxy';
+        document.getElementById('identity-browser').textContent = data.browser || 'Unknown';
+        document.getElementById('identity-screen').textContent = data.screen || 'Unknown';
+        document.getElementById('identity-locale').textContent = data.locale || 'Unknown';
+        document.getElementById('identity-timezone').textContent = data.timezone || 'Unknown';
+        document.getElementById('identity-proxy-count').textContent =
+            data.proxy_available > 0 ? `${data.proxy_available} proxies available` : 'No proxies available';
+    } catch (error) {
+        document.getElementById('identity-proxy').textContent = 'Error loading';
+    }
 }
 
 async function startRecording() {
@@ -4687,11 +4896,11 @@ async function startRecording() {
     const description = document.getElementById('record-flow-description').value.trim();
 
     if (!name) {
-        showToast('Please enter a flow name', 'error');
+        addEvent('error', 'Please enter a flow name');
         return;
     }
     if (!url) {
-        showToast('Please enter a start URL', 'error');
+        addEvent('error', 'Please enter a start URL');
         return;
     }
 
@@ -4712,16 +4921,206 @@ async function startRecording() {
 
         const data = await response.json();
         if (response.ok) {
+            // Hide error section if visible
+            document.getElementById('recording-error-section')?.classList.add('hidden');
+
             closeRecordFlowModal();
             const stealthMode = stealth.use_proxy || stealth.use_fingerprint ? ' with stealth mode' : '';
-            showToast(`Recording started${stealthMode}! Browser window opening...`, 'success');
-            addEvent('flow.recording_started', `Recording flow: ${name}`);
+            addEvent('success', `Recording started${stealthMode}! Browser window opening...`);
+
+            // Show recording control panel and start polling
+            currentRecordingFlowId = data.flow_id;
+            currentRecordingFlowName = name;
+            showRecordingControlPanel(name, stealth.use_proxy);
+            startRecordingStatusPolling();
         } else {
-            showToast(data.detail || 'Failed to start recording', 'error');
+            // Show error section with retry options
+            showRecordingError(data.detail || 'Failed to start recording');
         }
     } catch (error) {
-        showToast('Error starting recording: ' + error.message, 'error');
+        showRecordingError('Error starting recording: ' + error.message);
     }
+}
+
+function showRecordingError(message) {
+    const errorSection = document.getElementById('recording-error-section');
+    const errorMessage = document.getElementById('recording-error-message');
+    if (errorSection && errorMessage) {
+        errorMessage.textContent = message;
+        errorSection.classList.remove('hidden');
+    }
+    addEvent('error', message);
+}
+
+async function retryWithNewIdentity() {
+    // Refresh identity and try again
+    await refreshIdentityPreview();
+    document.getElementById('recording-error-section')?.classList.add('hidden');
+    startRecording();
+}
+
+function startRecordingNoProxy() {
+    // Disable proxy and try again
+    const proxyEl = document.getElementById('record-use-proxy');
+    if (proxyEl) proxyEl.checked = false;
+    updateIdentityPreviewVisibility();
+    document.getElementById('recording-error-section')?.classList.add('hidden');
+    startRecording();
+}
+
+// Recording control variables
+let currentRecordingFlowId = null;
+let currentRecordingFlowName = null;
+let recordingPollingInterval = null;
+let recordingStartTime = null;
+let recordingDurationInterval = null;
+
+function showRecordingControlPanel(flowName, useProxy) {
+    const panel = document.getElementById('recording-control-panel');
+    if (!panel) return;
+
+    document.getElementById('recording-flow-name').textContent = flowName;
+    document.getElementById('recording-proxy-status').textContent = useProxy ? 'Using proxy' : 'No proxy';
+    document.getElementById('recording-duration').textContent = '00:00';
+    document.getElementById('recording-actions-count').textContent = '0 actions';
+
+    panel.classList.remove('hidden');
+
+    // Start duration counter
+    recordingStartTime = Date.now();
+    recordingDurationInterval = setInterval(updateRecordingDuration, 1000);
+}
+
+function hideRecordingControlPanel() {
+    const panel = document.getElementById('recording-control-panel');
+    if (panel) panel.classList.add('hidden');
+
+    if (recordingDurationInterval) {
+        clearInterval(recordingDurationInterval);
+        recordingDurationInterval = null;
+    }
+    if (recordingPollingInterval) {
+        clearInterval(recordingPollingInterval);
+        recordingPollingInterval = null;
+    }
+}
+
+function updateRecordingDuration() {
+    if (!recordingStartTime) return;
+    const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+    const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+    const secs = (elapsed % 60).toString().padStart(2, '0');
+    const el = document.getElementById('recording-duration');
+    if (el) el.textContent = `${mins}:${secs}`;
+}
+
+function startRecordingStatusPolling() {
+    recordingPollingInterval = setInterval(async () => {
+        try {
+            const response = await fetch('/api/flows/record/status');
+            const data = await response.json();
+
+            if (!data.is_recording) {
+                hideRecordingControlPanel();
+                addEvent('info', 'Recording ended');
+                loadFlows();
+                return;
+            }
+
+            // Update actions count
+            const actionsEl = document.getElementById('recording-actions-count');
+            if (actionsEl && data.actions_recorded !== undefined) {
+                actionsEl.textContent = `${data.actions_recorded} actions`;
+            }
+
+            // Update proxy status
+            const proxyEl = document.getElementById('recording-proxy-status');
+            if (proxyEl && data.proxy_used) {
+                proxyEl.textContent = `Proxy: ${data.proxy_used}`;
+            }
+        } catch (error) {
+            console.error('Failed to poll recording status:', error);
+        }
+    }, 1000);
+}
+
+async function stopRecording() {
+    if (!currentRecordingFlowId) {
+        addEvent('error', 'No active recording');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/flows/record/${currentRecordingFlowId}/stop`, {
+            method: 'POST'
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+            hideRecordingControlPanel();
+            addEvent('success', `Flow saved! ${data.actions_count || 0} actions recorded`);
+            loadFlows();
+        } else {
+            addEvent('error', data.detail || 'Failed to stop recording');
+        }
+    } catch (error) {
+        addEvent('error', 'Error stopping recording: ' + error.message);
+    }
+
+    currentRecordingFlowId = null;
+    currentRecordingFlowName = null;
+}
+
+async function cancelRecording() {
+    try {
+        const response = await fetch('/api/flows/record/cancel', {
+            method: 'POST'
+        });
+
+        if (response.ok) {
+            hideRecordingControlPanel();
+            addEvent('info', 'Recording cancelled');
+        } else {
+            const data = await response.json();
+            addEvent('error', data.detail || 'Failed to cancel recording');
+        }
+    } catch (error) {
+        addEvent('error', 'Error cancelling recording: ' + error.message);
+    }
+
+    currentRecordingFlowId = null;
+    currentRecordingFlowName = null;
+}
+
+async function createCheckpoint() {
+    if (!currentRecordingFlowId) {
+        addEvent('error', 'No active recording');
+        return;
+    }
+
+    const checkpointName = prompt('Checkpoint name (optional):') || `Checkpoint ${Date.now()}`;
+
+    try {
+        const response = await fetch(`/api/flows/record/${currentRecordingFlowId}/checkpoint`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: checkpointName })
+        });
+
+        if (response.ok) {
+            addEvent('success', `Checkpoint created: ${checkpointName}`);
+        } else {
+            const data = await response.json();
+            addEvent('error', data.detail || 'Failed to create checkpoint');
+        }
+    } catch (error) {
+        addEvent('error', 'Error creating checkpoint: ' + error.message);
+    }
+}
+
+async function changeRecordingProxy() {
+    addEvent('warning', 'Proxy change requires restarting recording');
+    // Could implement live proxy change if backend supports it
 }
 
 // Set stealth mode presets for recording
@@ -4737,23 +5136,26 @@ function setRecordStealth(level) {
             if (fingerprintEl) fingerprintEl.checked = false;
             if (webrtcEl) webrtcEl.checked = false;
             if (canvasEl) canvasEl.checked = false;
-            showToast('Stealth disabled - using your real identity', 'warning');
+            addEvent('warning', 'Stealth disabled - using your real identity');
             break;
         case 'basic':
             if (proxyEl) proxyEl.checked = false;
             if (fingerprintEl) fingerprintEl.checked = true;
             if (webrtcEl) webrtcEl.checked = true;
             if (canvasEl) canvasEl.checked = true;
-            showToast('Basic stealth - fingerprint + anti-leak protections', 'success');
+            addEvent('success', 'Basic stealth - fingerprint + anti-leak protections');
             break;
         case 'full':
             if (proxyEl) proxyEl.checked = true;
             if (fingerprintEl) fingerprintEl.checked = true;
             if (webrtcEl) webrtcEl.checked = true;
             if (canvasEl) canvasEl.checked = true;
-            showToast('Full stealth - all protections enabled!', 'success');
+            addEvent('success', 'Full stealth - all protections enabled!');
             break;
     }
+
+    // Update identity preview based on new settings
+    updateIdentityPreviewVisibility();
 }
 
 // Flow Library Modal
@@ -4844,14 +5246,14 @@ async function deleteFlow(flowId) {
     try {
         const response = await fetch(`/api/flows/${flowId}`, { method: 'DELETE' });
         if (response.ok) {
-            showToast('Flow deleted', 'success');
+            addEvent('success', 'Flow deleted');
             loadFlows();
         } else {
             const data = await response.json();
-            showToast(data.detail || 'Failed to delete flow', 'error');
+            addEvent('error', data.detail || 'Failed to delete flow');
         }
     } catch (error) {
-        showToast('Error deleting flow: ' + error.message, 'error');
+        addEvent('error', 'Error deleting flow: ' + error.message);
     }
 }
 
@@ -4859,14 +5261,14 @@ async function finalizeFlow(flowId) {
     try {
         const response = await fetch(`/api/flows/${flowId}/finalize`, { method: 'POST' });
         if (response.ok) {
-            showToast('Flow finalized and ready for execution', 'success');
+            addEvent('success', 'Flow finalized and ready for execution');
             loadFlows();
         } else {
             const data = await response.json();
-            showToast(data.detail || 'Failed to finalize flow', 'error');
+            addEvent('error', data.detail || 'Failed to finalize flow');
         }
     } catch (error) {
-        showToast('Error finalizing flow: ' + error.message, 'error');
+        addEvent('error', 'Error finalizing flow: ' + error.message);
     }
 }
 
@@ -4911,13 +5313,12 @@ async function executeFlow() {
         if (response.ok) {
             closeExecuteFlowModal();
             closeFlowLibraryModal();
-            showToast(`Flow execution started with ${workers} worker(s)`, 'success');
-            addEvent('flow.execution_started', `Executing flow with ${workers} workers`);
+            addEvent('success', `Flow execution started with ${workers} worker(s)`);
         } else {
-            showToast(data.detail || 'Failed to execute flow', 'error');
+            addEvent('error', data.detail || 'Failed to execute flow');
         }
     } catch (error) {
-        showToast('Error executing flow: ' + error.message, 'error');
+        addEvent('error', 'Error executing flow: ' + error.message);
     }
 }
 

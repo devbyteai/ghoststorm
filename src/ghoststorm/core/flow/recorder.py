@@ -60,9 +60,8 @@ RECORDING_TOOLBAR_HTML = """
     <div id="gs-record-indicator" style="
         width: 14px;
         height: 14px;
-        background: #e94560;
+        background: #ffa500;
         border-radius: 50%;
-        animation: gs-pulse 1.5s ease-in-out infinite;
     "></div>
 
     <!-- Status text -->
@@ -70,8 +69,8 @@ RECORDING_TOOLBAR_HTML = """
         color: #fff;
         font-size: 13px;
         font-weight: 500;
-        min-width: 80px;
-    ">Recording...</span>
+        min-width: 100px;
+    ">Ready - Click Play</span>
 
     <!-- Checkpoint count -->
     <span id="gs-checkpoint-count" style="
@@ -104,23 +103,22 @@ RECORDING_TOOLBAR_HTML = """
             </svg>
         </button>
 
-        <!-- Pause/Resume -->
-        <button id="gs-btn-pause" title="Pause Recording" style="
+        <!-- Play/Pause - starts as Play since recording is paused -->
+        <button id="gs-btn-pause" title="Start Recording" style="
             width: 36px;
             height: 36px;
             border: none;
             border-radius: 8px;
-            background: #0f3460;
+            background: #22c55e;
             color: #fff;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
-        " onmouseover="this.style.background='#e94560'" onmouseout="this.style.background='#0f3460'">
+        " onmouseover="this.style.background='#16a34a'" onmouseout="this.style.background='#22c55e'">
             <svg id="gs-pause-icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
+                <polygon points="5,3 19,12 5,21"></polygon>
             </svg>
         </button>
 
@@ -299,8 +297,8 @@ RECORDING_TOOLBAR_HTML = """
 
 RECORDING_TOOLBAR_SCRIPT = """
 (() => {
-    // State
-    let isPaused = false;
+    // State - start PAUSED so user can browse first
+    let isPaused = true;
     let checkpointCount = 0;
 
     // Elements
@@ -343,22 +341,35 @@ RECORDING_TOOLBAR_SCRIPT = """
         document.getElementById('gs-input-goal').focus();
     });
 
-    // Pause button
+    // Play/Pause button - starts paused so first click starts recording
     pauseBtn.addEventListener('click', () => {
         isPaused = !isPaused;
         if (isPaused) {
+            // Now paused - show play button (green)
             statusText.textContent = 'Paused';
             indicator.style.animation = 'none';
-            indicator.style.background = '#666';
-            pauseIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+            indicator.style.background = '#ffa500';
+            pauseIcon.innerHTML = '<polygon points="5,3 19,12 5,21"></polygon>';
+            pauseBtn.style.background = '#22c55e';
+            pauseBtn.title = 'Resume Recording';
+            pauseBtn.onmouseover = function() { this.style.background='#16a34a'; };
+            pauseBtn.onmouseout = function() { this.style.background='#22c55e'; };
         } else {
+            // Now recording - show pause button (blue)
             statusText.textContent = 'Recording...';
             indicator.style.animation = 'gs-pulse 1.5s ease-in-out infinite';
             indicator.style.background = '#e94560';
             pauseIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+            pauseBtn.style.background = '#0f3460';
+            pauseBtn.title = 'Pause Recording';
+            pauseBtn.onmouseover = function() { this.style.background='#e94560'; };
+            pauseBtn.onmouseout = function() { this.style.background='#0f3460'; };
         }
         window.__ghoststorm_recording_paused = isPaused;
     });
+
+    // Set initial paused state
+    window.__ghoststorm_recording_paused = true;
 
     // Stop button - sends message to backend
     document.getElementById('gs-btn-stop').addEventListener('click', () => {
@@ -612,6 +623,9 @@ class FlowRecorder:
                 proxy_used=proxy_used,
             )
 
+            # Handle browser disconnect (user closes browser manually)
+            browser.on("disconnected", lambda: self._on_browser_disconnected())
+
             # Inject toolbar
             await self._inject_toolbar(page)
 
@@ -644,6 +658,14 @@ class FlowRecorder:
 
         except Exception as e:
             logger.error("Failed to start recording", error=str(e))
+            # Clean up on failure
+            if self._active_session:
+                try:
+                    if self._active_session.browser:
+                        await self._active_session.browser.close()
+                except Exception:
+                    pass
+                self._active_session = None
             raise
 
     async def _get_recording_proxy(self) -> tuple[dict[str, str] | None, str | None]:
@@ -653,26 +675,32 @@ class FlowRecorder:
             Tuple of (proxy_config_for_playwright, proxy_string_for_logging)
         """
         try:
-            # Try to get proxy from file provider
-            proxy_file = self.project_root / "data" / "proxies" / "proxies.txt"
-            if proxy_file.exists():
-                lines = proxy_file.read_text().strip().splitlines()
-                valid_proxies = [
-                    line.strip() for line in lines if line.strip() and not line.startswith("#")
-                ]
-                if valid_proxies:
-                    proxy_str = random.choice(valid_proxies)
-                    # Parse proxy string (format: host:port or user:pass@host:port)
-                    if "@" in proxy_str:
-                        auth, server = proxy_str.rsplit("@", 1)
-                        if ":" in auth:
-                            username, password = auth.split(":", 1)
-                            return {
-                                "server": f"http://{server}",
-                                "username": username,
-                                "password": password,
-                            }, proxy_str
-                    return {"server": f"http://{proxy_str}"}, proxy_str
+            # Try alive_proxies.txt first (tested working proxies), then fall back to others
+            proxy_files = [
+                self.project_root / "data" / "proxies" / "alive_proxies.txt",
+                self.project_root / "data" / "proxies" / "proxies.txt",
+                self.project_root / "data" / "proxies" / "aggregated.txt",
+            ]
+
+            for proxy_file in proxy_files:
+                if proxy_file.exists():
+                    lines = proxy_file.read_text().strip().splitlines()
+                    valid_proxies = [
+                        line.strip() for line in lines if line.strip() and not line.startswith("#")
+                    ]
+                    if valid_proxies:
+                        proxy_str = random.choice(valid_proxies)
+                        # Parse proxy string (format: host:port or user:pass@host:port)
+                        if "@" in proxy_str:
+                            auth, server = proxy_str.rsplit("@", 1)
+                            if ":" in auth:
+                                username, password = auth.split(":", 1)
+                                return {
+                                    "server": f"http://{server}",
+                                    "username": username,
+                                    "password": password,
+                                }, proxy_str
+                        return {"server": f"http://{proxy_str}"}, proxy_str
         except Exception as e:
             logger.warning("Failed to get proxy for recording", error=str(e))
         return None, None
@@ -724,6 +752,56 @@ class FlowRecorder:
             "device_scale_factor": random.choice([1, 1.25, 1.5, 2]),
             "is_mobile": False,
             "has_touch": False,
+        }
+
+    async def generate_identity_preview(self) -> dict[str, Any]:
+        """Generate a full identity preview for the UI.
+
+        Returns:
+            Dict with proxy, fingerprint details, and proxy availability count.
+        """
+        # Get proxy
+        proxy_config, proxy_string = await self._get_recording_proxy()
+
+        # Count available proxies
+        alive_count = 0
+        alive_file = self.project_root / "data" / "proxies" / "alive_proxies.txt"
+        if alive_file.exists():
+            lines = alive_file.read_text().strip().splitlines()
+            alive_count = len([l for l in lines if l.strip() and not l.startswith("#")])
+
+        # Generate fingerprint
+        fingerprint = await self._generate_recording_fingerprint()
+
+        # Parse browser info from user agent
+        ua = fingerprint["user_agent"]
+        if "Windows" in ua:
+            os_name = "Windows"
+        elif "Macintosh" in ua:
+            os_name = "macOS"
+        elif "Linux" in ua:
+            os_name = "Linux"
+        else:
+            os_name = "Unknown"
+
+        if "Chrome/" in ua:
+            chrome_ver = ua.split("Chrome/")[1].split(" ")[0].split(".")[0]
+            browser = f"Chrome {chrome_ver}"
+        elif "Safari/" in ua and "Chrome" not in ua:
+            browser = "Safari"
+        else:
+            browser = "Unknown"
+
+        return {
+            "proxy": proxy_string,
+            "proxy_config": proxy_config,
+            "proxy_available": alive_count,
+            "user_agent": ua,
+            "browser": f"{browser} / {os_name}",
+            "screen": f"{fingerprint['viewport']['width']}x{fingerprint['viewport']['height']}",
+            "locale": fingerprint["locale"],
+            "timezone": fingerprint["timezone_id"],
+            "fingerprint": fingerprint,  # Full fingerprint for passing to start_recording
         }
 
     async def _inject_canvas_noise(self, page: Any) -> None:
@@ -810,6 +888,29 @@ class FlowRecorder:
         if self._active_session and self._active_session.page:
             await asyncio.sleep(0.5)  # Wait for page to stabilize
             await self._inject_toolbar(self._active_session.page)
+
+    def _on_browser_disconnected(self) -> None:
+        """Handle browser disconnect (user closed browser manually)."""
+        logger.info("Recording browser disconnected by user")
+        if self._active_session:
+            self._active_session.is_stopped = True
+            # Cancel poll task
+            if self._poll_task and not self._poll_task.done():
+                self._poll_task.cancel()
+            # Schedule async cleanup
+            asyncio.create_task(self._cleanup_disconnected_session())
+
+    async def _cleanup_disconnected_session(self) -> None:
+        """Clean up after browser disconnect."""
+        if self._active_session:
+            flow_id = self._active_session.flow.id
+            # Delete the incomplete flow
+            try:
+                await self.storage.delete(flow_id)
+            except Exception:
+                pass
+            self._active_session = None
+            logger.info("Recording session cleaned up after browser disconnect")
 
     async def _poll_for_events(self) -> None:
         """Poll for checkpoint additions and stop signal from the browser."""

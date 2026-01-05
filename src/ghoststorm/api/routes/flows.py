@@ -283,6 +283,17 @@ async def delete_checkpoint(flow_id: str, checkpoint_id: str) -> dict[str, str]:
 # --- Recording ---
 
 
+@router.get("/record/preview-identity")
+async def preview_recording_identity() -> dict:
+    """Generate and return a full identity preview for recording.
+
+    Returns proxy, browser fingerprint, locale, timezone info.
+    User can call this to see identity before starting, and refresh for new one.
+    """
+    recorder = get_flow_recorder()
+    return await recorder.generate_identity_preview()
+
+
 @router.post("/record/start", response_model=RecordingStartResponse)
 async def start_recording(request: RecordingStartRequest) -> RecordingStartResponse:
     """Start recording a new flow.
