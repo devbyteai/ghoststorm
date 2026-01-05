@@ -1160,6 +1160,7 @@ async def _run_test_job(job_id: str) -> None:
                 async with semaphore:
                     return await _test_proxy_browser(p, timeout)
         else:
+
             async def test_func(p):
                 async with semaphore:
                     return await _test_single_proxy(p, timeout)
