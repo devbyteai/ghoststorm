@@ -8,10 +8,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
 

@@ -1121,9 +1121,14 @@ async def _run_test_job(job_id: str) -> None:
     # Browser tests are slower, use smaller batches
     if use_browser:
         batch_size = min(batch_size, 10)  # Max 10 concurrent browser instances
-        test_func = lambda p: _test_proxy_browser(p, timeout)
+
+        async def test_func(p):
+            return await _test_proxy_browser(p, timeout)
+
     else:
-        test_func = lambda p: _test_single_proxy(p, timeout)
+
+        async def test_func(p):
+            return await _test_single_proxy(p, timeout)
 
     start_time = time.time()
     tested = 0
