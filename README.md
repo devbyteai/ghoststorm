@@ -1,6 +1,8 @@
 <div align="center">
 
-# 👻 GhostStorm
+<img src="assets/logo.svg" alt="GhostStorm" width="180" height="180">
+
+# GhostStorm
 
 [![CI](https://img.shields.io/github/actions/workflow/status/devbyteai/ghoststorm/ci.yml?style=flat-square&label=CI)](https://github.com/devbyteai/ghoststorm/actions)
 [![Stars](https://img.shields.io/github/stars/devbyteai/ghoststorm?style=flat-square)](https://github.com/devbyteai/ghoststorm/stargazers)
