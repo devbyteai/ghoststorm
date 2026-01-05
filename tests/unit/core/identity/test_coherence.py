@@ -1,4 +1,5 @@
 """Unit tests for identity coherence orchestrator."""
+# ruff: noqa: I001
 
 from __future__ import annotations
 
@@ -15,11 +16,7 @@ from ghoststorm.core.identity.coherence_orchestrator import (
     CoherentIdentity,
     IdentityCoherenceOrchestrator,
 )
-from ghoststorm.core.models.fingerprint import (
-    Fingerprint,
-    GeolocationConfig,
-    ScreenConfig,
-)
+from ghoststorm.core.models.fingerprint import Fingerprint, GeolocationConfig, ScreenConfig
 from ghoststorm.core.models.proxy import Proxy, ProxyCategory, ProxyType
 
 
