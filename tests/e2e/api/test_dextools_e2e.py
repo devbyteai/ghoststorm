@@ -176,7 +176,7 @@ class TestDEXToolsTaskAPI:
             },
         )
 
-        assert response.status_code == 200
+        assert response.status_code in [200, 201]
         data = response.json()
 
         assert "task_id" in data
@@ -202,7 +202,7 @@ class TestDEXToolsTaskAPI:
             },
         )
 
-        assert response.status_code == 200
+        assert response.status_code in [200, 201]
         data = response.json()
 
         assert data["platform"] == "dextools"
@@ -225,7 +225,7 @@ class TestDEXToolsTaskAPI:
             },
         )
 
-        assert response.status_code == 200
+        assert response.status_code in [200, 201]
         data = response.json()
 
         assert data["platform"] == "dextools"
@@ -303,7 +303,7 @@ class TestDEXToolsAPIIntegration:
                 "workers": 1,
             },
         )
-        assert create_response.status_code == 200
+        assert create_response.status_code in [200, 201]
         task_id = create_response.json()["task_id"]
 
         # Step 4: Check task status

@@ -323,114 +323,9 @@ def read_data_items(category: str) -> dict:
     return result
 
 
-@router.get("/{category}")
-async def list_data_items(category: str, limit: int = 100, offset: int = 0) -> dict:
-    """List data items for a category."""
-    return read_data_items(category)
-
-
-@router.get("/{category}/{filename}")
-async def get_file_content(category: str, filename: str) -> dict:
-    """Get full content of a specific file."""
-    dir_path = get_category_dir(category)
-    file_path = dir_path / filename
-
-    if not file_path.exists():
-        raise HTTPException(status_code=404, detail="File not found")
-
-    # Security: ensure file is within the category directory
-    try:
-        file_path.resolve().relative_to(dir_path.resolve())
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid filename")
-
-    try:
-        if filename.endswith(".json"):
-            with open(file_path) as f:
-                data = json.load(f)
-                return {"type": "json", "data": data}
-        else:
-            with open(file_path) as f:
-                lines = [line.strip() for line in f if line.strip()]
-                return {"type": "txt", "data": lines}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/{category}/{filename}")
-async def add_data_item(category: str, filename: str, item: DataItem) -> dict:
-    """Add a new item to a data file."""
-    dir_path = get_category_dir(category)
-    file_path = dir_path / filename
-
-    # Security check
-    try:
-        file_path.resolve().relative_to(dir_path.resolve())
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid filename")
-
-    # Ensure directory exists
-    dir_path.mkdir(parents=True, exist_ok=True)
-
-    try:
-        if filename.endswith(".json"):
-            # Handle JSON files
-            data = []
-            if file_path.exists():
-                with open(file_path) as f:
-                    data = json.load(f)
-                    if not isinstance(data, list):
-                        data = [data]
-            data.append(item.content)
-            with open(file_path, "w") as f:
-                json.dump(data, f, indent=2)
-        else:
-            # Handle text files - append new line
-            with open(file_path, "a") as f:
-                f.write(item.content.strip() + "\n")
-
-        return {"success": True, "message": "Item added"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.delete("/{category}/{filename}")
-async def delete_data_item(category: str, filename: str, item: DataItem) -> dict:
-    """Delete an item from a data file."""
-    dir_path = get_category_dir(category)
-    file_path = dir_path / filename
-
-    if not file_path.exists():
-        raise HTTPException(status_code=404, detail="File not found")
-
-    # Security check
-    try:
-        file_path.resolve().relative_to(dir_path.resolve())
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid filename")
-
-    try:
-        if filename.endswith(".json"):
-            with open(file_path) as f:
-                data = json.load(f)
-            if isinstance(data, list) and item.content in data:
-                data.remove(item.content)
-                with open(file_path, "w") as f:
-                    json.dump(data, f, indent=2)
-        else:
-            with open(file_path) as f:
-                lines = [line.strip() for line in f if line.strip()]
-            if item.content in lines:
-                lines.remove(item.content)
-                with open(file_path, "w") as f:
-                    f.write("\n".join(lines) + "\n" if lines else "")
-
-        return {"success": True, "message": "Item deleted"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 # ============ USER AGENT GENERATION ENDPOINTS ============
+# NOTE: These specific routes MUST be defined BEFORE the generic /{category}/{filename} routes
+# to avoid path parameter matching issues in FastAPI.
 
 
 class UAGenerateRequest(BaseModel):
@@ -606,6 +501,40 @@ PLATFORM_UA_RECOMMENDATIONS = {
 }
 
 
+@router.get("/user_agents/recommendation/{platform}")
+async def get_ua_recommendation(platform: str) -> dict:
+    """Get user agent recommendations for a specific platform."""
+    platform = platform.lower()
+
+    if platform not in PLATFORM_UA_RECOMMENDATIONS:
+        platform = "generic"
+
+    rec = PLATFORM_UA_RECOMMENDATIONS[platform]
+
+    # Check if recommended file exists
+    ua_dir = DATA_DIR / "user_agents"
+    file_exists = (ua_dir / rec["recommended_file"]).exists()
+
+    # Count UAs in file if exists
+    file_count = 0
+    if file_exists:
+        try:
+            with open(ua_dir / rec["recommended_file"]) as f:
+                file_count = sum(1 for line in f if line.strip() and not line.startswith("#"))
+        except Exception:
+            pass
+
+    return {
+        "platform": platform,
+        "recommended_mode": rec["recommended_mode"],
+        "recommended_file": rec["recommended_file"],
+        "file_exists": file_exists,
+        "file_count": file_count,
+        "message": rec["message"],
+        "settings": rec["settings"],
+    }
+
+
 # ============ FINGERPRINT GENERATION ENDPOINTS ============
 
 
@@ -700,35 +629,112 @@ async def sample_fingerprint() -> dict:
         return {"success": False, "error": str(e)}
 
 
-@router.get("/user_agents/recommendation/{platform}")
-async def get_ua_recommendation(platform: str) -> dict:
-    """Get user agent recommendations for a specific platform."""
-    platform = platform.lower()
+# ============ GENERIC CATEGORY/FILE ENDPOINTS ============
+# NOTE: These generic routes MUST come AFTER the specific routes above
 
-    if platform not in PLATFORM_UA_RECOMMENDATIONS:
-        platform = "generic"
 
-    rec = PLATFORM_UA_RECOMMENDATIONS[platform]
+@router.get("/{category}")
+async def list_data_items(category: str, limit: int = 100, offset: int = 0) -> dict:
+    """List data items for a category."""
+    return read_data_items(category)
 
-    # Check if recommended file exists
-    ua_dir = DATA_DIR / "user_agents"
-    file_exists = (ua_dir / rec["recommended_file"]).exists()
 
-    # Count UAs in file if exists
-    file_count = 0
-    if file_exists:
-        try:
-            with open(ua_dir / rec["recommended_file"]) as f:
-                file_count = sum(1 for line in f if line.strip() and not line.startswith("#"))
-        except Exception:
-            pass
+@router.get("/{category}/{filename}")
+async def get_file_content(category: str, filename: str) -> dict:
+    """Get full content of a specific file."""
+    dir_path = get_category_dir(category)
+    file_path = dir_path / filename
 
-    return {
-        "platform": platform,
-        "recommended_mode": rec["recommended_mode"],
-        "recommended_file": rec["recommended_file"],
-        "file_exists": file_exists,
-        "file_count": file_count,
-        "message": rec["message"],
-        "settings": rec["settings"],
-    }
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # Security: ensure file is within the category directory
+    try:
+        file_path.resolve().relative_to(dir_path.resolve())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    try:
+        if filename.endswith(".json"):
+            with open(file_path) as f:
+                data = json.load(f)
+                return {"type": "json", "data": data}
+        else:
+            with open(file_path) as f:
+                lines = [line.strip() for line in f if line.strip()]
+                return {"type": "txt", "data": lines}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{category}/{filename}")
+async def add_data_item(category: str, filename: str, item: DataItem) -> dict:
+    """Add a new item to a data file."""
+    dir_path = get_category_dir(category)
+    file_path = dir_path / filename
+
+    # Security check
+    try:
+        file_path.resolve().relative_to(dir_path.resolve())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    # Ensure directory exists
+    dir_path.mkdir(parents=True, exist_ok=True)
+
+    try:
+        if filename.endswith(".json"):
+            # Handle JSON files
+            data = []
+            if file_path.exists():
+                with open(file_path) as f:
+                    data = json.load(f)
+                    if not isinstance(data, list):
+                        data = [data]
+            data.append(item.content)
+            with open(file_path, "w") as f:
+                json.dump(data, f, indent=2)
+        else:
+            # Handle text files - append new line
+            with open(file_path, "a") as f:
+                f.write(item.content.strip() + "\n")
+
+        return {"success": True, "message": "Item added"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/{category}/{filename}")
+async def delete_data_item(category: str, filename: str, item: DataItem) -> dict:
+    """Delete an item from a data file."""
+    dir_path = get_category_dir(category)
+    file_path = dir_path / filename
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # Security check
+    try:
+        file_path.resolve().relative_to(dir_path.resolve())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+
+    try:
+        if filename.endswith(".json"):
+            with open(file_path) as f:
+                data = json.load(f)
+            if isinstance(data, list) and item.content in data:
+                data.remove(item.content)
+                with open(file_path, "w") as f:
+                    json.dump(data, f, indent=2)
+        else:
+            with open(file_path) as f:
+                lines = [line.strip() for line in f if line.strip()]
+            if item.content in lines:
+                lines.remove(item.content)
+                with open(file_path, "w") as f:
+                    f.write("\n".join(lines) + "\n" if lines else "")
+
+        return {"success": True, "message": "Item deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

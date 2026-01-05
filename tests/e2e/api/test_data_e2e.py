@@ -123,15 +123,20 @@ class TestDataFileAPI:
 
     def test_delete_data_item(self, api_test_client: TestClient):
         """Test deleting a data item."""
+        import json as json_lib
+
         with patch("pathlib.Path.exists", return_value=True):
             with patch("builtins.open", MagicMock()) as mock_open:
                 mock_open.return_value.__enter__.return_value.__iter__ = lambda self: iter(
                     ["item1\n", "item2\n"]
                 )
 
-                response = api_test_client.delete(
-                    "/api/data/user_agents/test.txt",
-                    json={"content": "item1"},
+                # DELETE with body requires using request() method or content parameter
+                response = api_test_client.request(
+                    method="DELETE",
+                    url="/api/data/user_agents/test.txt",
+                    content=json_lib.dumps({"content": "item1"}),
+                    headers={"Content-Type": "application/json"},
                 )
 
                 assert response.status_code in [200, 404, 500]

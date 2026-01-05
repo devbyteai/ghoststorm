@@ -19,7 +19,7 @@ class TestWebSocketConnection:
 
     def test_websocket_connect(self, api_test_client: TestClient):
         """Test WebSocket connection establishment."""
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             # Should receive welcome message
             data = websocket.receive_json()
             assert data["type"] == "connected"
@@ -28,7 +28,7 @@ class TestWebSocketConnection:
 
     def test_websocket_disconnect_graceful(self, api_test_client: TestClient):
         """Test graceful WebSocket disconnection."""
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             # Receive welcome
             websocket.receive_json()
 
@@ -37,10 +37,10 @@ class TestWebSocketConnection:
 
     def test_websocket_multiple_connections(self, api_test_client: TestClient):
         """Test multiple concurrent WebSocket connections."""
-        with api_test_client.websocket_connect("/ws") as ws1:
+        with api_test_client.websocket_connect("/ws/events") as ws1:
             ws1.receive_json()  # Welcome
 
-            with api_test_client.websocket_connect("/ws") as ws2:
+            with api_test_client.websocket_connect("/ws/events") as ws2:
                 ws2.receive_json()  # Welcome
 
                 # Both connections should work
@@ -63,7 +63,7 @@ class TestWebSocketMessages:
 
     def test_ping_pong(self, api_test_client: TestClient):
         """Test ping/pong message exchange."""
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             websocket.send_json({"type": "ping"})
@@ -74,7 +74,7 @@ class TestWebSocketMessages:
 
     def test_subscribe_events(self, api_test_client: TestClient):
         """Test event subscription."""
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             websocket.send_json(
@@ -90,7 +90,7 @@ class TestWebSocketMessages:
 
     def test_subscribe_all_events(self, api_test_client: TestClient):
         """Test subscribing to all events."""
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             websocket.send_json({"type": "subscribe"})
@@ -101,7 +101,7 @@ class TestWebSocketMessages:
 
     def test_get_stats(self, api_test_client: TestClient):
         """Test getting stats via WebSocket."""
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             websocket.send_json({"type": "get_stats"})
@@ -112,7 +112,7 @@ class TestWebSocketMessages:
 
     def test_unknown_message_type(self, api_test_client: TestClient):
         """Test handling of unknown message type."""
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             websocket.send_json({"type": "unknown_command"})
@@ -123,7 +123,7 @@ class TestWebSocketMessages:
 
     def test_invalid_json(self, api_test_client: TestClient):
         """Test handling of invalid JSON."""
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             websocket.send_text("not valid json{")
@@ -145,7 +145,7 @@ class TestWebSocketManager:
 
         initial_count = ws_manager.connection_count
 
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
             # Count should increase
             assert ws_manager.connection_count >= initial_count + 1
@@ -157,10 +157,10 @@ class TestWebSocketManager:
         """Test broadcasting to multiple clients."""
         from ghoststorm.api.websocket import ws_manager
 
-        with api_test_client.websocket_connect("/ws") as ws1:
+        with api_test_client.websocket_connect("/ws/events") as ws1:
             ws1.receive_json()  # Welcome
 
-            with api_test_client.websocket_connect("/ws") as ws2:
+            with api_test_client.websocket_connect("/ws/events") as ws2:
                 ws2.receive_json()  # Welcome
 
                 # Broadcast a message
@@ -194,7 +194,7 @@ class TestWebSocketEvents:
         """Test receiving task created event."""
         from ghoststorm.api.websocket import ws_manager
 
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             # Simulate task creation event
@@ -217,7 +217,7 @@ class TestWebSocketEvents:
         """Test receiving task progress event."""
         from ghoststorm.api.websocket import ws_manager
 
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             async def emit_event():
@@ -240,7 +240,7 @@ class TestWebSocketEvents:
         """Test receiving task completed event."""
         from ghoststorm.api.websocket import ws_manager
 
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             async def emit_event():
@@ -263,7 +263,7 @@ class TestWebSocketEvents:
         """Test receiving flow recording event."""
         from ghoststorm.api.websocket import ws_manager
 
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             async def emit_event():
@@ -286,7 +286,7 @@ class TestWebSocketEvents:
         """Test receiving error event."""
         from ghoststorm.api.websocket import ws_manager
 
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             async def emit_event():
@@ -327,7 +327,7 @@ class TestWebSocketHeartbeat:
         """Test heartbeat message structure."""
         from ghoststorm.api.websocket import ws_manager
 
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             # Manually trigger heartbeat
@@ -355,7 +355,7 @@ class TestWebSocketEdgeCases:
 
     def test_empty_message(self, api_test_client: TestClient):
         """Test handling empty message."""
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             websocket.send_json({})
@@ -366,7 +366,7 @@ class TestWebSocketEdgeCases:
 
     def test_large_message(self, api_test_client: TestClient):
         """Test handling large message."""
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             large_data = "x" * 10000
@@ -383,7 +383,7 @@ class TestWebSocketEdgeCases:
 
     def test_rapid_messages(self, api_test_client: TestClient):
         """Test rapid message sending."""
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
             # Send many pings rapidly
@@ -397,16 +397,13 @@ class TestWebSocketEdgeCases:
 
     def test_binary_message_handling(self, api_test_client: TestClient):
         """Test binary message handling."""
-        with api_test_client.websocket_connect("/ws") as websocket:
+        with api_test_client.websocket_connect("/ws/events") as websocket:
             websocket.receive_json()  # Welcome
 
-            # Send binary data - should be rejected or converted
+            # Send binary data - server should reject with error
             websocket.send_bytes(b"\x00\x01\x02\x03")
 
-            # Implementation may close connection or send error
-            try:
-                response = websocket.receive_json()
-                assert response["type"] == "error"
-            except Exception:
-                # Connection may close on binary data
-                pass
+            # Should receive error response for binary data
+            response = websocket.receive_json()
+            assert response["type"] == "error"
+            assert "Binary" in response["message"] or "not supported" in response["message"]

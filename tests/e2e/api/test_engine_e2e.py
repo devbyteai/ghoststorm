@@ -217,7 +217,8 @@ class TestEngineTestAPI:
 
     def test_quick_test_mock(self, api_test_client: TestClient):
         """Test quick test with mocked browser."""
-        with patch("ghoststorm.api.routes.engine.AutomationEngine") as MockEngine:
+        # Patch where the module is used (lazy import inside the function)
+        with patch("ghoststorm.plugins.automation.engine.AutomationEngine") as MockEngine:
             mock_engine = MagicMock()
             mock_engine._init_browser = AsyncMock()
             mock_engine._page = MagicMock()
@@ -246,7 +247,8 @@ class TestEngineTestAPI:
 
     def test_quick_test_failure(self, api_test_client: TestClient):
         """Test quick test with browser failure."""
-        with patch("ghoststorm.api.routes.engine.AutomationEngine") as MockEngine:
+        # Patch where the module is used (lazy import inside the function)
+        with patch("ghoststorm.plugins.automation.engine.AutomationEngine") as MockEngine:
             mock_engine = MagicMock()
             mock_engine._init_browser = AsyncMock(side_effect=Exception("Browser failed"))
             mock_engine._cleanup = AsyncMock()
@@ -273,8 +275,9 @@ class TestEngineAnalyzeAPI:
 
     def test_analyze_page_mock(self, api_test_client: TestClient):
         """Test page analysis with mocked components."""
-        with patch("ghoststorm.api.routes.engine.AutomationEngine") as MockEngine:
-            with patch("ghoststorm.api.routes.engine.PageDetector") as MockDetector:
+        # Patch where the modules are used (lazy imports inside the function)
+        with patch("ghoststorm.plugins.automation.engine.AutomationEngine") as MockEngine:
+            with patch("ghoststorm.plugins.automation.page_detector.PageDetector") as MockDetector:
                 mock_engine = MagicMock()
                 mock_engine._init_browser = AsyncMock()
                 mock_engine._page = MagicMock()

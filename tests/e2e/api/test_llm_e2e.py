@@ -383,6 +383,17 @@ class TestLLMUsageAPI:
 
     def test_usage_after_reset(self, api_test_client: TestClient, mock_orchestrator):
         """Test usage is zero after reset."""
+        # Configure mock to return zero after reset is called
+        # This simulates the reset behavior properly
+        def make_reset_side_effect():
+            """Side effect that updates the usage summary mock to return zeros."""
+            mock_orchestrator.llm_service.get_usage_summary.return_value = {
+                "total": {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+                "by_provider": {},
+            }
+
+        mock_orchestrator.llm_service.reset_usage.side_effect = make_reset_side_effect
+
         # Reset
         api_test_client.post("/api/llm/usage/reset")
 

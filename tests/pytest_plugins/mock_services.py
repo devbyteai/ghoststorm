@@ -150,20 +150,66 @@ def create_mock_orchestrator() -> MagicMock:
         }
     )
 
-    # LLM service
+    # LLM service - properly mock for LLM API routes
     orchestrator.llm_service = MagicMock()
-    orchestrator.llm_service.complete = AsyncMock(return_value="Mock LLM response")
-    orchestrator.llm_service.get_providers = MagicMock(
-        return_value=[
-            {"name": "ollama", "available": True},
-            {"name": "openai", "available": False},
-        ]
+
+    # Mock provider info objects (as returned by list_providers)
+    mock_provider_info = MagicMock()
+    mock_provider_info.name = "ollama"
+    mock_provider_info.default_model = "llama3.2"
+    mock_provider_info.supported_models = ["llama3.2", "mistral", "qwen2.5-coder:7b"]
+    mock_provider_info.requires_api_key = False
+    mock_provider_info.supports_streaming = True
+    mock_provider_info.supports_tools = True
+
+    orchestrator.llm_service.list_providers = MagicMock(return_value=[mock_provider_info])
+
+    # Mock current_provider as an enum-like object with .value
+    mock_current_provider = MagicMock()
+    mock_current_provider.value = "ollama"
+    orchestrator.llm_service.current_provider = mock_current_provider
+
+    # Mock set_provider
+    orchestrator.llm_service.set_provider = MagicMock()
+
+    # Mock complete response
+    mock_completion = MagicMock()
+    mock_completion.content = "This is a mock LLM response."
+    mock_completion.model = "llama3.2"
+    mock_completion.finish_reason = "stop"
+    mock_completion.usage = MagicMock()
+    mock_completion.usage.input_tokens = 10
+    mock_completion.usage.output_tokens = 20
+    mock_completion.usage.total_tokens = 30
+    orchestrator.llm_service.complete = AsyncMock(return_value=mock_completion)
+
+    # Mock usage summary
+    orchestrator.llm_service.get_usage_summary = MagicMock(
+        return_value={
+            "total": {"input_tokens": 100, "output_tokens": 200, "total_tokens": 300},
+            "by_provider": {
+                "ollama": {"input_tokens": 100, "output_tokens": 200, "total_tokens": 300}
+            },
+        }
+    )
+    orchestrator.llm_service.reset_usage = MagicMock()
+
+    # Mock health check
+    mock_health_results = MagicMock()
+    mock_health_results.items = MagicMock(
+        return_value=[(MagicMock(value="ollama"), True), (MagicMock(value="openai"), False)]
+    )
+    orchestrator.llm_service.health_check_all = AsyncMock(
+        return_value={MagicMock(value="ollama"): True, MagicMock(value="openai"): False}
     )
 
     # LLM controller
     orchestrator.llm_controller = MagicMock()
     orchestrator.llm_controller.mode = "off"
     orchestrator.llm_controller.vision_mode = "off"
+
+    # Mock page for task (returns None by default)
+    orchestrator.get_page_for_task = MagicMock(return_value=None)
 
     # DOM service
     orchestrator.dom_service = MagicMock()

@@ -173,20 +173,34 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
     try:
         while True:
-            # Wait for messages from client
-            data = await websocket.receive_text()
+            # Wait for messages from client (handle both text and binary)
+            message = await websocket.receive()
 
-            try:
-                message = json.loads(data)
-                await _handle_client_message(websocket, message)
-            except json.JSONDecodeError:
-                await ws_manager._send_to_client(
-                    websocket,
-                    {
-                        "type": "error",
-                        "message": "Invalid JSON",
-                    },
-                )
+            if message["type"] == "websocket.receive":
+                if "text" in message:
+                    data = message["text"]
+                    try:
+                        parsed = json.loads(data)
+                        await _handle_client_message(websocket, parsed)
+                    except json.JSONDecodeError:
+                        await ws_manager._send_to_client(
+                            websocket,
+                            {
+                                "type": "error",
+                                "message": "Invalid JSON",
+                            },
+                        )
+                elif "bytes" in message:
+                    # Binary messages are not supported
+                    await ws_manager._send_to_client(
+                        websocket,
+                        {
+                            "type": "error",
+                            "message": "Binary messages not supported",
+                        },
+                    )
+            elif message["type"] == "websocket.disconnect":
+                break
 
     except WebSocketDisconnect:
         pass

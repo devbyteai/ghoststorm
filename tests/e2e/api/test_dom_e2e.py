@@ -238,7 +238,8 @@ class TestDOMAnalyzeAPI:
             ],
         }
 
-        with patch("ghoststorm.api.routes.dom.DOMAnalyzer") as MockAnalyzer:
+        # Patch where the module is used (lazy import inside the function)
+        with patch("ghoststorm.core.dom.DOMAnalyzer") as MockAnalyzer:
             mock_analyzer = MagicMock()
             mock_match = MagicMock()
             mock_match.to_dict.return_value = {
@@ -288,7 +289,8 @@ class TestDOMConfigAPI:
 
     def test_get_config(self, api_test_client: TestClient):
         """Test getting DOM extraction configuration."""
-        with patch("ghoststorm.api.routes.dom.DOMConfig") as MockConfig:
+        # Patch where the module is used (lazy import inside the function)
+        with patch("ghoststorm.core.dom.DOMConfig") as MockConfig:
             mock_config = MagicMock()
             mock_config.to_dict.return_value = {
                 "max_depth": 10,
