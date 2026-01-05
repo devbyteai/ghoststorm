@@ -629,6 +629,197 @@ async def sample_fingerprint() -> dict:
         return {"success": False, "error": str(e)}
 
 
+# ============ GENERATE AND SAVE ENDPOINT ============
+
+
+class GenerateAndSaveRequest(BaseModel):
+    """Request for generating data and saving to file."""
+
+    count: int = 100
+    browser: str = "chrome"  # For UA/fingerprints
+    os: str = "windows"  # For UA/fingerprints
+    target_file: str = ""  # Target filename
+
+
+# Preset data for screen sizes and referrers
+SCREEN_SIZE_PRESETS = [
+    "1920x1080",
+    "1366x768",
+    "1536x864",
+    "1440x900",
+    "1280x720",
+    "2560x1440",
+    "3840x2160",
+    "1600x900",
+    "1280x800",
+    "1024x768",
+    # Mobile
+    "390x844",
+    "412x915",
+    "360x800",
+    "414x896",
+    "375x812",
+    "428x926",
+    "393x873",
+    "360x780",
+    "412x892",
+    "384x854",
+]
+
+REFERRER_PRESETS = [
+    "https://www.google.com/",
+    "https://www.google.com/search?q=",
+    "https://www.facebook.com/",
+    "https://twitter.com/",
+    "https://t.co/",
+    "https://www.instagram.com/",
+    "https://www.reddit.com/",
+    "https://www.youtube.com/",
+    "https://www.tiktok.com/",
+    "https://www.linkedin.com/",
+    "https://www.pinterest.com/",
+    "https://www.bing.com/",
+    "https://duckduckgo.com/",
+    "https://www.yahoo.com/",
+    "https://www.twitch.tv/",
+    "https://discord.com/",
+    "https://telegram.org/",
+    "https://medium.com/",
+    "https://www.quora.com/",
+    "https://news.ycombinator.com/",
+]
+
+
+@router.post("/{category}/generate-and-save")
+async def generate_and_save(category: str, request: GenerateAndSaveRequest) -> dict:
+    """Generate data items and save them to a file."""
+    if category not in ["user_agents", "fingerprints", "screen_sizes", "referrers"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Category '{category}' does not support generation",
+        )
+
+    dir_path = get_category_dir(category)
+    dir_path.mkdir(parents=True, exist_ok=True)
+
+    count = min(request.count, 500)  # Max 500 per request
+    generated_items = []
+
+    try:
+        if category == "user_agents":
+            # Generate using browserforge
+            from browserforge.headers import HeaderGenerator
+
+            target_file = request.target_file or "generated.txt"
+            file_path = dir_path / target_file
+
+            hg = HeaderGenerator(browser=request.browser, os=request.os)
+            for _ in range(count):
+                headers = hg.generate()
+                ua = headers.get("User-Agent", "")
+                if ua:
+                    generated_items.append(ua)
+
+            # Append to file
+            with open(file_path, "a") as f:
+                for item in generated_items:
+                    f.write(item + "\n")
+
+        elif category == "fingerprints":
+            # Generate using browserforge
+            from browserforge.fingerprints import FingerprintGenerator
+
+            target_file = request.target_file or "generated.json"
+            if not target_file.endswith(".json"):
+                target_file += ".json"
+            file_path = dir_path / target_file
+
+            fg = FingerprintGenerator(browser=request.browser, os=request.os)
+            for _ in range(count):
+                fp = fg.generate()
+                generated_items.append(
+                    {
+                        "screen": {
+                            "width": fp.screen.width,
+                            "height": fp.screen.height,
+                            "availWidth": fp.screen.availWidth,
+                            "availHeight": fp.screen.availHeight,
+                            "colorDepth": fp.screen.colorDepth,
+                            "pixelRatio": fp.screen.devicePixelRatio,
+                        },
+                        "navigator": {
+                            "userAgent": fp.navigator.userAgent,
+                            "platform": fp.navigator.platform,
+                            "language": fp.navigator.language,
+                            "languages": fp.navigator.languages,
+                            "hardwareConcurrency": fp.navigator.hardwareConcurrency,
+                            "deviceMemory": fp.navigator.deviceMemory,
+                            "maxTouchPoints": fp.navigator.maxTouchPoints,
+                        },
+                        "videoCard": {
+                            "vendor": fp.videoCard.vendor if fp.videoCard else None,
+                            "renderer": fp.videoCard.renderer if fp.videoCard else None,
+                        },
+                    }
+                )
+
+            # Load existing data and append
+            existing = []
+            if file_path.exists():
+                with open(file_path) as f:
+                    existing = json.load(f)
+                    if not isinstance(existing, list):
+                        existing = [existing]
+
+            existing.extend(generated_items)
+            with open(file_path, "w") as f:
+                json.dump(existing, f, indent=2)
+
+        elif category == "screen_sizes":
+            # Use presets
+            target_file = request.target_file or "generated.txt"
+            file_path = dir_path / target_file
+
+            # Generate random selections from presets
+            for _ in range(count):
+                generated_items.append(random.choice(SCREEN_SIZE_PRESETS))
+
+            # Append to file
+            with open(file_path, "a") as f:
+                for item in generated_items:
+                    f.write(item + "\n")
+
+        elif category == "referrers":
+            # Use presets
+            target_file = request.target_file or "generated.txt"
+            file_path = dir_path / target_file
+
+            # Generate random selections from presets
+            for _ in range(count):
+                generated_items.append(random.choice(REFERRER_PRESETS))
+
+            # Append to file
+            with open(file_path, "a") as f:
+                for item in generated_items:
+                    f.write(item + "\n")
+
+        # Get new total count
+        new_total = count_dir_entries(dir_path)
+
+        return {
+            "success": True,
+            "generated": len(generated_items),
+            "saved_to": target_file,
+            "new_total": new_total,
+            "category": category,
+        }
+
+    except ImportError as e:
+        return {"success": False, "error": f"Required library not installed: {e}"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 # ============ GENERIC CATEGORY/FILE ENDPOINTS ============
 # NOTE: These generic routes MUST come AFTER the specific routes above
 

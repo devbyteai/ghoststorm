@@ -1,3 +1,63 @@
+<!-- Generate Data Modal -->
+<div id="generate-data-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+    <div class="bg-surface rounded-lg border border-gray-700 w-full max-w-md">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+            <h3 class="font-medium" id="generate-modal-title">Generate Data</h3>
+            <button onclick="closeGenerateModal()" class="text-gray-400 hover:text-white p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="p-4 space-y-4">
+            <input type="hidden" id="generate-category" value="">
+
+            <div>
+                <label class="block text-sm text-gray-400 mb-2">Count</label>
+                <select id="generate-count" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2">
+                    <option value="10">10</option>
+                    <option value="50">50</option>
+                    <option value="100" selected>100</option>
+                    <option value="200">200</option>
+                    <option value="500">500</option>
+                </select>
+            </div>
+
+            <!-- Browser/OS options (shown for UA and Fingerprints) -->
+            <div id="generate-browser-options" class="hidden">
+                <div class="mb-4">
+                    <label class="block text-sm text-gray-400 mb-2">Browser</label>
+                    <select id="generate-browser" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2">
+                        <option value="chrome">Chrome</option>
+                        <option value="firefox">Firefox</option>
+                        <option value="safari">Safari</option>
+                        <option value="edge">Edge</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">OS</label>
+                    <select id="generate-os" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2">
+                        <option value="windows">Windows</option>
+                        <option value="macos">macOS</option>
+                        <option value="linux">Linux</option>
+                        <option value="android">Android</option>
+                        <option value="ios">iOS</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm text-gray-400 mb-2">Save to File</label>
+                <input type="text" id="generate-filename" value="generated.txt" class="w-full bg-surface-light border border-gray-600 rounded px-3 py-2">
+            </div>
+
+            <div id="generate-status" class="text-sm text-gray-400 hidden"></div>
+        </div>
+        <div class="flex justify-end gap-2 px-4 py-3 border-t border-gray-700">
+            <button onclick="closeGenerateModal()" class="px-4 py-2 bg-surface-light border border-gray-600 rounded hover:bg-gray-700">Cancel</button>
+            <button onclick="generateAndSaveData()" id="generate-btn" class="px-4 py-2 bg-primary text-black rounded hover:bg-primary/80 font-medium">Generate & Save</button>
+        </div>
+    </div>
+</div>
+
 <!-- Data Manager Modal -->
 <div id="data-manager-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
     <div class="bg-surface rounded-lg border border-gray-700 w-full max-w-4xl max-h-[80vh] flex flex-col">
@@ -49,7 +109,10 @@
                     </div>
                 </div>
                 <div class="text-2xl font-bold text-purple-400 mb-2" id="ua-count">0</div>
-                <button onclick="openDataManager('user_agents', 'User Agents')" class="w-full py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+                <div class="flex gap-2">
+                    <button onclick="openGenerateModal('user_agents', 'User Agents')" class="flex-1 py-2 bg-purple-500/20 border border-purple-500/50 rounded text-sm hover:bg-purple-500/30 text-purple-400">Generate</button>
+                    <button onclick="openDataManager('user_agents', 'User Agents')" class="flex-1 py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+                </div>
             </div>
 
             <!-- Fingerprints -->
@@ -64,7 +127,10 @@
                     </div>
                 </div>
                 <div class="text-2xl font-bold text-green-400 mb-2" id="fp-count">0</div>
-                <button onclick="openDataManager('fingerprints', 'Fingerprints')" class="w-full py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+                <div class="flex gap-2">
+                    <button onclick="openGenerateModal('fingerprints', 'Fingerprints')" class="flex-1 py-2 bg-green-500/20 border border-green-500/50 rounded text-sm hover:bg-green-500/30 text-green-400">Generate</button>
+                    <button onclick="openDataManager('fingerprints', 'Fingerprints')" class="flex-1 py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+                </div>
             </div>
 
             <!-- Referrers -->
@@ -79,7 +145,10 @@
                     </div>
                 </div>
                 <div class="text-2xl font-bold text-blue-400 mb-2" id="ref-count">0</div>
-                <button onclick="openDataManager('referrers', 'Referrers')" class="w-full py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+                <div class="flex gap-2">
+                    <button onclick="openGenerateModal('referrers', 'Referrers')" class="flex-1 py-2 bg-blue-500/20 border border-blue-500/50 rounded text-sm hover:bg-blue-500/30 text-blue-400">Generate</button>
+                    <button onclick="openDataManager('referrers', 'Referrers')" class="flex-1 py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+                </div>
             </div>
 
             <!-- Blacklists -->
@@ -109,7 +178,10 @@
                     </div>
                 </div>
                 <div class="text-2xl font-bold text-cyan-400 mb-2" id="screen-count">0</div>
-                <button onclick="openDataManager('screen_sizes', 'Screen Sizes')" class="w-full py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+                <div class="flex gap-2">
+                    <button onclick="openGenerateModal('screen_sizes', 'Screen Sizes')" class="flex-1 py-2 bg-cyan-500/20 border border-cyan-500/50 rounded text-sm hover:bg-cyan-500/30 text-cyan-400">Generate</button>
+                    <button onclick="openDataManager('screen_sizes', 'Screen Sizes')" class="flex-1 py-2 bg-surface-light border border-gray-600 rounded text-sm hover:bg-gray-700">Manage</button>
+                </div>
             </div>
 
             <!-- Behavior Patterns -->

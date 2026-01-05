@@ -980,15 +980,8 @@ async def _run_scrape_job(job_id: str) -> None:
 
         job["alive_added"] = len(new_alive)  # Fixed: was len(alive_proxies)
 
-        # Update tested count - increment since we only tested new proxies
-        tested_file = proxy_dir / ".tested_count"
-        existing_tested = 0
-        if tested_file.exists():
-            try:
-                existing_tested = int(tested_file.read_text().strip())
-            except (ValueError, OSError):
-                existing_tested = 0
-        tested_file.write_text(str(existing_tested + len(new_proxies)))
+        # NOTE: Scraping does NOT update tested_count - only TEST job does that
+        # The .tested_count file tracks how many proxies have been TESTED, not scraped
 
     job["status"] = "completed"
     job["completed_at"] = datetime.now(UTC).isoformat()
@@ -1106,78 +1099,100 @@ async def _test_proxy_browser(proxy: str, timeout: float = 10.0) -> bool:
 async def _run_test_job(job_id: str) -> None:
     """Background task to test proxies from selected source file."""
     job = _jobs[job_id]
-    proxy_dir = DATA_DIR / "proxies"
 
-    # Read from selected source file
-    source_path = Path(job.get("source_path", proxy_dir / "aggregated.txt"))
-    all_proxies = list(read_proxies(source_path))
-    alive_proxies: set[str] = set()
+    try:
+        proxy_dir = DATA_DIR / "proxies"
 
-    # Use job settings
-    use_browser = job.get("browser_test", False)
-    batch_size = job.get("concurrent", 100)
-    timeout = job.get("timeout", 5.0)
+        # Read from selected source file - resolve to absolute path
+        source_path_str = job.get("source_path", str(proxy_dir / "aggregated.txt"))
+        source_path = Path(source_path_str).resolve()
 
-    # Browser tests are slower, use smaller batches
-    if use_browser:
-        batch_size = min(batch_size, 10)  # Max 10 concurrent browser instances
-
-        async def test_func(p):
-            return await _test_proxy_browser(p, timeout)
-
-    else:
-
-        async def test_func(p):
-            return await _test_single_proxy(p, timeout)
-
-    start_time = time.time()
-    tested = 0
-
-    for i in range(0, len(all_proxies), batch_size):
-        if job.get("cancelled"):
-            job["status"] = "cancelled"
+        # Validate file exists
+        if not source_path.exists():
+            job["status"] = "failed"
+            job["error"] = f"Source file not found: {source_path.name}"
             return
 
-        batch = all_proxies[i : i + batch_size]
-        results = await asyncio.gather(*[test_func(p) for p in batch])
+        all_proxies = list(read_proxies(source_path))
 
-        for proxy, is_alive in zip(batch, results):
-            tested += 1
-            if is_alive:
-                alive_proxies.add(proxy)
-                job["alive"] = len(alive_proxies)
-            else:
-                job["dead"] = tested - len(alive_proxies)
+        # Validate proxies were loaded
+        if not all_proxies:
+            job["status"] = "failed"
+            job["error"] = f"No proxies found in {source_path.name}"
+            return
 
-        job["tested"] = tested
+        alive_proxies: set[str] = set()
+        job["total"] = len(all_proxies)  # Update total for accurate progress
 
-        # Calculate speed and ETA
-        elapsed = time.time() - start_time
-        if elapsed > 0:
-            job["speed_per_sec"] = round(tested / elapsed, 1)
-            remaining = len(all_proxies) - tested
-            job["eta_seconds"] = (
-                int(remaining / job["speed_per_sec"]) if job["speed_per_sec"] > 0 else 0
-            )
+        # Use job settings
+        use_browser = job.get("browser_test", False)
+        batch_size = job.get("concurrent", 100)
+        timeout = job.get("timeout", 5.0)
 
-    # Save alive proxies - merge with existing to preserve previously working proxies
-    existing_alive = read_proxies(proxy_dir / "alive_proxies.txt")
-    all_alive = existing_alive | alive_proxies
-    new_alive_count = len(alive_proxies - existing_alive)
+        # Browser tests are slower, use smaller batches
+        if use_browser:
+            batch_size = min(batch_size, 10)  # Max 10 concurrent browser instances
 
-    with open(proxy_dir / "alive_proxies.txt", "w") as f:
-        for proxy in sorted(all_alive):
-            f.write(proxy + "\n")
+            async def test_func(p):
+                return await _test_proxy_browser(p, timeout)
 
-    job["alive_added"] = new_alive_count
-    job["total_alive"] = len(all_alive)
+        else:
 
-    # Save tested count for stats tracking
-    tested_file = proxy_dir / ".tested_count"
-    tested_file.write_text(str(job.get("tested", len(all_proxies))))
+            async def test_func(p):
+                return await _test_single_proxy(p, timeout)
 
-    job["status"] = "completed"
-    job["completed_at"] = datetime.now(UTC).isoformat()
+        start_time = time.time()
+        tested = 0
+
+        for i in range(0, len(all_proxies), batch_size):
+            if job.get("cancelled"):
+                job["status"] = "cancelled"
+                return
+
+            batch = all_proxies[i : i + batch_size]
+            results = await asyncio.gather(*[test_func(p) for p in batch])
+
+            for proxy, is_alive in zip(batch, results):
+                tested += 1
+                if is_alive:
+                    alive_proxies.add(proxy)
+                    job["alive"] = len(alive_proxies)
+                else:
+                    job["dead"] = tested - len(alive_proxies)
+
+            job["tested"] = tested
+
+            # Calculate speed and ETA
+            elapsed = time.time() - start_time
+            if elapsed > 0:
+                job["speed_per_sec"] = round(tested / elapsed, 1)
+                remaining = len(all_proxies) - tested
+                job["eta_seconds"] = (
+                    int(remaining / job["speed_per_sec"]) if job["speed_per_sec"] > 0 else 0
+                )
+
+        # Save alive proxies - merge with existing to preserve previously working proxies
+        existing_alive = read_proxies(proxy_dir / "alive_proxies.txt")
+        all_alive = existing_alive | alive_proxies
+        new_alive_count = len(alive_proxies - existing_alive)
+
+        with open(proxy_dir / "alive_proxies.txt", "w") as f:
+            for proxy in sorted(all_alive):
+                f.write(proxy + "\n")
+
+        job["alive_added"] = new_alive_count
+        job["total_alive"] = len(all_alive)
+
+        # Save tested count for stats tracking
+        tested_file = proxy_dir / ".tested_count"
+        tested_file.write_text(str(job.get("tested", len(all_proxies))))
+
+        job["status"] = "completed"
+        job["completed_at"] = datetime.now(UTC).isoformat()
+
+    except Exception as e:
+        job["status"] = "failed"
+        job["error"] = str(e)
 
 
 @router.get("/test/{job_id}")

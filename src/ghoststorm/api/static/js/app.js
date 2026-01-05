@@ -2837,6 +2837,96 @@ function closeDataManager() {
     loadDataStats();
 }
 
+// ============ DATA GENERATION ============
+function openGenerateModal(category, title) {
+    document.getElementById('generate-category').value = category;
+    document.getElementById('generate-modal-title').textContent = `Generate ${title}`;
+    document.getElementById('generate-status').classList.add('hidden');
+    document.getElementById('generate-btn').disabled = false;
+    document.getElementById('generate-btn').textContent = 'Generate & Save';
+
+    // Show/hide browser options based on category
+    const browserOptions = document.getElementById('generate-browser-options');
+    if (category === 'user_agents' || category === 'fingerprints') {
+        browserOptions.classList.remove('hidden');
+    } else {
+        browserOptions.classList.add('hidden');
+    }
+
+    // Set default filename based on category
+    const filenameInput = document.getElementById('generate-filename');
+    if (category === 'fingerprints') {
+        filenameInput.value = 'generated.json';
+    } else {
+        filenameInput.value = 'generated.txt';
+    }
+
+    document.getElementById('generate-data-modal').classList.remove('hidden');
+}
+
+function closeGenerateModal() {
+    document.getElementById('generate-data-modal').classList.add('hidden');
+}
+
+async function generateAndSaveData() {
+    const category = document.getElementById('generate-category').value;
+    const count = parseInt(document.getElementById('generate-count').value);
+    const browser = document.getElementById('generate-browser').value;
+    const os = document.getElementById('generate-os').value;
+    const targetFile = document.getElementById('generate-filename').value;
+
+    const statusEl = document.getElementById('generate-status');
+    const btn = document.getElementById('generate-btn');
+
+    statusEl.textContent = `Generating ${count} items...`;
+    statusEl.classList.remove('hidden', 'text-red-400', 'text-green-400');
+    statusEl.classList.add('text-gray-400');
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+
+    try {
+        const response = await fetch(`/api/data/${category}/generate-and-save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                count,
+                browser,
+                os,
+                target_file: targetFile
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            statusEl.textContent = `Generated ${data.generated} items. Saved to ${data.saved_to}. Total: ${data.new_total.toLocaleString()}`;
+            statusEl.classList.remove('text-gray-400');
+            statusEl.classList.add('text-green-400');
+            btn.textContent = 'Done!';
+
+            // Refresh stats
+            loadDataStats();
+
+            // Close modal after 2 seconds
+            setTimeout(() => {
+                closeGenerateModal();
+            }, 2000);
+        } else {
+            statusEl.textContent = `Error: ${data.error}`;
+            statusEl.classList.remove('text-gray-400');
+            statusEl.classList.add('text-red-400');
+            btn.disabled = false;
+            btn.textContent = 'Generate & Save';
+        }
+    } catch (error) {
+        statusEl.textContent = `Error: ${error.message}`;
+        statusEl.classList.remove('text-gray-400');
+        statusEl.classList.add('text-red-400');
+        btn.disabled = false;
+        btn.textContent = 'Generate & Save';
+    }
+}
+
 async function loadFileData() {
     const select = document.getElementById('data-file-select');
     const filename = select.value;
