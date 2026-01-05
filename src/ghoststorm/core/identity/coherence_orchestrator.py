@@ -174,22 +174,17 @@ class IdentityCoherenceOrchestrator:
                         # Use GeoIP country only if no explicit country set
                         if not proxy_country:
                             proxy_country = geo.country_code
-                            logger.debug(
-                                f"GeoIP resolved country: {proxy.host} -> {proxy_country}"
-                            )
+                            logger.debug(f"GeoIP resolved country: {proxy.host} -> {proxy_country}")
                         # Only use GeoIP timezone/coords if country matches
                         # (don't use US coords for a JP proxy)
-                        geoip_country_matches = (
-                            geo.country_code.upper() == proxy_country
-                        )
+                        geoip_country_matches = geo.country_code.upper() == proxy_country
                         if geoip_country_matches:
                             if geo.timezone:
                                 proxy_timezone = geo.timezone
                             if geo.latitude and geo.longitude:
                                 proxy_coords = (geo.latitude, geo.longitude)
                             logger.debug(
-                                f"GeoIP matched: {geo.timezone}, "
-                                f"({geo.latitude}, {geo.longitude})"
+                                f"GeoIP matched: {geo.timezone}, ({geo.latitude}, {geo.longitude})"
                             )
                 except Exception as e:
                     logger.debug(f"GeoIP lookup failed for {proxy.host}: {e}")
@@ -346,16 +341,10 @@ class IdentityCoherenceOrchestrator:
             if match:
                 version = match.group(1)
                 headers["Sec-CH-UA"] = (
-                    f'"Chromium";v="{version}", '
-                    f'"Google Chrome";v="{version}", '
-                    f'"Not-A.Brand";v="99"'
+                    f'"Chromium";v="{version}", "Google Chrome";v="{version}", "Not-A.Brand";v="99"'
                 )
-                headers["Sec-CH-UA-Mobile"] = (
-                    "?1" if fingerprint.max_touch_points > 0 else "?0"
-                )
-                headers["Sec-CH-UA-Platform"] = (
-                    f'"{self._get_platform_name(fingerprint.platform)}"'
-                )
+                headers["Sec-CH-UA-Mobile"] = "?1" if fingerprint.max_touch_points > 0 else "?0"
+                headers["Sec-CH-UA-Platform"] = f'"{self._get_platform_name(fingerprint.platform)}"'
 
         return headers
 
@@ -435,14 +424,10 @@ class IdentityCoherenceOrchestrator:
         )
 
         if identity.locale != expected_locale.locale:
-            issues.append(
-                f"Locale {identity.locale} doesn't match country {identity.country_code}"
-            )
+            issues.append(f"Locale {identity.locale} doesn't match country {identity.country_code}")
 
         if identity.timezone != expected_locale.timezone:
-            issues.append(
-                f"Timezone {identity.timezone} unusual for {identity.country_code}"
-            )
+            issues.append(f"Timezone {identity.timezone} unusual for {identity.country_code}")
 
         # Check Accept-Language header
         if "Accept-Language" not in identity.headers:

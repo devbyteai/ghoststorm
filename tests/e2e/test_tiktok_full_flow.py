@@ -552,7 +552,9 @@ class TestTikTokFullFlow:
         assert sessions_run == 3, "Should have run 3 sessions"
         # With mocks, coherence engine may cause early session termination
         # Minimum: 1 video per session = 3 total; typical: 3-5 per session
-        assert total_videos >= 3, f"Should have watched at least 3 videos (1 per session), got {total_videos}"
+        assert total_videos >= 3, (
+            f"Should have watched at least 3 videos (1 per session), got {total_videos}"
+        )
 
         print("\n  [VERIFICATION] Metrics accumulation test PASSED")
 

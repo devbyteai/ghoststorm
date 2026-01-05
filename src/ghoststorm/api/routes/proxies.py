@@ -1214,11 +1214,21 @@ async def clear_dead_proxies(source_file: str = "alive") -> dict:
         file_path = proxy_dir / "aggregated.txt"
 
     if not file_path.exists():
-        return {"error": f"File {file_path.name} not found", "tested": 0, "removed": 0, "remaining": 0}
+        return {
+            "error": f"File {file_path.name} not found",
+            "tested": 0,
+            "removed": 0,
+            "remaining": 0,
+        }
 
     all_proxies = list(read_proxies(file_path))
     if not all_proxies:
-        return {"error": f"No proxies in {file_path.name}", "tested": 0, "removed": 0, "remaining": 0}
+        return {
+            "error": f"No proxies in {file_path.name}",
+            "tested": 0,
+            "removed": 0,
+            "remaining": 0,
+        }
 
     # Test all proxies
     alive_proxies: set[str] = set()

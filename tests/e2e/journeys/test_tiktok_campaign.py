@@ -73,7 +73,13 @@ class TestTikTokCampaignJourney:
         task_status = api_test_client.get(f"/api/tasks/{task_id}")
         assert task_status.status_code == 200
         # Task may already be completed/failed since execution is fast in tests
-        assert task_status.json()["status"] in ["pending", "running", "queued", "completed", "failed"]
+        assert task_status.json()["status"] in [
+            "pending",
+            "running",
+            "queued",
+            "completed",
+            "failed",
+        ]
 
         # Step 5: Check metrics endpoint
         metrics = api_test_client.get("/api/metrics")
@@ -214,9 +220,13 @@ class TestTikTokCampaignWithAI:
         # Mock the _get_agent function which returns the Agent instance
         with patch("ghoststorm.api.routes.assistant._get_agent") as mock_get_agent:
             mock_agent = MagicMock()
+
             # Mock the async chat method
             async def mock_chat(message, stream=False):
-                return "For TikTok views, I recommend using stealth mode with 5-30 second watch times."
+                return (
+                    "For TikTok views, I recommend using stealth mode with 5-30 second watch times."
+                )
+
             mock_agent.chat = mock_chat
             mock_agent.get_pending_approvals.return_value = []
             mock_get_agent.return_value = mock_agent

@@ -383,6 +383,7 @@ class TestLLMUsageAPI:
 
     def test_usage_after_reset(self, api_test_client: TestClient, mock_orchestrator):
         """Test usage is zero after reset."""
+
         # Configure mock to return zero after reset is called
         # This simulates the reset behavior properly
         def make_reset_side_effect():

@@ -17,7 +17,9 @@ class ProxySource:
     name: str
     url: str
     proxy_type: str = "http"  # http, socks4, socks5
-    scrape_type: str = "raw_txt"  # raw_txt, html_table, proxynova, hidemy, spys, geonode, proxylistorg
+    scrape_type: str = (
+        "raw_txt"  # raw_txt, html_table, proxynova, hidemy, spys, geonode, proxylistorg
+    )
     enabled: bool = True
 
 
@@ -44,63 +46,203 @@ class ProxyAggregator:
         ProxySource("freeproxylist", "https://free-proxy-list.net/", scrape_type="html_table"),
         ProxySource("sslproxies", "https://www.sslproxies.org/", scrape_type="html_table"),
         ProxySource("usproxyorg", "https://www.us-proxy.org/", scrape_type="html_table"),
-        ProxySource("ukproxyorg", "https://free-proxy-list.net/uk-proxy.html", scrape_type="html_table"),
-        ProxySource("anonproxylist", "https://free-proxy-list.net/anonymous-proxy.html", scrape_type="html_table"),
+        ProxySource(
+            "ukproxyorg", "https://free-proxy-list.net/uk-proxy.html", scrape_type="html_table"
+        ),
+        ProxySource(
+            "anonproxylist",
+            "https://free-proxy-list.net/anonymous-proxy.html",
+            scrape_type="html_table",
+        ),
         ProxySource("socks_proxy", "https://www.socks-proxy.net/", scrape_type="html_table"),
         # ProxyNova
-        ProxySource("proxynova", "https://www.proxynova.com/proxy-server-list/", scrape_type="proxynova"),
-        ProxySource("proxynova_us", "https://www.proxynova.com/proxy-server-list/country-us/", scrape_type="proxynova"),
-        ProxySource("proxynova_uk", "https://www.proxynova.com/proxy-server-list/country-gb/", scrape_type="proxynova"),
-        ProxySource("proxynova_de", "https://www.proxynova.com/proxy-server-list/country-de/", scrape_type="proxynova"),
-        ProxySource("proxynova_fr", "https://www.proxynova.com/proxy-server-list/country-fr/", scrape_type="proxynova"),
-        ProxySource("proxynova_elite", "https://www.proxynova.com/proxy-server-list/elite-proxies/", scrape_type="proxynova"),
-        ProxySource("proxynova_anon", "https://www.proxynova.com/proxy-server-list/anonymous-proxies/", scrape_type="proxynova"),
-        ProxySource("proxynova_israel", "https://www.proxynova.com/proxy-server-list/country-il/", scrape_type="proxynova"),
+        ProxySource(
+            "proxynova", "https://www.proxynova.com/proxy-server-list/", scrape_type="proxynova"
+        ),
+        ProxySource(
+            "proxynova_us",
+            "https://www.proxynova.com/proxy-server-list/country-us/",
+            scrape_type="proxynova",
+        ),
+        ProxySource(
+            "proxynova_uk",
+            "https://www.proxynova.com/proxy-server-list/country-gb/",
+            scrape_type="proxynova",
+        ),
+        ProxySource(
+            "proxynova_de",
+            "https://www.proxynova.com/proxy-server-list/country-de/",
+            scrape_type="proxynova",
+        ),
+        ProxySource(
+            "proxynova_fr",
+            "https://www.proxynova.com/proxy-server-list/country-fr/",
+            scrape_type="proxynova",
+        ),
+        ProxySource(
+            "proxynova_elite",
+            "https://www.proxynova.com/proxy-server-list/elite-proxies/",
+            scrape_type="proxynova",
+        ),
+        ProxySource(
+            "proxynova_anon",
+            "https://www.proxynova.com/proxy-server-list/anonymous-proxies/",
+            scrape_type="proxynova",
+        ),
+        ProxySource(
+            "proxynova_israel",
+            "https://www.proxynova.com/proxy-server-list/country-il/",
+            scrape_type="proxynova",
+        ),
         # HideMy.name
         ProxySource("hidemy", "https://hidemy.name/en/proxy-list/?type=hs", scrape_type="hidemy"),
-        ProxySource("hidemy_socks4", "https://hidemy.name/en/proxy-list/?type=4", scrape_type="hidemy"),
-        ProxySource("hidemy_socks5", "https://hidemy.name/en/proxy-list/?type=5", scrape_type="hidemy"),
-        ProxySource("hidemy_anon", "https://hidemy.name/en/proxy-list/?anon=34", scrape_type="hidemy"),
-        ProxySource("hidemy_us", "https://hidemy.name/en/proxy-list/?country=US", scrape_type="hidemy"),
-        ProxySource("hidemy_uk", "https://hidemy.name/en/proxy-list/?country=GB", scrape_type="hidemy"),
-        ProxySource("hidemy_israel", "https://hidemy.name/en/proxy-list/?country=IL", scrape_type="hidemy"),
+        ProxySource(
+            "hidemy_socks4", "https://hidemy.name/en/proxy-list/?type=4", scrape_type="hidemy"
+        ),
+        ProxySource(
+            "hidemy_socks5", "https://hidemy.name/en/proxy-list/?type=5", scrape_type="hidemy"
+        ),
+        ProxySource(
+            "hidemy_anon", "https://hidemy.name/en/proxy-list/?anon=34", scrape_type="hidemy"
+        ),
+        ProxySource(
+            "hidemy_us", "https://hidemy.name/en/proxy-list/?country=US", scrape_type="hidemy"
+        ),
+        ProxySource(
+            "hidemy_uk", "https://hidemy.name/en/proxy-list/?country=GB", scrape_type="hidemy"
+        ),
+        ProxySource(
+            "hidemy_israel", "https://hidemy.name/en/proxy-list/?country=IL", scrape_type="hidemy"
+        ),
         # ProxyListPlus
-        ProxySource("proxylistplus_1", "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-1", scrape_type="html_table"),
-        ProxySource("proxylistplus_2", "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-2", scrape_type="html_table"),
-        ProxySource("proxylistplus_3", "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-3", scrape_type="html_table"),
-        ProxySource("proxylistplus_4", "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-4", scrape_type="html_table"),
-        ProxySource("proxylistplus_5", "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-5", scrape_type="html_table"),
-        ProxySource("proxylistplus_ssl", "https://list.proxylistplus.com/SSL-List-1", scrape_type="html_table"),
+        ProxySource(
+            "proxylistplus_1",
+            "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-1",
+            scrape_type="html_table",
+        ),
+        ProxySource(
+            "proxylistplus_2",
+            "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-2",
+            scrape_type="html_table",
+        ),
+        ProxySource(
+            "proxylistplus_3",
+            "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-3",
+            scrape_type="html_table",
+        ),
+        ProxySource(
+            "proxylistplus_4",
+            "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-4",
+            scrape_type="html_table",
+        ),
+        ProxySource(
+            "proxylistplus_5",
+            "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-5",
+            scrape_type="html_table",
+        ),
+        ProxySource(
+            "proxylistplus_ssl",
+            "https://list.proxylistplus.com/SSL-List-1",
+            scrape_type="html_table",
+        ),
         # FreeProxy.World
-        ProxySource("freeproxyworld_1", "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=1", scrape_type="html_table"),
-        ProxySource("freeproxyworld_2", "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=2", scrape_type="html_table"),
-        ProxySource("freeproxyworld_3", "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=3", scrape_type="html_table"),
-        ProxySource("freeproxyworld_https", "https://www.freeproxy.world/?type=https&anonymity=&country=&speed=&port=&page=1", scrape_type="html_table"),
-        ProxySource("freeproxyworld_socks4", "https://www.freeproxy.world/?type=socks4&anonymity=&country=&speed=&port=&page=1", scrape_type="html_table"),
-        ProxySource("freeproxyworld_socks5", "https://www.freeproxy.world/?type=socks5&anonymity=&country=&speed=&port=&page=1", scrape_type="html_table"),
-        ProxySource("freeproxyworld_israel", "https://www.freeproxy.world/?type=&anonymity=&country=IL&speed=&port=&page=1", scrape_type="html_table"),
+        ProxySource(
+            "freeproxyworld_1",
+            "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=1",
+            scrape_type="html_table",
+        ),
+        ProxySource(
+            "freeproxyworld_2",
+            "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=2",
+            scrape_type="html_table",
+        ),
+        ProxySource(
+            "freeproxyworld_3",
+            "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=3",
+            scrape_type="html_table",
+        ),
+        ProxySource(
+            "freeproxyworld_https",
+            "https://www.freeproxy.world/?type=https&anonymity=&country=&speed=&port=&page=1",
+            scrape_type="html_table",
+        ),
+        ProxySource(
+            "freeproxyworld_socks4",
+            "https://www.freeproxy.world/?type=socks4&anonymity=&country=&speed=&port=&page=1",
+            scrape_type="html_table",
+        ),
+        ProxySource(
+            "freeproxyworld_socks5",
+            "https://www.freeproxy.world/?type=socks5&anonymity=&country=&speed=&port=&page=1",
+            scrape_type="html_table",
+        ),
+        ProxySource(
+            "freeproxyworld_israel",
+            "https://www.freeproxy.world/?type=&anonymity=&country=IL&speed=&port=&page=1",
+            scrape_type="html_table",
+        ),
         # FreeProxy.cz
-        ProxySource("freeproxycz_1", "http://free-proxy.cz/en/proxylist/main/1", scrape_type="html_table"),
-        ProxySource("freeproxycz_2", "http://free-proxy.cz/en/proxylist/main/2", scrape_type="html_table"),
-        ProxySource("freeproxycz_3", "http://free-proxy.cz/en/proxylist/main/3", scrape_type="html_table"),
-        ProxySource("freeproxycz_4", "http://free-proxy.cz/en/proxylist/main/4", scrape_type="html_table"),
-        ProxySource("freeproxycz_5", "http://free-proxy.cz/en/proxylist/main/5", scrape_type="html_table"),
-        ProxySource("freeproxycz_us", "http://free-proxy.cz/en/proxylist/country/US/all/ping/all", scrape_type="html_table"),
-        ProxySource("freeproxycz_israel", "http://free-proxy.cz/en/proxylist/country/IL/all/ping/all", scrape_type="html_table"),
+        ProxySource(
+            "freeproxycz_1", "http://free-proxy.cz/en/proxylist/main/1", scrape_type="html_table"
+        ),
+        ProxySource(
+            "freeproxycz_2", "http://free-proxy.cz/en/proxylist/main/2", scrape_type="html_table"
+        ),
+        ProxySource(
+            "freeproxycz_3", "http://free-proxy.cz/en/proxylist/main/3", scrape_type="html_table"
+        ),
+        ProxySource(
+            "freeproxycz_4", "http://free-proxy.cz/en/proxylist/main/4", scrape_type="html_table"
+        ),
+        ProxySource(
+            "freeproxycz_5", "http://free-proxy.cz/en/proxylist/main/5", scrape_type="html_table"
+        ),
+        ProxySource(
+            "freeproxycz_us",
+            "http://free-proxy.cz/en/proxylist/country/US/all/ping/all",
+            scrape_type="html_table",
+        ),
+        ProxySource(
+            "freeproxycz_israel",
+            "http://free-proxy.cz/en/proxylist/country/IL/all/ping/all",
+            scrape_type="html_table",
+        ),
         # Spys.one
         ProxySource("spysone_http", "https://spys.one/en/http-proxy-list/", scrape_type="spys"),
-        ProxySource("spysone_anon", "https://spys.one/en/anonymous-proxy-list/", scrape_type="spys"),
+        ProxySource(
+            "spysone_anon", "https://spys.one/en/anonymous-proxy-list/", scrape_type="spys"
+        ),
         ProxySource("spysone_socks", "https://spys.one/en/socks-proxy-list/", scrape_type="spys"),
         ProxySource("spysone_israel", "https://spys.one/free-proxy-list/IL/", scrape_type="spys"),
         # Geonode
         ProxySource("geonode_1", "https://geonode.com/free-proxy-list", scrape_type="geonode"),
-        ProxySource("geonode_us", "https://geonode.com/free-proxy-list?country=US", scrape_type="geonode"),
-        ProxySource("geonode_uk", "https://geonode.com/free-proxy-list?country=GB", scrape_type="geonode"),
-        ProxySource("geonode_israel", "https://geonode.com/free-proxy-list?country=IL", scrape_type="geonode"),
+        ProxySource(
+            "geonode_us", "https://geonode.com/free-proxy-list?country=US", scrape_type="geonode"
+        ),
+        ProxySource(
+            "geonode_uk", "https://geonode.com/free-proxy-list?country=GB", scrape_type="geonode"
+        ),
+        ProxySource(
+            "geonode_israel",
+            "https://geonode.com/free-proxy-list?country=IL",
+            scrape_type="geonode",
+        ),
         # Proxy-List.org
-        ProxySource("proxylistorg_1", "https://proxy-list.org/english/index.php?p=1", scrape_type="proxylistorg"),
-        ProxySource("proxylistorg_2", "https://proxy-list.org/english/index.php?p=2", scrape_type="proxylistorg"),
-        ProxySource("proxylistorg_3", "https://proxy-list.org/english/index.php?p=3", scrape_type="proxylistorg"),
+        ProxySource(
+            "proxylistorg_1",
+            "https://proxy-list.org/english/index.php?p=1",
+            scrape_type="proxylistorg",
+        ),
+        ProxySource(
+            "proxylistorg_2",
+            "https://proxy-list.org/english/index.php?p=2",
+            scrape_type="proxylistorg",
+        ),
+        ProxySource(
+            "proxylistorg_3",
+            "https://proxy-list.org/english/index.php?p=3",
+            scrape_type="proxylistorg",
+        ),
         # ============================================================
         # RAW TXT SOURCES - Simple IP:PORT lists
         # ============================================================
@@ -435,7 +577,7 @@ class ProxyAggregator:
             "https://raw.githubusercontent.com/Zaeem20/FREE_PROXIES_LIST/master/socks5.txt",
             "socks5",
         ),
-        #Proxy-Spider
+        # Proxy-Spider
         ProxySource(
             "proxyspider_http",
             "https://raw.githubusercontent.com/Proxy-Spider/proxy-spider/main/proxies/http/http.txt",

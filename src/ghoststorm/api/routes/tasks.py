@@ -464,7 +464,9 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
                 # =========================================================
                 if coherent_identity:
                     # Use coherent identity values
-                    context_args["user_agent"] = coherent_identity.fingerprint.user_agent or user_agent
+                    context_args["user_agent"] = (
+                        coherent_identity.fingerprint.user_agent or user_agent
+                    )
                     context_args["locale"] = coherent_identity.locale
                     context_args["timezone_id"] = coherent_identity.timezone
                     context_args["geolocation"] = coherent_identity.geolocation.to_dict()
@@ -511,7 +513,10 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
                         context_args["is_mobile"] = True
                         context_args["has_touch"] = True
                     elif screen_size:
-                        context_args["viewport"] = {"width": screen_size[0], "height": screen_size[1]}
+                        context_args["viewport"] = {
+                            "width": screen_size[0],
+                            "height": screen_size[1],
+                        }
 
                     # Apply referrer if set
                     if referrer:

@@ -405,9 +405,7 @@ class TestIdentityCoherenceOrchestrator:
         assert identity.coherence_score >= 0.8
 
     @pytest.mark.asyncio
-    async def test_coherence_score_datacenter_proxy(
-        self, orchestrator, base_fingerprint, jp_proxy
-    ):
+    async def test_coherence_score_datacenter_proxy(self, orchestrator, base_fingerprint, jp_proxy):
         """Datacenter proxy should have lower coherence score."""
         jp_proxy.category = ProxyCategory.DATACENTER
 
