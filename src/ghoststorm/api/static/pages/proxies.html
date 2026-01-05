@@ -54,14 +54,26 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 Scrape All Sources
             </button>
-            <button onclick="startTestJob()" class="px-6 py-3 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 flex items-center gap-2 font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Test All Proxies
-            </button>
-            <button onclick="cleanDeadProxies()" class="px-6 py-3 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 flex items-center gap-2 font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                Remove Dead
-            </button>
+            <div class="flex items-center gap-1">
+                <button onclick="startTestJob()" class="px-4 py-3 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-l-lg hover:bg-blue-500/30 flex items-center gap-2 font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Test
+                </button>
+                <select id="test-source-file" class="px-3 py-3 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-r-lg hover:bg-blue-500/30 font-medium focus:outline-none cursor-pointer">
+                    <option value="aggregated">All Scraped (aggregated.txt)</option>
+                    <option value="alive">Alive Only (alive_proxies.txt)</option>
+                </select>
+            </div>
+            <div class="flex items-center gap-1">
+                <button onclick="clearDeadProxies()" class="px-4 py-3 bg-red-500/20 text-red-400 border border-red-500/30 rounded-l-lg hover:bg-red-500/30 flex items-center gap-2 font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    Clear Dead
+                </button>
+                <select id="clear-source-file" class="px-3 py-3 bg-red-500/20 text-red-400 border border-red-500/30 rounded-r-lg hover:bg-red-500/30 font-medium focus:outline-none cursor-pointer">
+                    <option value="alive">from Alive</option>
+                    <option value="aggregated">from Scraped</option>
+                </select>
+            </div>
             <button onclick="exportProxies()" class="px-6 py-3 bg-surface-light border border-gray-600 rounded-lg hover:bg-gray-700 flex items-center gap-2 font-medium">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 Export
@@ -81,6 +93,7 @@
                             <input type="text" id="source-search" placeholder="Search sources..." oninput="filterSources()" class="px-3 py-1.5 bg-surface-light border border-gray-600 rounded text-sm focus:border-primary focus:outline-none w-48">
                             <select id="source-filter" onchange="filterSources()" class="px-3 py-1.5 bg-surface-light border border-gray-600 rounded text-sm focus:border-primary focus:outline-none">
                                 <option value="all">All Types</option>
+                                <option value="raw_txt">API/Text Lists</option>
                                 <option value="html_table">HTML Tables</option>
                                 <option value="proxynova">ProxyNova</option>
                                 <option value="hidemy">HideMy.name</option>
@@ -210,6 +223,20 @@
             <div class="max-h-64 overflow-y-auto space-y-1 bg-surface-light rounded-lg p-3" id="scrape-results-list">
                 <div class="text-center text-gray-500 py-4">Waiting for results...</div>
             </div>
+            <!-- Summary shown after completion -->
+            <div id="scrape-summary" class="hidden mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+                <div class="flex items-center gap-3">
+                    <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <div>
+                        <div class="font-medium text-green-400">Scrape Complete!</div>
+                        <div class="text-sm text-gray-400" id="scrape-summary-text">Saved to aggregated.txt</div>
+                    </div>
+                </div>
+            </div>
+            <!-- OK Button shown after completion -->
+            <button id="scrape-ok-btn" onclick="closeScrapeModal()" class="hidden w-full mt-4 px-6 py-3 bg-primary hover:bg-primary/80 text-white font-medium rounded-lg transition-colors">
+                OK
+            </button>
         </div>
     </div>
 </div>

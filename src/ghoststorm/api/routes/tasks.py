@@ -20,6 +20,9 @@ from ghoststorm.api.schemas import (
     TaskResponse,
     detect_platform,
 )
+from ghoststorm.core.identity import CoherentIdentity, IdentityCoherenceOrchestrator
+from ghoststorm.core.models.fingerprint import Fingerprint, ScreenConfig
+from ghoststorm.core.models.proxy import Proxy
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
@@ -338,6 +341,62 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
             if evasion_scripts:
                 logger.debug("Loaded evasion scripts", count=len(evasion_scripts))
 
+        # =====================================================================
+        # IDENTITY COHERENCE ORCHESTRATION
+        # Ensures proxy geo, fingerprint locale/timezone, and headers all match
+        # =====================================================================
+        coherent_identity: CoherentIdentity | None = None
+        if config.get("use_identity_coherence", True):
+            try:
+                # Create base fingerprint from loaded data
+                base_fingerprint = Fingerprint(
+                    user_agent=user_agent or "",
+                    screen=ScreenConfig(
+                        width=screen_size[0] if screen_size else 1920,
+                        height=screen_size[1] if screen_size else 1080,
+                    ),
+                )
+
+                # Parse proxy string to Proxy object if available
+                proxy_obj = None
+                if proxy:
+                    try:
+                        proxy_obj = Proxy.from_string(proxy)
+                    except Exception as e:
+                        logger.debug("Failed to parse proxy for coherence", error=str(e))
+
+                # Create coherent identity
+                orchestrator = IdentityCoherenceOrchestrator.get_instance()
+                coherent_identity = await orchestrator.create_coherent_identity(
+                    fingerprint=base_fingerprint,
+                    proxy=proxy_obj,
+                    strict=True,  # Adapt fingerprint to match proxy geo
+                )
+
+                logger.info(
+                    "Identity coherence generated",
+                    score=f"{coherent_identity.coherence_score:.2f}",
+                    country=coherent_identity.country_code,
+                    locale=coherent_identity.locale,
+                    timezone=coherent_identity.timezone,
+                    warnings=coherent_identity.warnings[:2] if coherent_identity.warnings else [],
+                )
+
+                # Add timezone emulation script
+                from ghoststorm.plugins.evasion.timezone_emulator import (
+                    generate_timezone_script,
+                )
+
+                timezone_script = generate_timezone_script(
+                    timezone_id=coherent_identity.timezone,
+                    locale=coherent_identity.locale,
+                )
+                evasion_scripts.append(timezone_script)
+
+            except Exception as e:
+                logger.warning("Identity coherence failed, using defaults", error=str(e))
+                coherent_identity = None
+
         # Import browser engine
         try:
             from patchright.async_api import async_playwright
@@ -399,28 +458,64 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
                 # Create context with configured options
                 context_args: dict[str, Any] = {}
 
-                # Apply user agent
-                if user_agent:
-                    context_args["user_agent"] = user_agent
+                # =========================================================
+                # APPLY COHERENT IDENTITY (if available)
+                # This ensures all browser parameters match the proxy geo
+                # =========================================================
+                if coherent_identity:
+                    # Use coherent identity values
+                    context_args["user_agent"] = coherent_identity.fingerprint.user_agent or user_agent
+                    context_args["locale"] = coherent_identity.locale
+                    context_args["timezone_id"] = coherent_identity.timezone
+                    context_args["geolocation"] = coherent_identity.geolocation.to_dict()
+                    context_args["permissions"] = ["geolocation"]
 
-                # Apply screen size / viewport
-                if platform in ("tiktok", "instagram", "youtube"):
-                    # Use mobile viewport for social media, but respect custom screen size
-                    if screen_size:
-                        context_args["viewport"] = {
-                            "width": screen_size[0],
-                            "height": screen_size[1],
-                        }
-                    else:
-                        context_args["viewport"] = {"width": 390, "height": 844}
-                    context_args["is_mobile"] = True
-                    context_args["has_touch"] = True
-                elif screen_size:
-                    context_args["viewport"] = {"width": screen_size[0], "height": screen_size[1]}
+                    # Merge coherent headers with referrer
+                    extra_headers = dict(coherent_identity.headers)
+                    if referrer:
+                        extra_headers["Referer"] = referrer
+                    context_args["extra_http_headers"] = extra_headers
 
-                # Apply referrer if set
-                if referrer:
-                    context_args["extra_http_headers"] = {"Referer": referrer}
+                    # Apply screen size from coherent identity
+                    context_args["viewport"] = {
+                        "width": coherent_identity.fingerprint.screen.width,
+                        "height": coherent_identity.fingerprint.screen.height,
+                    }
+
+                    # Mobile settings from fingerprint
+                    if coherent_identity.fingerprint.max_touch_points > 0:
+                        context_args["is_mobile"] = True
+                        context_args["has_touch"] = True
+
+                    logger.debug(
+                        "Applied coherent identity to context",
+                        locale=coherent_identity.locale,
+                        timezone=coherent_identity.timezone,
+                        headers=list(extra_headers.keys()),
+                    )
+                else:
+                    # Fallback to original behavior without coherence
+                    if user_agent:
+                        context_args["user_agent"] = user_agent
+
+                    # Apply screen size / viewport
+                    if platform in ("tiktok", "instagram", "youtube"):
+                        # Use mobile viewport for social media
+                        if screen_size:
+                            context_args["viewport"] = {
+                                "width": screen_size[0],
+                                "height": screen_size[1],
+                            }
+                        else:
+                            context_args["viewport"] = {"width": 390, "height": 844}
+                        context_args["is_mobile"] = True
+                        context_args["has_touch"] = True
+                    elif screen_size:
+                        context_args["viewport"] = {"width": screen_size[0], "height": screen_size[1]}
+
+                    # Apply referrer if set
+                    if referrer:
+                        context_args["extra_http_headers"] = {"Referer": referrer}
 
                 context = await browser.new_context(**context_args)
 

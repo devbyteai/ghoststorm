@@ -2038,6 +2038,7 @@ function renderProxySources(filteredSources = null) {
 
     const typeColors = {
         'plain': 'bg-blue-500/20 text-blue-400',
+        'raw_txt': 'bg-cyan-500/20 text-cyan-400',
         'html_table': 'bg-green-500/20 text-green-400',
         'geonode_api': 'bg-purple-500/20 text-purple-400',
         'hidemy': 'bg-orange-500/20 text-orange-400',
@@ -2170,6 +2171,13 @@ async function startScrapeJob() {
         document.getElementById('scrape-modal').classList.remove('hidden');
         document.getElementById('scrape-close-btn').classList.add('hidden');
         document.getElementById('scrape-results-list').innerHTML = '';
+        // Reset summary and OK button for new scrape
+        document.getElementById('scrape-summary').classList.add('hidden');
+        document.getElementById('scrape-ok-btn').classList.add('hidden');
+        document.getElementById('scrape-progress-bar').style.width = '0%';
+        document.getElementById('scrape-sources-done').textContent = '0';
+        document.getElementById('scrape-proxies-found').textContent = '0';
+        document.getElementById('scrape-current-source').textContent = 'Starting...';
 
         scrapePollingInterval = setInterval(pollScrapeJob, 500);
         addEvent('info', 'Scraping started...');
@@ -2207,6 +2215,13 @@ async function pollScrapeJob() {
             document.getElementById('scrape-close-btn').classList.remove('hidden');
             document.getElementById('scrape-floating').classList.add('hidden');
             updateSourceStatus(null, job.results);
+
+            // Show summary and OK button
+            document.getElementById('scrape-summary').classList.remove('hidden');
+            document.getElementById('scrape-ok-btn').classList.remove('hidden');
+            document.getElementById('scrape-summary-text').textContent =
+                `${job.proxies_found.toLocaleString()} proxies from ${job.sources_done} sources saved to aggregated.txt`;
+
             addEvent('success', `Done! ${job.proxies_found.toLocaleString()} proxies found`);
             loadProxyStats();
         }
@@ -2253,7 +2268,8 @@ function updateFloatingProgress(job) {
 // ============ TEST JOB ============
 async function startTestJob() {
     try {
-        const response = await fetch('/api/proxies/test/start', { method: 'POST' });
+        const sourceFile = document.getElementById('test-source-file')?.value || 'aggregated';
+        const response = await fetch(`/api/proxies/test/start?source_file=${sourceFile}`, { method: 'POST' });
         const data = await response.json();
 
         if (data.error) {
@@ -2300,7 +2316,22 @@ async function pollTestJob() {
 
         if (job.status === 'completed' || job.status === 'cancelled') {
             clearInterval(testPollingInterval);
-            document.getElementById('test-progress-panel').classList.add('hidden');
+
+            // Update to show completion state
+            document.getElementById('test-progress-bar').style.width = '100%';
+            document.getElementById('test-progress-bar').classList.remove('bg-blue-500');
+            document.getElementById('test-progress-bar').classList.add('bg-green-500');
+            document.getElementById('test-progress-status').textContent = 'Complete!';
+            document.getElementById('test-eta').textContent = '--';
+
+            // Show final results for 5 seconds before hiding
+            setTimeout(() => {
+                document.getElementById('test-progress-panel').classList.add('hidden');
+                // Reset bar color for next run
+                document.getElementById('test-progress-bar').classList.remove('bg-green-500');
+                document.getElementById('test-progress-bar').classList.add('bg-blue-500');
+            }, 5000);
+
             addEvent('success', `Test complete: ${job.alive} alive, ${job.dead} dead`);
             loadProxyStats();
             currentTestJobId = null;
@@ -2655,6 +2686,30 @@ async function exportProxies() {
         addEvent('success', `Exported ${data.proxies.length.toLocaleString()} proxies`);
     } catch (error) {
         addEvent('error', 'Export failed: ' + error.message);
+    }
+}
+
+async function clearDeadProxies() {
+    const sourceFile = document.getElementById('clear-source-file')?.value || 'alive';
+    const fileName = sourceFile === 'alive' ? 'alive_proxies.txt' : 'aggregated.txt';
+
+    if (!confirm(`This will test all proxies in ${fileName} and remove dead ones. Continue?`)) return;
+
+    addEvent('info', `Testing and clearing dead from ${fileName}...`);
+
+    try {
+        const response = await fetch(`/api/proxies/clear-dead?source_file=${sourceFile}`, { method: 'POST' });
+        const data = await response.json();
+
+        if (data.error) {
+            addEvent('error', data.error);
+            return;
+        }
+
+        addEvent('success', `Tested ${data.tested}, removed ${data.removed} dead, ${data.remaining} alive`);
+        loadProxyStats();
+    } catch (error) {
+        addEvent('error', 'Failed to clear dead: ' + error.message);
     }
 }
 

@@ -7,7 +7,7 @@ import contextlib
 import random
 import re
 import time
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -16,6 +16,8 @@ import httpx
 from bs4 import BeautifulSoup
 from fastapi import APIRouter
 from pydantic import BaseModel
+
+from ghoststorm.plugins.data.proxy_aggregator import ProxyAggregator
 
 router = APIRouter()
 
@@ -51,6 +53,31 @@ def _get_random_scraper_headers() -> dict[str, str]:
 
 # Job tracking for scrape and test operations
 _jobs: dict[str, dict[str, Any]] = {}
+
+
+def _cleanup_old_jobs(max_age_hours: int = 1) -> int:
+    """Remove jobs older than max_age_hours to prevent memory leaks.
+
+    Returns the number of jobs cleaned up.
+    """
+    cutoff = datetime.now(UTC) - timedelta(hours=max_age_hours)
+    expired = []
+
+    for job_id, job in _jobs.items():
+        started_at = job.get("started_at")
+        if started_at:
+            try:
+                job_time = datetime.fromisoformat(started_at)
+                if job_time < cutoff:
+                    expired.append(job_id)
+            except (ValueError, TypeError):
+                # Invalid timestamp, mark for cleanup
+                expired.append(job_id)
+
+    for job_id in expired:
+        del _jobs[job_id]
+
+    return len(expired)
 
 
 def is_valid_proxy(proxy: str) -> bool:
@@ -106,454 +133,27 @@ def filter_valid_proxies(proxies: set[str]) -> set[str]:
     return {p for p in proxies if is_valid_proxy(p)}
 
 
-# ============ PROXY SOURCES ============
+# ============ PROXY SOURCES (imported from proxy_aggregator.py) ============
 
+# Convert ProxySource dataclass to dict format for backward compatibility
 PROXY_SOURCES = [
-    # ===== FREE-PROXY-LIST.NET FAMILY (HTML Table Scraping) =====
     {
-        "id": "freeproxylist",
-        "name": "Free-Proxy-List.net",
-        "url": "https://free-proxy-list.net/",
-        "type": "html_table",
-    },
-    {
-        "id": "sslproxies",
-        "name": "SSL Proxies",
-        "url": "https://www.sslproxies.org/",
-        "type": "html_table",
-    },
-    {
-        "id": "usproxyorg",
-        "name": "US-Proxy.org",
-        "url": "https://www.us-proxy.org/",
-        "type": "html_table",
-    },
-    {
-        "id": "ukproxyorg",
-        "name": "UK-Proxy.org",
-        "url": "https://free-proxy-list.net/uk-proxy.html",
-        "type": "html_table",
-    },
-    {
-        "id": "anonproxylist",
-        "name": "Anonymous Proxy List",
-        "url": "https://free-proxy-list.net/anonymous-proxy.html",
-        "type": "html_table",
-    },
-    {
-        "id": "socks_proxy",
-        "name": "SOCKS-Proxy.net",
-        "url": "https://www.socks-proxy.net/",
-        "type": "html_table",
-    },
-    # ===== PROXYNOVA (JS-obfuscated scraping) =====
-    {
-        "id": "proxynova",
-        "name": "ProxyNova",
-        "url": "https://www.proxynova.com/proxy-server-list/",
-        "type": "proxynova",
-    },
-    {
-        "id": "proxynova_us",
-        "name": "ProxyNova US",
-        "url": "https://www.proxynova.com/proxy-server-list/country-us/",
-        "type": "proxynova",
-    },
-    {
-        "id": "proxynova_uk",
-        "name": "ProxyNova UK",
-        "url": "https://www.proxynova.com/proxy-server-list/country-gb/",
-        "type": "proxynova",
-    },
-    {
-        "id": "proxynova_de",
-        "name": "ProxyNova Germany",
-        "url": "https://www.proxynova.com/proxy-server-list/country-de/",
-        "type": "proxynova",
-    },
-    {
-        "id": "proxynova_fr",
-        "name": "ProxyNova France",
-        "url": "https://www.proxynova.com/proxy-server-list/country-fr/",
-        "type": "proxynova",
-    },
-    {
-        "id": "proxynova_elite",
-        "name": "ProxyNova Elite",
-        "url": "https://www.proxynova.com/proxy-server-list/elite-proxies/",
-        "type": "proxynova",
-    },
-    {
-        "id": "proxynova_anon",
-        "name": "ProxyNova Anonymous",
-        "url": "https://www.proxynova.com/proxy-server-list/anonymous-proxies/",
-        "type": "proxynova",
-    },
-    # ===== HIDEMY.NAME (HTML Table Scraping) =====
-    {
-        "id": "hidemy",
-        "name": "HideMy.name HTTP/S",
-        "url": "https://hidemy.name/en/proxy-list/?type=hs",
-        "type": "hidemy",
-    },
-    {
-        "id": "hidemy_socks4",
-        "name": "HideMy.name SOCKS4",
-        "url": "https://hidemy.name/en/proxy-list/?type=4",
-        "type": "hidemy",
-    },
-    {
-        "id": "hidemy_socks5",
-        "name": "HideMy.name SOCKS5",
-        "url": "https://hidemy.name/en/proxy-list/?type=5",
-        "type": "hidemy",
-    },
-    {
-        "id": "hidemy_anon",
-        "name": "HideMy.name Anonymous",
-        "url": "https://hidemy.name/en/proxy-list/?anon=34",
-        "type": "hidemy",
-    },
-    {
-        "id": "hidemy_us",
-        "name": "HideMy.name US",
-        "url": "https://hidemy.name/en/proxy-list/?country=US",
-        "type": "hidemy",
-    },
-    {
-        "id": "hidemy_uk",
-        "name": "HideMy.name UK",
-        "url": "https://hidemy.name/en/proxy-list/?country=GB",
-        "type": "hidemy",
-    },
-    # ===== PROXYLISTPLUS (HTML Table Scraping) =====
-    {
-        "id": "proxylistplus_1",
-        "name": "ProxyListPlus Page 1",
-        "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-1",
-        "type": "html_table",
-    },
-    {
-        "id": "proxylistplus_2",
-        "name": "ProxyListPlus Page 2",
-        "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-2",
-        "type": "html_table",
-    },
-    {
-        "id": "proxylistplus_3",
-        "name": "ProxyListPlus Page 3",
-        "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-3",
-        "type": "html_table",
-    },
-    {
-        "id": "proxylistplus_4",
-        "name": "ProxyListPlus Page 4",
-        "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-4",
-        "type": "html_table",
-    },
-    {
-        "id": "proxylistplus_5",
-        "name": "ProxyListPlus Page 5",
-        "url": "https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-5",
-        "type": "html_table",
-    },
-    {
-        "id": "proxylistplus_ssl",
-        "name": "ProxyListPlus SSL",
-        "url": "https://list.proxylistplus.com/SSL-List-1",
-        "type": "html_table",
-    },
-    # ===== FREEPROXY.WORLD (HTML Table Scraping) =====
-    {
-        "id": "freeproxyworld_1",
-        "name": "FreeProxy.World Page 1",
-        "url": "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=1",
-        "type": "html_table",
-    },
-    {
-        "id": "freeproxyworld_2",
-        "name": "FreeProxy.World Page 2",
-        "url": "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=2",
-        "type": "html_table",
-    },
-    {
-        "id": "freeproxyworld_3",
-        "name": "FreeProxy.World Page 3",
-        "url": "https://www.freeproxy.world/?type=http&anonymity=&country=&speed=&port=&page=3",
-        "type": "html_table",
-    },
-    {
-        "id": "freeproxyworld_https",
-        "name": "FreeProxy.World HTTPS",
-        "url": "https://www.freeproxy.world/?type=https&anonymity=&country=&speed=&port=&page=1",
-        "type": "html_table",
-    },
-    {
-        "id": "freeproxyworld_socks4",
-        "name": "FreeProxy.World SOCKS4",
-        "url": "https://www.freeproxy.world/?type=socks4&anonymity=&country=&speed=&port=&page=1",
-        "type": "html_table",
-    },
-    {
-        "id": "freeproxyworld_socks5",
-        "name": "FreeProxy.World SOCKS5",
-        "url": "https://www.freeproxy.world/?type=socks5&anonymity=&country=&speed=&port=&page=1",
-        "type": "html_table",
-    },
-    # ===== FREEPROXY.CZ (HTML Table Scraping) =====
-    {
-        "id": "freeproxycz_1",
-        "name": "FreeProxy.cz Page 1",
-        "url": "http://free-proxy.cz/en/proxylist/main/1",
-        "type": "html_table",
-    },
-    {
-        "id": "freeproxycz_2",
-        "name": "FreeProxy.cz Page 2",
-        "url": "http://free-proxy.cz/en/proxylist/main/2",
-        "type": "html_table",
-    },
-    {
-        "id": "freeproxycz_3",
-        "name": "FreeProxy.cz Page 3",
-        "url": "http://free-proxy.cz/en/proxylist/main/3",
-        "type": "html_table",
-    },
-    {
-        "id": "freeproxycz_4",
-        "name": "FreeProxy.cz Page 4",
-        "url": "http://free-proxy.cz/en/proxylist/main/4",
-        "type": "html_table",
-    },
-    {
-        "id": "freeproxycz_5",
-        "name": "FreeProxy.cz Page 5",
-        "url": "http://free-proxy.cz/en/proxylist/main/5",
-        "type": "html_table",
-    },
-    {
-        "id": "freeproxycz_us",
-        "name": "FreeProxy.cz US",
-        "url": "http://free-proxy.cz/en/proxylist/country/US/all/ping/all",
-        "type": "html_table",
-    },
-    # ===== SPYS.ONE (HTML Scraping - complex) =====
-    {
-        "id": "spysone_http",
-        "name": "Spys.one HTTP",
-        "url": "https://spys.one/en/http-proxy-list/",
-        "type": "spys",
-    },
-    {
-        "id": "spysone_anon",
-        "name": "Spys.one Anonymous",
-        "url": "https://spys.one/en/anonymous-proxy-list/",
-        "type": "spys",
-    },
-    {
-        "id": "spysone_socks",
-        "name": "Spys.one SOCKS",
-        "url": "https://spys.one/en/socks-proxy-list/",
-        "type": "spys",
-    },
-    # ===== GEONODE (Website Scraping) =====
-    {
-        "id": "geonode_1",
-        "name": "Geonode.com Page 1",
-        "url": "https://geonode.com/free-proxy-list",
-        "type": "geonode",
-    },
-    {
-        "id": "geonode_us",
-        "name": "Geonode.com US",
-        "url": "https://geonode.com/free-proxy-list?country=US",
-        "type": "geonode",
-    },
-    {
-        "id": "geonode_uk",
-        "name": "Geonode.com UK",
-        "url": "https://geonode.com/free-proxy-list?country=GB",
-        "type": "geonode",
-    },
-    # ===== PROXY-LIST.ORG (HTML Scraping) =====
-    {
-        "id": "proxylistorg_1",
-        "name": "Proxy-List.org Page 1",
-        "url": "https://proxy-list.org/english/index.php?p=1",
-        "type": "proxylistorg",
-    },
-    {
-        "id": "proxylistorg_2",
-        "name": "Proxy-List.org Page 2",
-        "url": "https://proxy-list.org/english/index.php?p=2",
-        "type": "proxylistorg",
-    },
-    {
-        "id": "proxylistorg_3",
-        "name": "Proxy-List.org Page 3",
-        "url": "https://proxy-list.org/english/index.php?p=3",
-        "type": "proxylistorg",
-    },
-    # ===== ISRAEL PROXY LISTS =====
-    {
-        "id": "spysone_israel",
-        "name": "Spys.one Israel",
-        "url": "https://spys.one/free-proxy-list/IL/",
-        "type": "spys",
-    },
-    {
-        "id": "proxynova_israel",
-        "name": "ProxyNova Israel",
-        "url": "https://www.proxynova.com/proxy-server-list/country-il/",
-        "type": "proxynova",
-    },
-    {
-        "id": "hidemy_israel",
-        "name": "HideMy.name Israel",
-        "url": "https://hidemy.name/en/proxy-list/?country=IL",
-        "type": "hidemy",
-    },
-    {
-        "id": "freeproxyworld_israel",
-        "name": "FreeProxy.World Israel",
-        "url": "https://www.freeproxy.world/?type=&anonymity=&country=IL&speed=&port=&page=1",
-        "type": "html_table",
-    },
-    {
-        "id": "geonode_israel",
-        "name": "Geonode.com Israel",
-        "url": "https://geonode.com/free-proxy-list?country=IL",
-        "type": "geonode",
-    },
-    {
-        "id": "freeproxycz_israel",
-        "name": "FreeProxy.cz Israel",
-        "url": "http://free-proxy.cz/en/proxylist/country/IL/all/ping/all",
-        "type": "html_table",
-    },
-    # ===== API-BASED SOURCES (Pre-tested, updated frequently) =====
-    # Proxifly - Updated every 5 minutes
-    {
-        "id": "proxifly_http",
-        "name": "Proxifly HTTP",
-        "url": "https://cdn.proxifly.dev/proxies/http/raw/proxies.txt",
-        "type": "raw_txt",
-    },
-    {
-        "id": "proxifly_https",
-        "name": "Proxifly HTTPS",
-        "url": "https://cdn.proxifly.dev/proxies/https/raw/proxies.txt",
-        "type": "raw_txt",
-    },
-    {
-        "id": "proxifly_socks4",
-        "name": "Proxifly SOCKS4",
-        "url": "https://cdn.proxifly.dev/proxies/socks4/raw/proxies.txt",
-        "type": "raw_txt",
-    },
-    {
-        "id": "proxifly_socks5",
-        "name": "Proxifly SOCKS5",
-        "url": "https://cdn.proxifly.dev/proxies/socks5/raw/proxies.txt",
-        "type": "raw_txt",
-    },
-    # ProxyScrape API - Updated every minute
-    {
-        "id": "proxyscrape_http",
-        "name": "ProxyScrape HTTP",
-        "url": "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all",
-        "type": "raw_txt",
-    },
-    {
-        "id": "proxyscrape_https",
-        "name": "ProxyScrape HTTPS",
-        "url": "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=https&timeout=10000&country=all",
-        "type": "raw_txt",
-    },
-    {
-        "id": "proxyscrape_socks4",
-        "name": "ProxyScrape SOCKS4",
-        "url": "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks4&timeout=10000&country=all",
-        "type": "raw_txt",
-    },
-    {
-        "id": "proxyscrape_socks5",
-        "name": "ProxyScrape SOCKS5",
-        "url": "https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks5&timeout=10000&country=all",
-        "type": "raw_txt",
-    },
-    # jetkai/proxy-list GitHub - Updated hourly, pre-tested
-    {
-        "id": "jetkai_http",
-        "name": "Jetkai HTTP",
-        "url": "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-http.txt",
-        "type": "raw_txt",
-    },
-    {
-        "id": "jetkai_https",
-        "name": "Jetkai HTTPS",
-        "url": "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-https.txt",
-        "type": "raw_txt",
-    },
-    {
-        "id": "jetkai_socks4",
-        "name": "Jetkai SOCKS4",
-        "url": "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks4.txt",
-        "type": "raw_txt",
-    },
-    {
-        "id": "jetkai_socks5",
-        "name": "Jetkai SOCKS5",
-        "url": "https://raw.githubusercontent.com/jetkai/proxy-list/main/online-proxies/txt/proxies-socks5.txt",
-        "type": "raw_txt",
-    },
-    # TheSpeedX/PROXY-List GitHub - Large collection
-    {
-        "id": "thespeedx_http",
-        "name": "TheSpeedX HTTP",
-        "url": "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt",
-        "type": "raw_txt",
-    },
-    {
-        "id": "thespeedx_socks4",
-        "name": "TheSpeedX SOCKS4",
-        "url": "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks4.txt",
-        "type": "raw_txt",
-    },
-    {
-        "id": "thespeedx_socks5",
-        "name": "TheSpeedX SOCKS5",
-        "url": "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks5.txt",
-        "type": "raw_txt",
-    },
-    # clarketm/proxy-list GitHub - Quality proxies
-    {
-        "id": "clarketm_http",
-        "name": "Clarketm HTTP",
-        "url": "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt",
-        "type": "raw_txt",
-    },
-    # monosans/proxy-list GitHub - Geo-checked
-    {
-        "id": "monosans_http",
-        "name": "Monosans HTTP",
-        "url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt",
-        "type": "raw_txt",
-    },
-    {
-        "id": "monosans_socks4",
-        "name": "Monosans SOCKS4",
-        "url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks4.txt",
-        "type": "raw_txt",
-    },
-    {
-        "id": "monosans_socks5",
-        "name": "Monosans SOCKS5",
-        "url": "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt",
-        "type": "raw_txt",
-    },
+        "id": source.name,
+        "name": source.name.replace("_", " ").title(),
+        "url": source.url,
+        "type": source.scrape_type,
+    }
+    for source in ProxyAggregator.SOURCES
+    if source.enabled
 ]
 
+# Keep this for reference - old format was:
+# {
+#     "id": "freeproxylist",
+#     "name": "Free-Proxy-List.net",
+#     "url": "https://free-proxy-list.net/",
+#     "type": "html_table",
+# },
 
 # ============ SCRAPER FUNCTIONS ============
 
@@ -735,8 +335,27 @@ async def scrape_proxylistorg(client: httpx.AsyncClient, url: str) -> set[str]:
     return proxies
 
 
+async def scrape_raw_txt(html: str) -> set[str]:
+    """Handle raw text proxy lists (IP:PORT per line).
+
+    Used for API sources like Proxifly, ProxyScrape, Jetkai, TheSpeedX, etc.
+    These return plain text with one proxy per line.
+    """
+    proxies: set[str] = set()
+    for line in html.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        # Handle various formats: IP:PORT, IP:PORT:USER:PASS, etc.
+        match = PROXY_PATTERN.match(line)
+        if match:
+            proxies.add(f"{match.group(1)}:{match.group(2)}")
+    return proxies
+
+
 SCRAPER_MAP = {
     "html_table": scrape_html_table,
+    "raw_txt": scrape_raw_txt,  # For API sources (Proxifly, ProxyScrape, etc.)
     "proxynova": scrape_proxynova,
     "hidemy": scrape_hidemy,
     "spys": scrape_spys,
@@ -799,17 +418,49 @@ async def get_proxy_stats() -> dict:
             for f in type_dir.glob("*.txt"):
                 total += count_lines(f)
 
+    # Track tested count from metadata file
+    tested_file = proxy_dir / ".tested_count"
+    tested = 0
+    if tested_file.exists():
+        try:
+            tested = int(tested_file.read_text().strip())
+        except (ValueError, OSError):
+            tested = 0
+
+    # Calculate accurate stats
+    # - If no proxies in files, reset tested count
+    if total == 0 and alive == 0:
+        # No proxies - reset stale tested count
+        if tested_file.exists():
+            tested_file.unlink()
+        tested = 0
+        dead = 0
+        untested = 0
+    elif tested > 0:
+        # Cap tested at total (can't test more than exist)
+        tested = min(tested, total + alive)
+        dead = max(0, tested - alive)
+        untested = max(0, total - tested)
+    else:
+        # No test run yet - all are untested
+        dead = 0
+        untested = total
+
     return {
         "total": total,
         "alive": alive,
-        "dead": max(0, total - alive) if alive > 0 else 0,
-        "untested": total if alive == 0 else 0,
+        "dead": dead,
+        "untested": untested,
+        "tested": tested,
     }
 
 
 @router.post("/scrape/start")
 async def start_scrape() -> dict:
     """Start scraping all proxy sources. Returns job_id for tracking."""
+    # Cleanup old jobs to prevent memory leak
+    _cleanup_old_jobs()
+
     job_id = str(uuid4())[:8]
 
     _jobs[job_id] = {
@@ -1318,6 +969,7 @@ async def _run_scrape_job(job_id: str) -> None:
             job["test_alive"] = len(alive_proxies)
 
         # Save alive proxies
+        new_alive: set[str] = set()
         if alive_proxies:
             existing_alive = read_proxies(proxy_dir / "alive_proxies.txt")
             new_alive = alive_proxies - existing_alive
@@ -1326,7 +978,17 @@ async def _run_scrape_job(job_id: str) -> None:
                     for proxy in sorted(new_alive):
                         f.write(proxy + "\n")
 
-        job["alive_added"] = len(alive_proxies)
+        job["alive_added"] = len(new_alive)  # Fixed: was len(alive_proxies)
+
+        # Update tested count - increment since we only tested new proxies
+        tested_file = proxy_dir / ".tested_count"
+        existing_tested = 0
+        if tested_file.exists():
+            try:
+                existing_tested = int(tested_file.read_text().strip())
+            except (ValueError, OSError):
+                existing_tested = 0
+        tested_file.write_text(str(existing_tested + len(new_proxies)))
 
     job["status"] = "completed"
     job["completed_at"] = datetime.now(UTC).isoformat()
@@ -1341,13 +1003,39 @@ async def get_scrape_status(job_id: str) -> dict:
 
 
 @router.post("/test/start")
-async def start_test() -> dict:
-    """Start testing all proxies. Returns job_id for tracking."""
+async def start_test(
+    source_file: str = "aggregated",
+    browser_test: bool = False,
+    concurrent: int = 100,
+    timeout: float = 5.0,
+) -> dict:
+    """Start testing proxies from selected file. Returns job_id for tracking.
+
+    Args:
+        source_file: Which file to test - "aggregated" (all scraped) or "alive" (known working)
+        browser_test: If True, use Playwright browser for testing.
+                     This tests CONNECT tunnel support needed for HTTPS.
+                     Slower but more accurate for browser automation use.
+        concurrent: Number of concurrent tests (default 100, max 500)
+        timeout: Timeout per proxy in seconds (default 5.0)
+    """
+    # Cleanup old jobs to prevent memory leak
+    _cleanup_old_jobs()
+
     proxy_dir = DATA_DIR / "proxies"
-    total = count_lines(proxy_dir / "aggregated.txt")
+
+    # Select source file
+    if source_file == "alive":
+        source_path = proxy_dir / "alive_proxies.txt"
+        source_name = "alive_proxies.txt"
+    else:
+        source_path = proxy_dir / "aggregated.txt"
+        source_name = "aggregated.txt"
+
+    total = count_lines(source_path)
 
     if total == 0:
-        return {"error": "No proxies to test", "total": 0}
+        return {"error": f"No proxies in {source_name}", "total": 0}
 
     job_id = str(uuid4())[:8]
 
@@ -1361,15 +1049,20 @@ async def start_test() -> dict:
         "dead": 0,
         "speed_per_sec": 0,
         "eta_seconds": 0,
+        "browser_test": browser_test,
+        "concurrent": min(concurrent, 500),
+        "timeout": timeout,
+        "source_file": source_file,
+        "source_path": str(source_path),
     }
 
     asyncio.create_task(_run_test_job(job_id))
 
-    return {"job_id": job_id, "total": total}
+    return {"job_id": job_id, "total": total, "source": source_name, "browser_test": browser_test}
 
 
 async def _test_single_proxy(proxy: str, timeout: float = 5.0) -> bool:
-    """Test if a single proxy is alive."""
+    """Test if a single proxy is alive using httpx."""
     try:
         async with httpx.AsyncClient(
             proxies={"http://": f"http://{proxy}", "https://": f"http://{proxy}"},
@@ -1381,15 +1074,57 @@ async def _test_single_proxy(proxy: str, timeout: float = 5.0) -> bool:
         return False
 
 
+async def _test_proxy_browser(proxy: str, timeout: float = 10.0) -> bool:
+    """Test proxy with Playwright browser (CONNECT tunnel support for HTTPS).
+
+    Many proxies that work with httpx fail in browsers because browsers
+    require CONNECT tunnel for HTTPS sites. This test verifies the proxy
+    actually works for browser automation.
+    """
+    try:
+        from playwright.async_api import async_playwright
+
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
+                headless=True,
+                proxy={"server": f"http://{proxy}"},
+            )
+            context = await browser.new_context()
+            page = await context.new_page()
+
+            # Test HTTPS site to verify CONNECT tunnel works
+            await page.goto("https://httpbin.org/ip", timeout=int(timeout * 1000))
+            content = await page.content()
+            await browser.close()
+
+            # Verify we got a valid response
+            return "origin" in content
+    except Exception:
+        return False
+
+
 async def _run_test_job(job_id: str) -> None:
-    """Background task to test all proxies."""
+    """Background task to test proxies from selected source file."""
     job = _jobs[job_id]
     proxy_dir = DATA_DIR / "proxies"
 
-    all_proxies = list(read_proxies(proxy_dir / "aggregated.txt"))
+    # Read from selected source file
+    source_path = Path(job.get("source_path", proxy_dir / "aggregated.txt"))
+    all_proxies = list(read_proxies(source_path))
     alive_proxies: set[str] = set()
 
-    batch_size = 100
+    # Use job settings
+    use_browser = job.get("browser_test", False)
+    batch_size = job.get("concurrent", 100)
+    timeout = job.get("timeout", 5.0)
+
+    # Browser tests are slower, use smaller batches
+    if use_browser:
+        batch_size = min(batch_size, 10)  # Max 10 concurrent browser instances
+        test_func = lambda p: _test_proxy_browser(p, timeout)
+    else:
+        test_func = lambda p: _test_single_proxy(p, timeout)
+
     start_time = time.time()
     tested = 0
 
@@ -1399,7 +1134,7 @@ async def _run_test_job(job_id: str) -> None:
             return
 
         batch = all_proxies[i : i + batch_size]
-        results = await asyncio.gather(*[_test_single_proxy(p) for p in batch])
+        results = await asyncio.gather(*[test_func(p) for p in batch])
 
         for proxy, is_alive in zip(batch, results):
             tested += 1
@@ -1420,10 +1155,21 @@ async def _run_test_job(job_id: str) -> None:
                 int(remaining / job["speed_per_sec"]) if job["speed_per_sec"] > 0 else 0
             )
 
-    # Save alive proxies
+    # Save alive proxies - merge with existing to preserve previously working proxies
+    existing_alive = read_proxies(proxy_dir / "alive_proxies.txt")
+    all_alive = existing_alive | alive_proxies
+    new_alive_count = len(alive_proxies - existing_alive)
+
     with open(proxy_dir / "alive_proxies.txt", "w") as f:
-        for proxy in sorted(alive_proxies):
+        for proxy in sorted(all_alive):
             f.write(proxy + "\n")
+
+    job["alive_added"] = new_alive_count
+    job["total_alive"] = len(all_alive)
+
+    # Save tested count for stats tracking
+    tested_file = proxy_dir / ".tested_count"
+    tested_file.write_text(str(job.get("tested", len(all_proxies))))
 
     job["status"] = "completed"
     job["completed_at"] = datetime.now(UTC).isoformat()
@@ -1445,6 +1191,55 @@ async def stop_test(job_id: str) -> dict:
 
     _jobs[job_id]["cancelled"] = True
     return {"status": "stopping"}
+
+
+@router.post("/clear-dead")
+async def clear_dead_proxies(source_file: str = "alive") -> dict:
+    """Test proxies in a file and remove dead ones.
+
+    Args:
+        source_file: "alive" for alive_proxies.txt, "aggregated" for aggregated.txt
+    """
+    proxy_dir = DATA_DIR / "proxies"
+
+    # Select source file
+    if source_file == "alive":
+        file_path = proxy_dir / "alive_proxies.txt"
+    else:
+        file_path = proxy_dir / "aggregated.txt"
+
+    if not file_path.exists():
+        return {"error": f"File {file_path.name} not found", "tested": 0, "removed": 0, "remaining": 0}
+
+    all_proxies = list(read_proxies(file_path))
+    if not all_proxies:
+        return {"error": f"No proxies in {file_path.name}", "tested": 0, "removed": 0, "remaining": 0}
+
+    # Test all proxies
+    alive_proxies: set[str] = set()
+    batch_size = 100
+
+    for i in range(0, len(all_proxies), batch_size):
+        batch = all_proxies[i : i + batch_size]
+        results = await asyncio.gather(*[_test_single_proxy(p) for p in batch])
+
+        for proxy, is_alive in zip(batch, results):
+            if is_alive:
+                alive_proxies.add(proxy)
+
+    # Save only alive proxies back to the file
+    with open(file_path, "w") as f:
+        for proxy in sorted(alive_proxies):
+            f.write(proxy + "\n")
+
+    removed = len(all_proxies) - len(alive_proxies)
+
+    return {
+        "tested": len(all_proxies),
+        "removed": removed,
+        "remaining": len(alive_proxies),
+        "file": file_path.name,
+    }
 
 
 @router.post("/clean")

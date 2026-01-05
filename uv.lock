@@ -568,6 +568,12 @@ wheels = [
 ]
 
 [[package]]
+name = "geoip2fast"
+version = "1.2.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c6/07/2a346a6a3294e1a1f6c1852f17ae555160d6f41d8636ea00c2ae0a89a8ec/geoip2fast-1.2.2.tar.gz", hash = "sha256:38815700cedfeb197d51b4b8733b0d4f7965b36de15147c125527124f8b45d6b", size = 9655302, upload-time = "2024-06-21T04:59:04.978Z" }
+
+[[package]]
 name = "ghoststorm"
 version = "1.0.0"
 source = { editable = "." }
@@ -579,6 +585,7 @@ dependencies = [
     { name = "browserforge" },
     { name = "camoufox" },
     { name = "fastapi" },
+    { name = "geoip2fast" },
     { name = "lxml" },
     { name = "orjson" },
     { name = "patchright" },
@@ -642,6 +649,7 @@ requires-dist = [
     { name = "browserforge", specifier = ">=1.2.3" },
     { name = "camoufox", specifier = ">=0.4.0" },
     { name = "fastapi", specifier = ">=0.115.0" },
+    { name = "geoip2fast", specifier = ">=1.2.0" },
     { name = "ghoststorm", extras = ["captcha", "gui", "dev"], marker = "extra == 'all'" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.27.0" },
     { name = "lxml", specifier = ">=5.0.0" },

@@ -271,26 +271,14 @@ class TestIdentityCoherenceOrchestrator:
         )
 
     @pytest.fixture
-    def jp_proxy(self, mocker):
-        """Create Japan proxy with mocked GeoIP lookup."""
-        # Mock GeoIP to return Japan for this IP
-        mock_geo = GeoLocation(
-            country_code="JP",
-            country_name="Japan",
-            timezone="Asia/Tokyo",
-            latitude=35.6762,
-            longitude=139.6503,
-        )
-        mocker.patch.object(
-            GeoIPService,
-            "lookup_cached",
-            return_value=mock_geo,
-        )
-
+    def jp_proxy(self):
+        """Create Japan proxy - GeoIP will fallback for test IPs."""
+        # The proxy has explicit country set, so the orchestrator
+        # should use that instead of doing GeoIP lookup
         return Proxy(
             host="103.152.112.25",
             port=8080,
-            country="jp",
+            country="jp",  # Explicit country setting
             category=ProxyCategory.RESIDENTIAL,
         )
 

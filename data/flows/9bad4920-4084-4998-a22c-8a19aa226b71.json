@@ -1,0 +1,21 @@
+{
+  "id": "9bad4920-4084-4998-a22c-8a19aa226b71",
+  "name": "Test Flow",
+  "description": "New description",
+  "status": "draft",
+  "start_url": "https://example.com",
+  "checkpoints": [],
+  "summary_goal": "",
+  "recorded_with_browser": "patchright",
+  "created_at": "2026-01-05T11:08:38.261243",
+  "updated_at": "2026-01-05T11:08:38.261244",
+  "times_executed": 0,
+  "successful_executions": 0,
+  "success_rate": 0.0,
+  "checkpoint_count": 0,
+  "tags": [
+    "test",
+    "e2e"
+  ],
+  "metadata": {}
+}

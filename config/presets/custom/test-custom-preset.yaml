@@ -1,0 +1,14 @@
+id: test-custom-preset
+name: Test Custom Preset
+description: A test preset
+category: test
+url: https://example.com
+goal_keywords:
+- success
+- complete
+captcha_selectors:
+  iframe: iframe[src*='captcha']
+actions:
+- type: wait
+  seconds: 2
+settings: {}
