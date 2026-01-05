@@ -72,7 +72,7 @@ class TestZefoyStartAPI:
 
     def test_start_job_invalid_url(self, api_test_client: TestClient):
         """Test starting job with invalid URL."""
-        with patch("ghoststorm.api.routes.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
+        with patch("ghoststorm.plugins.automation.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
             response = api_test_client.post(
                 "/api/zefoy/start",
                 json={
@@ -88,7 +88,7 @@ class TestZefoyStartAPI:
 
     def test_start_job_invalid_service(self, api_test_client: TestClient):
         """Test starting job with invalid service."""
-        with patch("ghoststorm.api.routes.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
+        with patch("ghoststorm.plugins.automation.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
             response = api_test_client.post(
                 "/api/zefoy/start",
                 json={
@@ -105,7 +105,7 @@ class TestZefoyStartAPI:
     def test_start_job_success(self, api_test_client: TestClient):
         """Test starting job successfully."""
         with patch(
-            "ghoststorm.api.routes.zefoy.ZEFOY_SERVICES",
+            "ghoststorm.plugins.automation.zefoy.ZEFOY_SERVICES",
             {"views": ".btn-views", "likes": ".btn-likes"},
         ):
             with patch("ghoststorm.api.routes.zefoy._run_zefoy_job", new_callable=AsyncMock):
@@ -133,7 +133,7 @@ class TestZefoyStartAPI:
         """Test starting job with multiple services."""
         with (
             patch(
-                "ghoststorm.api.routes.zefoy.ZEFOY_SERVICES",
+                "ghoststorm.plugins.automation.zefoy.ZEFOY_SERVICES",
                 {
                     "views": ".btn-views",
                     "likes": ".btn-likes",
@@ -159,7 +159,7 @@ class TestZefoyStartAPI:
 
     def test_start_job_config_stored(self, api_test_client: TestClient):
         """Test job config is stored correctly."""
-        with patch("ghoststorm.api.routes.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
+        with patch("ghoststorm.plugins.automation.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
             with patch("ghoststorm.api.routes.zefoy._run_zefoy_job", new_callable=AsyncMock):
                 with patch("asyncio.create_task"):
                     response = api_test_client.post(
@@ -195,7 +195,7 @@ class TestZefoyServicesAPI:
     def test_get_services(self, api_test_client: TestClient):
         """Test getting available Zefoy services."""
         with patch(
-            "ghoststorm.api.routes.zefoy.ZEFOY_SERVICES",
+            "ghoststorm.plugins.automation.zefoy.ZEFOY_SERVICES",
             {
                 "views": ".btn-views",
                 "likes": ".btn-likes",
@@ -250,7 +250,7 @@ class TestZefoyServicesAPI:
                     "checking": False,
                 },
             ),
-            patch("ghoststorm.api.routes.zefoy.check_zefoy_services") as mock_check,
+            patch("ghoststorm.plugins.automation.zefoy.check_zefoy_services") as mock_check,
         ):
             mock_check.return_value = {
                 "views": "available",
@@ -276,7 +276,7 @@ class TestZefoyServicesAPI:
                     "checking": False,
                 },
             ),
-            patch("ghoststorm.api.routes.zefoy.check_zefoy_services") as mock_check,
+            patch("ghoststorm.plugins.automation.zefoy.check_zefoy_services") as mock_check,
         ):
             mock_check.side_effect = Exception("Network error")
 
@@ -294,7 +294,7 @@ class TestZefoyJobLifecycle:
 
     def test_create_and_get_job(self, api_test_client: TestClient):
         """Test creating and retrieving a job."""
-        with patch("ghoststorm.api.routes.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
+        with patch("ghoststorm.plugins.automation.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
             with patch("ghoststorm.api.routes.zefoy._run_zefoy_job", new_callable=AsyncMock):
                 with patch("asyncio.create_task"):
                     # Create job
@@ -316,7 +316,7 @@ class TestZefoyJobLifecycle:
 
     def test_create_and_cancel_job(self, api_test_client: TestClient):
         """Test creating and cancelling a job."""
-        with patch("ghoststorm.api.routes.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
+        with patch("ghoststorm.plugins.automation.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
             with patch("ghoststorm.api.routes.zefoy._run_zefoy_job", new_callable=AsyncMock):
                 with patch("asyncio.create_task"):
                     # Create job
@@ -341,7 +341,7 @@ class TestZefoyJobLifecycle:
 
     def test_job_appears_in_list(self, api_test_client: TestClient):
         """Test created job appears in job list."""
-        with patch("ghoststorm.api.routes.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
+        with patch("ghoststorm.plugins.automation.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
             with patch("ghoststorm.api.routes.zefoy._run_zefoy_job", new_callable=AsyncMock):
                 with patch("asyncio.create_task"):
                     # Create job
@@ -369,7 +369,7 @@ class TestZefoyJobStructure:
 
     def test_job_has_required_fields(self, api_test_client: TestClient):
         """Test job response has all required fields."""
-        with patch("ghoststorm.api.routes.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
+        with patch("ghoststorm.plugins.automation.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
             with patch("ghoststorm.api.routes.zefoy._run_zefoy_job", new_callable=AsyncMock):
                 with patch("asyncio.create_task"):
                     response = api_test_client.post(
@@ -399,7 +399,7 @@ class TestZefoyJobStructure:
 
     def test_job_initial_values(self, api_test_client: TestClient):
         """Test job has correct initial values."""
-        with patch("ghoststorm.api.routes.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
+        with patch("ghoststorm.plugins.automation.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
             with patch("ghoststorm.api.routes.zefoy._run_zefoy_job", new_callable=AsyncMock):
                 with patch("asyncio.create_task"):
                     response = api_test_client.post(
@@ -422,7 +422,7 @@ class TestZefoyJobStructure:
 
     def test_job_config_defaults(self, api_test_client: TestClient):
         """Test job config has defaults when not specified."""
-        with patch("ghoststorm.api.routes.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
+        with patch("ghoststorm.plugins.automation.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
             with patch("ghoststorm.api.routes.zefoy._run_zefoy_job", new_callable=AsyncMock):
                 with patch("asyncio.create_task"):
                     response = api_test_client.post(
@@ -456,7 +456,7 @@ class TestZefoyStatsTracking:
         initial_resp = api_test_client.get("/api/zefoy/stats")
         initial_total = initial_resp.json()["total"]
 
-        with patch("ghoststorm.api.routes.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
+        with patch("ghoststorm.plugins.automation.zefoy.ZEFOY_SERVICES", {"views": ".btn-views"}):
             with patch("ghoststorm.api.routes.zefoy._run_zefoy_job", new_callable=AsyncMock):
                 with patch("asyncio.create_task"):
                     api_test_client.post(

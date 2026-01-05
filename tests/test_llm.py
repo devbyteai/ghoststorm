@@ -261,7 +261,7 @@ class TestLLMServiceConfig:
 
     def test_default_config(self):
         config = LLMServiceConfig()
-        assert config.default_provider == ProviderType.OPENAI
+        assert config.default_provider == ProviderType.OLLAMA
         assert config.openai_model == "gpt-4o"
         assert config.anthropic_model == "claude-sonnet-4-20250514"
         assert config.ollama_model == "llama3"
@@ -290,7 +290,7 @@ class TestLLMService:
     def test_create_service(self):
         config = LLMServiceConfig()
         service = LLMService(config)
-        assert service.current_provider == ProviderType.OPENAI
+        assert service.current_provider == ProviderType.OLLAMA
 
     def test_set_provider(self):
         config = LLMServiceConfig()

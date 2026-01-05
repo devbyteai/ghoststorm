@@ -24,6 +24,12 @@ def api_test_client(mock_orchestrator: MagicMock) -> TestClient:
     return TestClient(app)
 
 
+@pytest.fixture
+def real_ollama_url(request: pytest.FixtureRequest) -> str:
+    """Get the Ollama URL from command line option for real tests."""
+    return request.config.getoption("--ollama-url")
+
+
 # ============================================================================
 # STATE RESET FIXTURES
 # ============================================================================

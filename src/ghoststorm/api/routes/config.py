@@ -8,6 +8,7 @@ from typing import Any
 import structlog
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
+from pydantic_core import PydanticUndefined
 
 from ghoststorm.api.schemas import (
     PRESETS,
@@ -42,9 +43,9 @@ def _get_schema_info(schema_class: type) -> dict[str, Any]:
     schema = schema_class.model_json_schema()
     defaults = {}
 
-    # Get default values
+    # Get default values (skip PydanticUndefined which means no default)
     for field_name, field_info in schema_class.model_fields.items():
-        if field_info.default is not None:
+        if field_info.default is not PydanticUndefined:
             defaults[field_name] = field_info.default
         elif field_info.default_factory is not None:
             defaults[field_name] = field_info.default_factory()

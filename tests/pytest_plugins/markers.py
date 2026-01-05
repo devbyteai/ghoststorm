@@ -38,6 +38,7 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line("markers", "websocket: marks WebSocket tests")
     config.addinivalue_line("markers", "flow: marks Flow Recorder tests")
     config.addinivalue_line("markers", "assistant: marks AI Assistant tests")
+    config.addinivalue_line("markers", "journey: marks user journey tests")
 
 
 def pytest_collection_modifyitems(

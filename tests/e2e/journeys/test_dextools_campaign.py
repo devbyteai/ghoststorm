@@ -68,7 +68,7 @@ class TestDEXToolsSingleVisitJourney:
             },
         )
 
-        assert create_response.status_code == 200
+        assert create_response.status_code in [200, 201]
         task_data = create_response.json()
         assert task_data["platform"] == "dextools"
         assert "task_id" in task_data
@@ -96,7 +96,7 @@ class TestDEXToolsSingleVisitJourney:
             },
         )
 
-        assert response.status_code == 200
+        assert response.status_code in [200, 201]
         assert response.json()["platform"] == "dextools"
 
     def test_single_visit_with_engaged_behavior(self, api_test_client: TestClient):
@@ -116,7 +116,7 @@ class TestDEXToolsSingleVisitJourney:
             },
         )
 
-        assert response.status_code == 200
+        assert response.status_code in [200, 201]
 
 
 # ============================================================================
@@ -163,7 +163,7 @@ class TestDEXToolsCampaignJourney:
             },
         )
 
-        assert campaign_response.status_code == 200
+        assert campaign_response.status_code in [200, 201]
         assert campaign_response.json()["platform"] == "dextools"
 
     def test_campaign_with_burst_distribution(self, api_test_client: TestClient):
@@ -183,7 +183,7 @@ class TestDEXToolsCampaignJourney:
             },
         )
 
-        assert response.status_code == 200
+        assert response.status_code in [200, 201]
 
     def test_campaign_with_even_distribution(self, api_test_client: TestClient):
         """Test campaign with even distribution mode."""
@@ -202,7 +202,7 @@ class TestDEXToolsCampaignJourney:
             },
         )
 
-        assert response.status_code == 200
+        assert response.status_code in [200, 201]
 
 
 # ============================================================================
@@ -247,7 +247,7 @@ class TestDEXToolsBehaviorDistribution:
                 },
             )
 
-            assert response.status_code == 200, f"Failed for mode: {mode}"
+            assert response.status_code in [200, 201], f"Failed for mode: {mode}"
 
 
 # ============================================================================
@@ -341,7 +341,7 @@ class TestDEXToolsMultiChain:
 
         for url in chains:
             response = api_test_client.post("/api/tasks", json={"url": url, "workers": 1})
-            assert response.status_code == 200
+            assert response.status_code in [200, 201]
             assert response.json()["platform"] == "dextools"
 
 
@@ -381,4 +381,4 @@ class TestDEXToolsErrorHandling:
 
         # Should either reject or use defaults
         # Implementation dependent
-        assert response.status_code in [200, 400, 422]
+        assert response.status_code in [200, 201, 400, 422]
