@@ -15,7 +15,11 @@ from ghoststorm.core.identity.coherence_orchestrator import (
     CoherentIdentity,
     IdentityCoherenceOrchestrator,
 )
-from ghoststorm.core.models.fingerprint import Fingerprint, GeolocationConfig, ScreenConfig
+from ghoststorm.core.models.fingerprint import (
+    Fingerprint,
+    GeolocationConfig,
+    ScreenConfig,
+)
 from ghoststorm.core.models.proxy import Proxy, ProxyCategory, ProxyType
 
 
