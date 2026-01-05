@@ -163,14 +163,10 @@ Perfect for debugging, writing automation scripts, and extending the project.
 
 ---
 
-## 📈 Star History
+## 👥 Contributors
 
-<a href="https://star-history.com/#devbyteai/ghoststorm&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=devbyteai/ghoststorm&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=devbyteai/ghoststorm&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=devbyteai/ghoststorm&type=Date" />
- </picture>
+<a href="https://github.com/devbyteai/ghoststorm/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=devbyteai/ghoststorm" />
 </a>
 
 ---
