@@ -186,6 +186,14 @@ Perfect for debugging, writing automation scripts, and extending the project.
 
 ---
 
+## 💜 Support
+
+If you find GhostStorm useful:
+
+**SOL:** `3R6DJ8BcUxMErn3d3Bqp7RV74r4uaFUV3zoQY1H6rChd`
+
+---
+
 ## 📄 License
 
 MIT — See [LICENSE](LICENSE)
@@ -194,7 +202,7 @@ MIT — See [LICENSE](LICENSE)
 
 <div align="center">
 
-**[⬆ Back to Top](#-ghoststorm)**
+**[⬆ Back to Top](#ghoststorm)**
 
 Made by [@devbyteai](https://github.com/devbyteai)
 
