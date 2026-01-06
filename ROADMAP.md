@@ -28,6 +28,9 @@ GhostStorm is currently in beta with all core features functional:
 
 ## Short Term (Next Release)
 
+### Priority: Vision-Based Element Finding
+- [ ] **LLM Vision fallback for button detection** - When CSS/XPath selectors fail to find elements (like Search button after Zefoy cooldown), use screenshot + GPT-4o/Claude vision to locate the element and return click coordinates. Infrastructure already exists in `core/llm/vision.py`.
+
 ### Performance & Stability
 - [ ] **Connection pooling** - Reduce browser startup overhead
 - [ ] **Memory optimization** - Lower memory footprint for long-running tasks

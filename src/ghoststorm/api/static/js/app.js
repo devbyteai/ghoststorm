@@ -116,7 +116,7 @@ async function checkActiveScrapeJob() {
 }
 
 async function loadPages() {
-    const pages = ['tasks', 'proxies', 'data', 'settings', 'zefoy', 'engine', 'algorithms', 'llm'];
+    const pages = ['tasks', 'knowledge-base', 'proxies', 'data', 'settings', 'zefoy', 'engine', 'algorithms', 'llm'];
     const container = document.getElementById('pages-container');
 
     for (const page of pages) {
@@ -136,6 +136,18 @@ function setupPlatformChips() {
     document.querySelectorAll('.platform-chip').forEach(chip => {
         chip.addEventListener('click', () => setPlatform(chip.dataset.platform));
     });
+}
+
+// ============ KNOWLEDGE BASE ============
+function toggleAccordion(id) {
+    const content = document.getElementById(id);
+    const icon = document.getElementById(id + '-icon');
+    if (content) {
+        content.classList.toggle('hidden');
+    }
+    if (icon) {
+        icon.classList.toggle('rotate-180');
+    }
 }
 
 // ============ PAGE NAVIGATION ============
@@ -3399,10 +3411,9 @@ function renderZefoyJobs() {
 }
 
 function setupZefoyServiceButtons() {
-    const buttons = document.querySelectorAll('.zefoy-service-btn');
-    buttons.forEach(btn => {
-        btn.addEventListener('click', () => toggleZefoyService(btn));
-    });
+    // Note: onclick handlers are already in HTML, no need to add listeners here
+    // Just reset the selection state
+    selectedZefoyServices.clear();
 }
 
 function toggleZefoyService(btn) {
@@ -3449,7 +3460,7 @@ async function startZefoyJob() {
         rotate_proxy: document.getElementById('zefoy-rotate-proxy')?.checked ?? true,
     };
 
-    addZefoyLog('info', `Starting Zefoy job for ${config.services.length} services...`);
+    addZefoyLog('info', `Starting job for ${config.services.length} services...`);
 
     try {
         const response = await fetch('/api/zefoy/start', {
@@ -3468,10 +3479,10 @@ async function startZefoyJob() {
 
         zefoyJobs[data.job_id] = data;
         renderZefoyJobs();
-        addEvent('success', `Zefoy job started: ${data.job_id}`);
+        addEvent('success', `Job started: ${data.job_id}`);
         addZefoyLog('success', `Job ${data.job_id} created - click Refresh to update status`);
     } catch (error) {
-        addEvent('error', 'Failed to start Zefoy job: ' + error.message);
+        addEvent('error', 'Failed to start job: ' + error.message);
         addZefoyLog('error', 'Failed to start: ' + error.message);
     }
 }
@@ -3591,25 +3602,19 @@ function updateZefoyServiceButtons() {
         const dot = document.createElement('span');
         dot.className = 'status-dot w-2 h-2 rounded-full inline-block ml-1';
 
+        // Never disable buttons - let users try any service
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+
         if (isOnline === true) {
             dot.classList.add('bg-green-500');
-            btn.disabled = false;
-            btn.classList.remove('opacity-50', 'cursor-not-allowed');
             btn.title = 'Service online';
         } else if (isOnline === false) {
-            dot.classList.add('bg-red-500');
-            btn.disabled = true;
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
-            btn.title = 'Service offline on Zefoy';
-            // Deselect if was selected
-            if (selectedZefoyServices.has(service)) {
-                selectedZefoyServices.delete(service);
-                btn.classList.remove('border-pink-500', 'text-pink-400', 'bg-pink-500/10');
-                btn.classList.add('border-gray-600', 'text-gray-400');
-            }
+            dot.classList.add('bg-yellow-500');
+            btn.title = 'Service may be offline - try anyway';
         } else {
             dot.classList.add('bg-gray-500');
-            btn.title = 'Status unknown - click Check Status';
+            btn.title = 'Click to select';
         }
 
         btn.appendChild(dot);

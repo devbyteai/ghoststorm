@@ -1,4 +1,4 @@
-"""Zefoy TikTok booster API routes."""
+"""TikTok booster API routes."""
 
 from __future__ import annotations
 
@@ -157,29 +157,30 @@ async def get_zefoy_services_status() -> dict:
 
 @router.post("/services/check")
 async def check_zefoy_services_now() -> dict:
-    """Trigger a fresh check of Zefoy services."""
-    from ghoststorm.plugins.automation.zefoy import check_zefoy_services
+    """Return all services as available.
 
-    if _service_status_cache["checking"]:
-        return {"error": "Check already in progress"}
+    Note: Actual availability is checked when job runs.
+    The full browser check was too slow (30+ iterations, ~45 seconds).
+    """
+    # Just mark all services as available - actual job will fail if service is down
+    status = {
+        "followers": True,
+        "hearts": True,
+        "chearts": True,
+        "views": True,
+        "shares": True,
+        "favorites": True,
+        "livestream": True,
+    }
+    _service_status_cache["status"] = status
+    _service_status_cache["last_check"] = datetime.now(UTC).isoformat()
+    _service_status_cache["checking"] = False
 
-    _service_status_cache["checking"] = True
-
-    try:
-        logger.info("[ZEFOY] Checking service availability on zefoy.com...")
-        status = await check_zefoy_services()
-        _service_status_cache["status"] = status
-        _service_status_cache["last_check"] = datetime.now(UTC).isoformat()
-        logger.info("[ZEFOY] Service check complete", status=status)
-        return {
-            "status": status,
-            "last_check": _service_status_cache["last_check"],
-        }
-    except Exception as e:
-        logger.error("[ZEFOY] Service check failed", error=str(e))
-        return {"error": str(e)}
-    finally:
-        _service_status_cache["checking"] = False
+    return {
+        "status": status,
+        "last_check": _service_status_cache["last_check"],
+        "checking": False,
+    }
 
 
 async def _run_zefoy_job(job_id: str) -> None:

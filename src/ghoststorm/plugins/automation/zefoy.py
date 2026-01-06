@@ -1,4 +1,4 @@
-"""Zefoy TikTok Booster Automation.
+"""TikTok Booster Automation.
 
 Automates Zefoy.com to boost TikTok engagement:
 - Followers, Hearts, Views, Shares, Favorites, Live Stream
@@ -318,15 +318,23 @@ class ZefoyAutomation:
             except Exception:
                 pass
 
-            # If cooldown message, parse and return
+            # If cooldown message, wait for it then click the button that appears
             if "wait" in cooldown_text.lower() or "second" in cooldown_text.lower():
                 cooldown = self._parse_cooldown(cooldown_text)
-                logger.info(f"[ZEFOY] Cooldown detected: {cooldown}s")
+                logger.info(f"[ZEFOY] Cooldown detected: {cooldown}s - waiting...")
+
+                # Wait for cooldown to finish
+                await self._wait_for_cooldown_and_click(div_num, cooldown)
+
+                # After clicking, check for new cooldown or success
+                success = await self._check_success()
+                new_cooldown = await self._get_cooldown_time(div_num)
+
                 return ZefoyResult(
-                    success=True,  # Cooldown means it worked previously
+                    success=success,
                     service=self.config.service,
                     captchas_solved=self._captchas_solved,
-                    cooldown_seconds=cooldown,
+                    cooldown_seconds=new_cooldown,
                     duration=(datetime.now(UTC) - start_time).total_seconds(),
                 )
 
@@ -414,9 +422,16 @@ class ZefoyAutomation:
                     pass
                 logger.warning("[ZEFOY] Send button not found")
 
+            # Check for cooldown after send - if present, wait and click
+            cooldown = await self._get_cooldown_time(div_num)
+            if cooldown > 0:
+                logger.info(f"[ZEFOY] Cooldown after send: {cooldown}s - waiting...")
+                await self._wait_for_cooldown_and_click(div_num, cooldown)
+                # Check new state
+                cooldown = await self._get_cooldown_time(div_num)
+
             # Check success
             success = await self._check_success()
-            cooldown = await self._get_cooldown_time(div_num)
 
             duration = (datetime.now(UTC) - start_time).total_seconds()
 
@@ -1526,6 +1541,202 @@ class ZefoyAutomation:
             pass
 
         return 0
+
+    async def _wait_for_cooldown_and_click(self, div_num: str, cooldown_seconds: int) -> bool:
+        """Wait for cooldown, then handle ready state.
+
+        After cooldown, two possible paths:
+        - Path A: Text says "Ready" → Click Search → Button appears → Click it
+        - Path B: Text becomes a button directly → Click it
+        Both paths end with success + new cooldown.
+
+        Args:
+            div_num: The div number for the current service
+            cooldown_seconds: Seconds to wait
+
+        Returns:
+            True if successful
+        """
+        logger.info(f"[ZEFOY] Waiting {cooldown_seconds}s for cooldown to finish...")
+
+        # Wait the full cooldown time
+        elapsed = 0
+        check_interval = 30
+
+        while elapsed < cooldown_seconds:
+            wait_time = min(check_interval, cooldown_seconds - elapsed)
+            await asyncio.sleep(wait_time)
+            elapsed += wait_time
+            await self._hide_ad_overlays()
+
+            remaining = cooldown_seconds - elapsed
+            if remaining > 0:
+                logger.info(f"[ZEFOY] Cooldown: {remaining}s remaining...")
+
+        logger.info("[ZEFOY] Cooldown finished! Checking state...")
+        await asyncio.sleep(2)
+        await self._hide_ad_overlays()
+
+        # Check what we have: button or "ready" text?
+        result_btn = await self._find_result_button(div_num)
+
+        if result_btn:
+            # Path B: Button appeared directly - click it
+            logger.info("[ZEFOY] Path B: Found button - clicking directly!")
+            try:
+                await result_btn.click(force=True, timeout=5000)
+                await asyncio.sleep(2)
+                logger.info("[ZEFOY] Button clicked successfully!")
+                return True
+            except Exception as e:
+                logger.warning(f"[ZEFOY] Button click failed: {e}")
+                return False
+
+        # Path A: Check for "ready" text, then click Search
+        page_text = ""
+        try:
+            page_text = await self._page.inner_text("body")
+        except Exception:
+            pass
+
+        if "ready" in page_text.lower():
+            logger.info("[ZEFOY] Path A: Found 'ready' text - clicking Search...")
+
+            # Click Search button
+            search_btn = await self._find_search_button(div_num)
+            if not search_btn:
+                logger.warning("[ZEFOY] Search button not found")
+                return False
+
+            await search_btn.click(force=True, timeout=5000)
+            await asyncio.sleep(3)
+            await self._hide_ad_overlays()
+
+            # Now find and click the result button
+            logger.info("[ZEFOY] Looking for result button after Search...")
+            result_btn = await self._find_result_button(div_num)
+            if result_btn:
+                logger.info("[ZEFOY] Found result button - clicking!")
+                await result_btn.click(force=True, timeout=5000)
+                await asyncio.sleep(2)
+                logger.info("[ZEFOY] Result button clicked successfully!")
+                return True
+            else:
+                logger.warning("[ZEFOY] Result button not found after Search")
+                return False
+
+        logger.warning("[ZEFOY] Neither button nor 'ready' text found after cooldown")
+        return False
+
+    async def _find_search_button(self, div_num: str) -> Any:
+        """Find the Search button."""
+        selectors = [
+            f"xpath=/html/body/div[4]/div[{div_num}]/div/form/div/div/button",
+            f"xpath=/html/body/div[5]/div[{div_num}]/div/form/div/div/button",
+            "button:has-text('Search')",
+            "button:has-text('search')",
+            "button.btn-primary",  # Direct class match
+            "button.btn.btn-primary",  # Bootstrap button
+            "form button[type='submit']",
+            "form button",
+        ]
+        for sel in selectors:
+            try:
+                locator = self._page.locator(sel)
+                count = await locator.count()
+                logger.debug(f"[ZEFOY] Selector '{sel}' found {count} elements")
+                if count > 0:
+                    btn = locator.first
+                    if await btn.is_visible():
+                        logger.info(f"[ZEFOY] Found search button with: {sel}")
+                        return btn
+            except Exception as e:
+                logger.debug(f"[ZEFOY] Selector '{sel}' error: {e}")
+                pass
+
+        # Debug: screenshot and log all visible buttons
+        logger.warning("[ZEFOY] Search button not found! Saving debug info...")
+        try:
+            await self._page.screenshot(path="/tmp/zefoy_search_not_found.png")
+            logger.info("[ZEFOY] Screenshot saved to /tmp/zefoy_search_not_found.png")
+        except Exception:
+            pass
+
+        try:
+            all_btns = await self._page.locator("button:visible").all()
+            logger.info(f"[ZEFOY] Found {len(all_btns)} visible buttons on page:")
+            for i, btn in enumerate(all_btns[:15]):
+                try:
+                    txt = await btn.inner_text()
+                    cls = await btn.get_attribute("class") or ""
+                    logger.info(f"[ZEFOY] Button {i}: text='{txt[:40]}' class='{cls[:40]}'")
+                except Exception:
+                    pass
+        except Exception as e:
+            logger.warning(f"[ZEFOY] Error listing buttons: {e}")
+
+        return None
+
+    async def _find_result_button(self, div_num: str) -> Any:
+        """Find the button in the result/countdown area."""
+        selectors = [
+            f"xpath=/html/body/div[5]/div[{div_num}]/div/div/div[1]/div/form/button",
+            f"xpath=/html/body/div[5]/div[{div_num}]/div/div//button[contains(@class,'btn-success')]",
+            "button.btn-success:visible",
+        ]
+        for sel in selectors:
+            try:
+                btn = self._page.locator(sel).first
+                if await btn.count() and await btn.is_visible():
+                    return btn
+            except Exception:
+                pass
+        return None
+
+    async def _find_send_button(self, div_num: str) -> Any:
+        """Find the send/submit button that appears after cooldown.
+
+        This button appears in place of the countdown timer. It's specifically
+        located within the service's result div, NOT just any button on the page.
+
+        Args:
+            div_num: The div number for the current service
+
+        Returns:
+            Button locator if found and ready, None otherwise
+        """
+        # The send button appears in a specific location within the service div
+        # It should be a btn-success (green) button with "Send" text
+        service_div_selector = f"xpath=/html/body/div[5]/div[{div_num}]/div/div"
+
+        # Specific selectors for the button that replaces the timer
+        # These are scoped to the service result div only
+        scoped_selectors = [
+            f"xpath=/html/body/div[5]/div[{div_num}]/div/div/div[1]/div/form/button",
+            f"xpath=/html/body/div[5]/div[{div_num}]//button[contains(@class, 'btn-success')]",
+            f"xpath=/html/body/div[5]/div[{div_num}]//button[contains(text(), 'Send')]",
+        ]
+
+        for sel in scoped_selectors:
+            try:
+                btn = self._page.locator(sel).first
+                if await btn.count() and await btn.is_visible():
+                    # Extra check: make sure it's not disabled and has Send-like text
+                    btn_text = await btn.inner_text()
+                    btn_text_lower = btn_text.lower().strip()
+                    if "send" in btn_text_lower or btn_text_lower == "":
+                        # Also verify no countdown text nearby
+                        try:
+                            parent = await btn.evaluate("el => el.closest('div')?.innerText || ''")
+                            if "wait" not in parent.lower() and "second" not in parent.lower():
+                                logger.debug(f"[ZEFOY] Found send button: '{btn_text}' with selector {sel}")
+                                return btn
+                        except Exception:
+                            return btn
+            except Exception:
+                pass
+
+        return None
 
     async def _check_success(self) -> bool:
         """Check if the action was successful."""
