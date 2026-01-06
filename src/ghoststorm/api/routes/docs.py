@@ -29,7 +29,7 @@ async def list_docs() -> dict[str, Any]:
             # Read first line for title
             title = file.stem.replace("-", " ").title()
             try:
-                with open(file, "r", encoding="utf-8") as f:
+                with open(file, encoding="utf-8") as f:
                     first_line = f.readline().strip()
                     if first_line.startswith("# "):
                         title = first_line[2:]
@@ -71,7 +71,7 @@ async def get_doc(filename: str) -> dict[str, Any]:
         if not file_path.exists():
             raise HTTPException(status_code=404, detail=f"Doc not found: {filename}")
 
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         # Extract title from first heading
