@@ -1,0 +1,43 @@
+{
+  "id": "3492d02c-67dd-4a47-9116-2c33606a7bfd",
+  "name": "Test Flow",
+  "description": "A test flow for E2E testing",
+  "status": "ready",
+  "start_url": "https://example.com",
+  "checkpoints": [
+    {
+      "id": "27d07ea3-bc81-497b-acd2-4f22675ab296",
+      "checkpoint_type": "click",
+      "goal": "Click the login button",
+      "url_pattern": null,
+      "element_description": "Blue button with text 'Login'",
+      "selector_hints": [
+        "#login-btn",
+        "button.login"
+      ],
+      "input_value": null,
+      "timing": {
+        "min_delay": 0.5,
+        "max_delay": 2.0,
+        "timeout": 30.0
+      },
+      "reference_screenshot": null,
+      "order": 0,
+      "created_at": "2026-01-06T14:44:51.337163",
+      "metadata": {}
+    }
+  ],
+  "summary_goal": "",
+  "recorded_with_browser": "patchright",
+  "created_at": "2026-01-06T14:44:51.335136",
+  "updated_at": "2026-01-06T14:44:51.339128",
+  "times_executed": 0,
+  "successful_executions": 0,
+  "success_rate": 0.0,
+  "checkpoint_count": 1,
+  "tags": [
+    "test",
+    "e2e"
+  ],
+  "metadata": {}
+}

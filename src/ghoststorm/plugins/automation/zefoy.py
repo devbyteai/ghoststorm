@@ -1737,7 +1737,9 @@ class ZefoyAutomation:
                 try:
                     txt = await btn.inner_text()
                     cls = await btn.get_attribute("class") or ""
-                    logger.debug(f"[ZEFOY] Visible button {i}: text='{txt[:50]}' class='{cls[:50]}'")
+                    logger.debug(
+                        f"[ZEFOY] Visible button {i}: text='{txt[:50]}' class='{cls[:50]}'"
+                    )
                 except Exception:
                     pass
         except Exception:
@@ -1779,7 +1781,9 @@ class ZefoyAutomation:
                         try:
                             parent = await btn.evaluate("el => el.closest('div')?.innerText || ''")
                             if "wait" not in parent.lower() and "second" not in parent.lower():
-                                logger.debug(f"[ZEFOY] Found send button: '{btn_text}' with selector {sel}")
+                                logger.debug(
+                                    f"[ZEFOY] Found send button: '{btn_text}' with selector {sel}"
+                                )
                                 return btn
                         except Exception:
                             return btn

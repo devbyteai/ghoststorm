@@ -1,0 +1,112 @@
+{
+  "id": "d2e2d67c-d1ae-4dce-bca0-5abdaeabdb1b",
+  "name": "Test Flow",
+  "description": "A test flow for E2E testing",
+  "status": "draft",
+  "start_url": "https://example.com",
+  "checkpoints": [
+    {
+      "id": "26d6f4ea-0018-4dbd-b3d3-4f04bdde30bd",
+      "checkpoint_type": "navigation",
+      "goal": "Test navigation checkpoint",
+      "url_pattern": null,
+      "element_description": null,
+      "selector_hints": [],
+      "input_value": null,
+      "timing": {
+        "min_delay": 0.5,
+        "max_delay": 1.0,
+        "timeout": 30.0
+      },
+      "reference_screenshot": null,
+      "order": 0,
+      "created_at": "2026-01-06T14:44:43.338278",
+      "metadata": {}
+    },
+    {
+      "id": "4e4436be-61cb-432f-9269-325a7a39c8fc",
+      "checkpoint_type": "click",
+      "goal": "Test click checkpoint",
+      "url_pattern": null,
+      "element_description": null,
+      "selector_hints": [],
+      "input_value": null,
+      "timing": {
+        "min_delay": 0.5,
+        "max_delay": 1.0,
+        "timeout": 30.0
+      },
+      "reference_screenshot": null,
+      "order": 1,
+      "created_at": "2026-01-06T14:44:43.340182",
+      "metadata": {}
+    },
+    {
+      "id": "adce3ab6-707e-45bb-83e5-febab0263e49",
+      "checkpoint_type": "input",
+      "goal": "Test input checkpoint",
+      "url_pattern": null,
+      "element_description": null,
+      "selector_hints": [],
+      "input_value": null,
+      "timing": {
+        "min_delay": 0.5,
+        "max_delay": 1.0,
+        "timeout": 30.0
+      },
+      "reference_screenshot": null,
+      "order": 2,
+      "created_at": "2026-01-06T14:44:43.342007",
+      "metadata": {}
+    },
+    {
+      "id": "9ab295be-e27b-42ae-8dee-003c81643d6f",
+      "checkpoint_type": "wait",
+      "goal": "Test wait checkpoint",
+      "url_pattern": null,
+      "element_description": null,
+      "selector_hints": [],
+      "input_value": null,
+      "timing": {
+        "min_delay": 0.5,
+        "max_delay": 1.0,
+        "timeout": 30.0
+      },
+      "reference_screenshot": null,
+      "order": 3,
+      "created_at": "2026-01-06T14:44:43.343876",
+      "metadata": {}
+    },
+    {
+      "id": "f0554eb4-7803-4ff3-a69a-b6a4bc6a6f11",
+      "checkpoint_type": "scroll",
+      "goal": "Test scroll checkpoint",
+      "url_pattern": null,
+      "element_description": null,
+      "selector_hints": [],
+      "input_value": null,
+      "timing": {
+        "min_delay": 0.5,
+        "max_delay": 1.0,
+        "timeout": 30.0
+      },
+      "reference_screenshot": null,
+      "order": 4,
+      "created_at": "2026-01-06T14:44:43.345891",
+      "metadata": {}
+    }
+  ],
+  "summary_goal": "",
+  "recorded_with_browser": "patchright",
+  "created_at": "2026-01-06T14:44:43.336006",
+  "updated_at": "2026-01-06T14:44:43.345893",
+  "times_executed": 0,
+  "successful_executions": 0,
+  "success_rate": 0.0,
+  "checkpoint_count": 5,
+  "tags": [
+    "test",
+    "e2e"
+  ],
+  "metadata": {}
+}

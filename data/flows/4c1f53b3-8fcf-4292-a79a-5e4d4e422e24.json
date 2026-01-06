@@ -1,0 +1,21 @@
+{
+  "id": "4c1f53b3-8fcf-4292-a79a-5e4d4e422e24",
+  "name": "Test Flow",
+  "description": "A test flow for E2E testing",
+  "status": "draft",
+  "start_url": "https://example.com",
+  "checkpoints": [],
+  "summary_goal": "",
+  "recorded_with_browser": "patchright",
+  "created_at": "2026-01-06T14:44:42.342061",
+  "updated_at": "2026-01-06T14:44:42.342062",
+  "times_executed": 0,
+  "successful_executions": 0,
+  "success_rate": 0.0,
+  "checkpoint_count": 0,
+  "tags": [
+    "test",
+    "e2e"
+  ],
+  "metadata": {}
+}

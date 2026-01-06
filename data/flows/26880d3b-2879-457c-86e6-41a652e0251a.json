@@ -1,0 +1,18 @@
+{
+  "id": "26880d3b-2879-457c-86e6-41a652e0251a",
+  "name": "Minimal Flow",
+  "description": "",
+  "status": "draft",
+  "start_url": "https://example.com",
+  "checkpoints": [],
+  "summary_goal": "",
+  "recorded_with_browser": "patchright",
+  "created_at": "2026-01-06T14:44:42.396951",
+  "updated_at": "2026-01-06T14:44:42.396952",
+  "times_executed": 0,
+  "successful_executions": 0,
+  "success_rate": 0.0,
+  "checkpoint_count": 0,
+  "tags": [],
+  "metadata": {}
+}
