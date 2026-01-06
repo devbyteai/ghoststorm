@@ -5,7 +5,6 @@
 # GhostStorm
 
 [![CI](https://img.shields.io/github/actions/workflow/status/devbyteai/ghoststorm/ci.yml?style=flat-square&label=CI)](https://github.com/devbyteai/ghoststorm/actions)
-[![Stars](https://img.shields.io/github/stars/devbyteai/ghoststorm?style=flat-square)](https://github.com/devbyteai/ghoststorm/stargazers)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue?style=flat-square)](https://python.org)
 [![Docs](https://img.shields.io/badge/docs-available-brightgreen?style=flat-square)](https://devbyteai.github.io/ghoststorm)
@@ -30,7 +29,7 @@ AI-powered browser automation with vision, local LLMs, and enterprise stealth.
 | 🧠 **Identity Coherence** | Consistent personas with circadian rhythms and fatigue simulation |
 | 🤖 **Local LLM** | Ollama integration — 100% private, no API costs |
 | 🛡️ **Undetectable** | 20+ anti-fingerprinting vectors, 0% detection rate |
-| 🔄 **47,000+ Proxies** | Built-in aggregator with automatic rotation |
+| 🔄 **Proxy Network** | 50+ free sources + premium residential APIs (Decodo, BrightData, Oxylabs) |
 | 📹 **Flow Recording** | Record once, replay with variation forever |
 
 ---
@@ -63,7 +62,7 @@ docker compose up -d
 | Vision AI | ❌ DOM only | ✅ **Screenshot analysis** |
 | Local LLM | ❌ Cloud API required | ✅ **Ollama built-in** |
 | Bot detection | ⚠️ Often detected | ✅ **Undetectable** |
-| Proxy support | ⚠️ Manual setup | ✅ **47K+ built-in** |
+| Proxy support | ⚠️ Manual setup | ✅ **50+ sources + premium APIs** |
 | Human behavior | ❌ Basic delays | ✅ **True human behavior** |
 
 ---
