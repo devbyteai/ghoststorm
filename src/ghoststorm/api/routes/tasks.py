@@ -89,7 +89,7 @@ async def _execute_with_llm(
     from ghoststorm.api.websocket import ws_manager
     from ghoststorm.core.dom.service import DOMService
     from ghoststorm.core.llm.controller import LLMController
-    from ghoststorm.core.llm.service import LLMService
+    from ghoststorm.core.llm.service import LLMService, LLMServiceConfig
 
     try:
         # Try to get orchestrator, but work without it
@@ -104,7 +104,7 @@ async def _execute_with_llm(
         else:
             # Initialize standalone LLM services
             logger.info("Initializing standalone LLM services")
-            llm_service = LLMService()
+            llm_service = LLMService(LLMServiceConfig())
             dom_service = DOMService()
             llm_controller = LLMController(llm_service, dom_service)
 
@@ -579,6 +579,7 @@ async def _run_task(task_id: str, task_data: dict[str, Any]) -> None:
                                 "task_id": task_id,
                                 "results": results_data,
                                 "llm_mode": llm_mode,
+                                "error": result.get("error"),
                             }
                         )
 

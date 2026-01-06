@@ -17,6 +17,7 @@ from ghoststorm.api.routes import (
     assistant,
     config,
     data,
+    docs,
     dom,
     engine,
     flows,
@@ -133,6 +134,7 @@ def create_app(orchestrator: Orchestrator | None = None) -> FastAPI:
     app.include_router(llm.router, tags=["llm"])
     app.include_router(assistant.router, tags=["assistant"])
     app.include_router(flows.router, tags=["flows"])
+    app.include_router(docs.router, prefix="/api/docs", tags=["docs"])
 
     # WebSocket endpoint
     from ghoststorm.api.websocket import websocket_endpoint

@@ -116,7 +116,7 @@ async function checkActiveScrapeJob() {
 }
 
 async function loadPages() {
-    const pages = ['tasks', 'knowledge-base', 'proxies', 'data', 'settings', 'zefoy', 'engine', 'algorithms', 'llm'];
+    const pages = ['tasks', 'knowledge-base', 'proxies', 'data', 'settings', 'zefoy', 'engine', 'algorithms', 'llm', 'docs'];
     const container = document.getElementById('pages-container');
 
     for (const page of pages) {
@@ -187,6 +187,8 @@ function switchPage(page) {
         loadEnginePresets();
     } else if (page === 'settings') {
         loadSettings();
+    } else if (page === 'docs') {
+        initDocsPage();
     }
 }
 
@@ -218,8 +220,14 @@ function handleWebSocketMessage(data) {
         case 'task_started':
         case 'task_progress':
         case 'task_completed':
+            updateTaskFromEvent(data);
+            break;
         case 'task_failed':
             updateTaskFromEvent(data);
+            // Also forward to LLM handler for AI Control page
+            if (window.llmEventHandler) {
+                window.llmEventHandler(data);
+            }
             break;
         case 'video_watched':
             addEvent('success', `Video watched: ${data.data?.duration?.toFixed(1)}s`);
@@ -5334,3 +5342,649 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+// ============ LLM PAGE ============
+
+// Model lists - Ollama only (text + vision)
+const LLM_MODELS = {
+    text: [
+        { value: 'llama3.2', label: 'Llama 3.2 (Recommended)' },
+        { value: 'llama3', label: 'Llama 3' },
+        { value: 'llama3:70b', label: 'Llama 3 70B' },
+        { value: 'mistral', label: 'Mistral' },
+        { value: 'mixtral', label: 'Mixtral 8x7B' },
+        { value: 'codellama', label: 'Code Llama' },
+        { value: 'qwen2.5', label: 'Qwen 2.5' },
+    ],
+    vision: [
+        { value: 'llama3.2-vision', label: 'Llama 3.2 Vision (Recommended)' },
+        { value: 'llava', label: 'LLaVA (~4GB)' },
+        { value: 'llava:13b', label: 'LLaVA 13B (~8GB)' },
+        { value: 'llava:34b', label: 'LLaVA 34B (~20GB)' },
+        { value: 'bakllava', label: 'BakLLaVA' },
+    ],
+};
+
+// Current task state
+let currentLLMTask = null;
+let pendingAction = null;
+
+function updateLLMModels() {
+    const visionEl = document.getElementById('llm-page-vision');
+    const modelSelect = document.getElementById('llm-model');
+    if (!visionEl || !modelSelect) return;
+
+    const vision = visionEl.value;
+    const useVision = vision === 'always' || vision === 'auto';
+    const models = useVision ? LLM_MODELS.vision : LLM_MODELS.text;
+
+    modelSelect.innerHTML = models.map(m =>
+        `<option value="${m.value}">${m.label}</option>`
+    ).join('');
+}
+
+async function startLLMTask() {
+    let url = document.getElementById('llm-url').value.trim();
+    const goal = document.getElementById('llm-goal').value.trim();
+    const provider = document.getElementById('llm-provider').value;
+    const mode = document.getElementById('llm-mode').value;
+    const vision = document.getElementById('llm-page-vision').value;
+
+    if (!url) {
+        addEvent('error', 'Please enter a URL');
+        return;
+    }
+
+    // Check if Ollama is available first
+    if (!ollamaAvailable) {
+        const analysisContent = document.getElementById('llm-analysis-content');
+        if (analysisContent) {
+            analysisContent.innerHTML = `
+                <div class="text-red-400">
+                    <strong>Cannot Start - Ollama Not Running</strong>
+                    <p class="mt-2 text-gray-300">Please install and start Ollama first.</p>
+                    <p class="mt-2 text-sm text-gray-400">
+                        Install: <code class="bg-black/30 px-1 rounded">curl -fsSL https://ollama.com/install.sh | sh</code><br>
+                        Start: <code class="bg-black/30 px-1 rounded">ollama serve</code><br>
+                        Get model: <code class="bg-black/30 px-1 rounded">ollama pull llama3.2-vision</code>
+                    </p>
+                </div>`;
+        }
+        addEvent('error', 'Ollama not running - cannot start AI task');
+        return;
+    }
+
+    // Auto-add https:// if missing
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+    }
+
+    // Show live indicator
+    document.getElementById('live-indicator').classList.remove('bg-gray-500');
+    document.getElementById('live-indicator').classList.add('bg-green-500', 'animate-pulse');
+
+    const payload = {
+        url: url,
+        llm_mode: mode,
+        llm_task: goal || null,
+        vision_mode: vision,
+        mode: 'debug',
+        workers: 1,
+        config: {
+            llm_provider: provider,
+        }
+    };
+
+    try {
+        const response = await fetch('/api/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            const task = await response.json();
+            currentLLMTask = task.task_id;
+            addEvent('success', 'AI task started');
+            addLLMTimelineEntry('navigate', url, 'Navigating to URL');
+        } else {
+            const error = await response.json();
+            // Parse validation errors
+            let errorMsg = 'Failed to start task';
+            if (error.detail) {
+                if (Array.isArray(error.detail)) {
+                    errorMsg = error.detail.map(e => e.msg || e).join(', ');
+                } else {
+                    errorMsg = error.detail;
+                }
+            }
+            // Show in Analysis panel
+            const analysisContent = document.getElementById('llm-analysis-content');
+            if (analysisContent) {
+                analysisContent.innerHTML = `<div class="text-red-400"><strong>Error:</strong> ${errorMsg}</div>`;
+            }
+            // Reset indicator
+            document.getElementById('live-indicator').classList.remove('bg-green-500', 'animate-pulse');
+            document.getElementById('live-indicator').classList.add('bg-red-500');
+            addEvent('error', errorMsg);
+        }
+    } catch (err) {
+        const analysisContent = document.getElementById('llm-analysis-content');
+        if (analysisContent) {
+            analysisContent.innerHTML = `<div class="text-red-400"><strong>Error:</strong> ${err.message || 'Network error'}</div>`;
+        }
+        document.getElementById('live-indicator').classList.remove('bg-green-500', 'animate-pulse');
+        document.getElementById('live-indicator').classList.add('bg-red-500');
+        addEvent('error', 'Network error');
+        console.error(err);
+    }
+}
+
+function addLLMTimelineEntry(action, target, description) {
+    const timeline = document.getElementById('action-timeline');
+    if (!timeline) return;
+
+    const isEmpty = timeline.querySelector('.text-gray-500');
+    if (isEmpty) isEmpty.remove();
+
+    const icons = {
+        navigate: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3"/>',
+        click: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>',
+        type: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>',
+        scroll: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>',
+        wait: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+        extract: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>',
+    };
+
+    const entry = document.createElement('div');
+    entry.className = 'flex items-start gap-2 p-2 rounded-lg bg-surface-light/50 animate-fade-in';
+    entry.innerHTML = `
+        <div class="w-6 h-6 bg-violet-500/20 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+            <svg class="w-3 h-3 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                ${icons[action] || icons.click}
+            </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+            <div class="text-xs font-medium text-violet-300 capitalize">${action}</div>
+            <div class="text-xs text-gray-400 truncate" title="${target}">${target}</div>
+        </div>
+        <span class="text-xs text-gray-600">${new Date().toLocaleTimeString()}</span>
+    `;
+
+    timeline.insertBefore(entry, timeline.firstChild);
+}
+
+function updateLLMElements(elements) {
+    const container = document.getElementById('elements-list');
+    const countEl = document.getElementById('elements-count');
+    if (!container || !countEl) return;
+
+    if (!elements || elements.length === 0) {
+        container.innerHTML = '<div class="text-sm text-gray-500 text-center py-4">No elements detected</div>';
+        countEl.textContent = '0';
+        return;
+    }
+
+    countEl.textContent = elements.length;
+
+    container.innerHTML = elements.slice(0, 50).map((el, i) => `
+        <div class="flex items-center gap-2 p-2 rounded hover:bg-surface-light cursor-pointer" onclick="highlightElement(${i})">
+            <span class="text-xs px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400">${el.tag || 'div'}</span>
+            <span class="text-xs text-gray-300 truncate flex-1">${el.text || el.selector || 'unnamed'}</span>
+            <span class="text-xs text-gray-500">${(el.confidence * 100).toFixed(0)}%</span>
+        </div>
+    `).join('');
+}
+
+function updateLLMScreenshot(base64Data) {
+    const img = document.getElementById('live-screenshot');
+    const placeholder = document.getElementById('screenshot-placeholder');
+    if (!img) return;
+
+    img.src = `data:image/png;base64,${base64Data}`;
+    img.classList.remove('hidden');
+    if (placeholder) placeholder.classList.add('hidden');
+}
+
+function updateLLMAnalysis(analysis) {
+    const content = document.getElementById('llm-analysis-content');
+    const confidence = document.getElementById('llm-confidence');
+    if (!content) return;
+
+    content.innerHTML = `<p class="text-sm text-gray-300">${analysis.text || analysis}</p>`;
+
+    if (confidence && analysis.confidence !== undefined) {
+        const conf = (analysis.confidence * 100).toFixed(0);
+        confidence.textContent = `${conf}% confident`;
+        confidence.className = `text-xs px-2 py-1 rounded-full ${
+            conf >= 80 ? 'bg-green-500/20 text-green-400' :
+            conf >= 50 ? 'bg-yellow-500/20 text-yellow-400' :
+            'bg-red-500/20 text-red-400'
+        }`;
+    }
+}
+
+function showSuggestedAction(action) {
+    const panel = document.getElementById('llm-action-panel');
+    if (!panel) return;
+
+    document.getElementById('action-type').textContent = action.type || 'Action';
+    document.getElementById('action-target').textContent = action.selector || action.target || '--';
+    document.getElementById('action-reason').textContent = action.reason || '';
+    panel.classList.remove('hidden');
+    pendingAction = action;
+}
+
+function approveAction() {
+    if (!pendingAction || !currentLLMTask) return;
+
+    if (window.ws && window.ws.readyState === WebSocket.OPEN) {
+        window.ws.send(JSON.stringify({
+            type: 'llm_action_approved',
+            task_id: currentLLMTask,
+            action: pendingAction
+        }));
+    }
+
+    addLLMTimelineEntry(pendingAction.type || 'action', pendingAction.selector || pendingAction.target || '--', 'Approved');
+    document.getElementById('llm-action-panel').classList.add('hidden');
+    pendingAction = null;
+}
+
+function rejectAction() {
+    if (!pendingAction || !currentLLMTask) return;
+
+    if (window.ws && window.ws.readyState === WebSocket.OPEN) {
+        window.ws.send(JSON.stringify({
+            type: 'llm_action_rejected',
+            task_id: currentLLMTask,
+            action: pendingAction
+        }));
+    }
+
+    document.getElementById('llm-action-panel').classList.add('hidden');
+    pendingAction = null;
+}
+
+function clearLLMTimeline() {
+    const timeline = document.getElementById('action-timeline');
+    if (timeline) {
+        timeline.innerHTML = '<div class="text-sm text-gray-500 text-center py-4">No actions yet</div>';
+    }
+}
+
+function highlightElement(index) {
+    console.log('Highlight element', index);
+}
+
+function refreshLLMScreenshot() {
+    if (!currentLLMTask) return;
+    fetch(`/api/llm/screenshot/${currentLLMTask}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.screenshot) {
+                updateLLMScreenshot(data.screenshot);
+            }
+        })
+        .catch(console.error);
+}
+
+function toggleLLMFullscreen() {
+    const wrapper = document.getElementById('screenshot-wrapper');
+    if (!wrapper) return;
+
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else {
+        wrapper.requestFullscreen();
+    }
+}
+
+// Handle WebSocket events for LLM page
+function handleLLMWebSocketEvent(data) {
+    switch (data.type) {
+        case 'screenshot_captured':
+        case 'visual.screenshot_live':
+            if (data.task_id === currentLLMTask && data.data?.screenshot) {
+                updateLLMScreenshot(data.data.screenshot);
+            }
+            break;
+
+        case 'llm_analysis_ready':
+        case 'llm.analysis_ready':
+            if (data.task_id === currentLLMTask) {
+                updateLLMAnalysis(data.data || data);
+                if (data.next_action) {
+                    showSuggestedAction(data.next_action);
+                }
+            }
+            break;
+
+        case 'dom_extracted':
+        case 'dom.extracted':
+            if (data.task_id === currentLLMTask) {
+                updateLLMElements(data.elements || []);
+            }
+            break;
+
+        case 'llm_navigated':
+            if (data.task_id === currentLLMTask) {
+                const urlEl = document.getElementById('current-url');
+                if (urlEl) urlEl.textContent = data.url;
+            }
+            break;
+
+        case 'llm.action_executing':
+            if (data.task_id === currentLLMTask && data.action) {
+                addLLMTimelineEntry(data.action.type, data.action.selector || '', 'Executing');
+            }
+            break;
+
+        case 'llm_task_complete':
+        case 'llm.task_complete':
+            if (data.task_id === currentLLMTask) {
+                const indicator = document.getElementById('live-indicator');
+                if (indicator) indicator.classList.remove('animate-pulse');
+                if (data.success) {
+                    addEvent('success', 'AI task completed successfully');
+                } else {
+                    addEvent('error', 'AI task failed');
+                }
+            }
+            break;
+
+        case 'task_failed':
+            if (data.task_id === currentLLMTask) {
+                const indicator = document.getElementById('live-indicator');
+                if (indicator) {
+                    indicator.classList.remove('bg-green-500', 'animate-pulse');
+                    indicator.classList.add('bg-red-500');
+                }
+                // Convert technical error to user-friendly message
+                const errorInfo = formatLLMError(data.error);
+
+                // Show error in AI Analysis panel for visibility
+                const analysisContent = document.getElementById('llm-analysis-content');
+                if (analysisContent) {
+                    analysisContent.innerHTML = `
+                        <div class="text-red-400">
+                            <strong>${errorInfo.title}</strong>
+                            <p class="mt-2 text-gray-300">${errorInfo.message}</p>
+                            ${errorInfo.fix ? `<p class="mt-2 text-yellow-400"><strong>How to fix:</strong> ${errorInfo.fix}</p>` : ''}
+                        </div>`;
+                }
+                addEvent('error', errorInfo.title);
+                addLLMTimelineEntry('error', errorInfo.title, 'Failed');
+            }
+            break;
+    }
+}
+
+// Format technical errors to user-friendly messages
+function formatLLMError(error) {
+    if (!error) {
+        return { title: 'Unknown Error', message: 'Something went wrong.', fix: null };
+    }
+
+    const errorStr = error.toLowerCase();
+
+    // Ollama not running
+    if (errorStr.includes('ollama') || errorStr.includes('connection refused') && errorStr.includes('11434')) {
+        return {
+            title: 'Ollama Not Running',
+            message: 'The AI requires Ollama to be installed and running on your computer.',
+            fix: 'Run: curl -fsSL https://ollama.com/install.sh | sh && ollama serve && ollama pull llama3.2-vision'
+        };
+    }
+
+    // Network/connection errors
+    if (errorStr.includes('err_connection_reset') || errorStr.includes('err_connection_refused')) {
+        return {
+            title: 'Connection Failed',
+            message: 'Could not connect to the website. The site may be blocking automated access or your network/proxy is having issues.',
+            fix: 'Try a different URL, check your internet connection, or try with a proxy enabled.'
+        };
+    }
+
+    if (errorStr.includes('err_empty_response')) {
+        return {
+            title: 'No Response from Website',
+            message: 'The website did not respond. It may be down, blocking your IP, or the URL is incorrect.',
+            fix: 'Verify the URL is correct and try enabling proxy rotation.'
+        };
+    }
+
+    if (errorStr.includes('timeout') || errorStr.includes('timed out')) {
+        return {
+            title: 'Request Timed Out',
+            message: 'The operation took too long. The website may be slow or unresponsive.',
+            fix: 'Try again or check if the website is accessible in a normal browser.'
+        };
+    }
+
+    // LLM model errors
+    if (errorStr.includes('model') && (errorStr.includes('not found') || errorStr.includes('does not exist'))) {
+        return {
+            title: 'AI Model Not Found',
+            message: 'The required AI model is not installed.',
+            fix: 'Run: ollama pull llama3.2-vision'
+        };
+    }
+
+    // Browser errors
+    if (errorStr.includes('browser') || errorStr.includes('playwright') || errorStr.includes('chromium')) {
+        return {
+            title: 'Browser Error',
+            message: 'Failed to start or control the browser.',
+            fix: 'Try restarting the server or run: playwright install chromium'
+        };
+    }
+
+    // Default - show original error but make it cleaner
+    return {
+        title: 'Task Failed',
+        message: error,
+        fix: null
+    };
+}
+
+// Register LLM handler
+window.llmEventHandler = handleLLMWebSocketEvent;
+
+// Track Ollama availability
+let ollamaAvailable = false;
+
+async function checkLLMProviderHealth() {
+    try {
+        const response = await fetch('/api/llm/health');
+        const health = await response.json();
+
+        const ollamaStatus = health.providers?.ollama;
+        ollamaAvailable = ollamaStatus?.available || false;
+
+        // Only show warning on AI Control page (check if llm-page-vision exists)
+        const isLLMPage = document.getElementById('llm-page-vision') !== null;
+        if (!ollamaAvailable && isLLMPage) {
+            // Show warning in the AI Analysis panel instead of global banner
+            const analysisContent = document.getElementById('llm-analysis-content');
+            if (analysisContent) {
+                analysisContent.innerHTML = `
+                    <div class="text-yellow-400">
+                        <strong>Ollama Not Running</strong>
+                        <p class="mt-2 text-gray-300">AI features require Ollama to be installed and running.</p>
+                        <p class="mt-2 text-sm text-gray-400">
+                            Install: <code class="bg-black/30 px-1 rounded">curl -fsSL https://ollama.com/install.sh | sh</code><br>
+                            Start: <code class="bg-black/30 px-1 rounded">ollama serve</code><br>
+                            Get model: <code class="bg-black/30 px-1 rounded">ollama pull llama3.2-vision</code>
+                        </p>
+                    </div>`;
+            }
+        }
+    } catch (err) {
+        ollamaAvailable = false;
+        console.error('Failed to check provider health:', err);
+    }
+}
+
+// Initialize LLM page when it becomes visible
+function initLLMPage() {
+    const visionEl = document.getElementById('llm-page-vision');
+    if (visionEl) {
+        visionEl.addEventListener('change', updateLLMModels);
+        updateLLMModels();
+        checkLLMProviderHealth();
+    }
+}
+
+// Call init after pages are loaded
+setTimeout(initLLMPage, 1000);
+
+// ============================================================
+// DOCUMENTATION PAGE
+// ============================================================
+
+let currentDocSlug = 'index';
+let docsCache = [];
+
+// Load docs list
+async function loadDocsList() {
+    try {
+        const response = await fetch('/api/docs');
+        const data = await response.json();
+
+        if (data.success && data.docs) {
+            docsCache = data.docs;
+            renderDocsList(data.docs);
+            // Load index by default
+            loadDoc('index');
+        }
+    } catch (err) {
+        console.error('Failed to load docs list:', err);
+        const nav = document.getElementById('docs-nav');
+        if (nav) {
+            nav.innerHTML = '<div class="text-center text-red-400 py-4 text-sm">Failed to load docs</div>';
+        }
+    }
+}
+
+// Render docs navigation list
+function renderDocsList(docs) {
+    const nav = document.getElementById('docs-nav');
+    if (!nav) return;
+
+    // Order: index first, then alphabetically
+    const ordered = [...docs].sort((a, b) => {
+        if (a.slug === 'index') return -1;
+        if (b.slug === 'index') return 1;
+        return a.title.localeCompare(b.title);
+    });
+
+    nav.innerHTML = ordered.map(doc => `
+        <button onclick="loadDoc('${doc.slug}')"
+            class="doc-nav-item w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-surface-light transition-colors ${doc.slug === currentDocSlug ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-300'}"
+            data-slug="${doc.slug}">
+            ${doc.title}
+        </button>
+    `).join('');
+}
+
+// Filter docs by search
+function filterDocs() {
+    const search = document.getElementById('docs-search')?.value.toLowerCase() || '';
+    const filtered = docsCache.filter(doc =>
+        doc.title.toLowerCase().includes(search) ||
+        doc.slug.toLowerCase().includes(search)
+    );
+    renderDocsList(filtered);
+}
+
+// Load a specific doc
+async function loadDoc(slug) {
+    currentDocSlug = slug;
+
+    // Update nav highlighting
+    document.querySelectorAll('.doc-nav-item').forEach(el => {
+        if (el.dataset.slug === slug) {
+            el.classList.add('bg-emerald-500/20', 'text-emerald-400');
+            el.classList.remove('text-gray-300');
+        } else {
+            el.classList.remove('bg-emerald-500/20', 'text-emerald-400');
+            el.classList.add('text-gray-300');
+        }
+    });
+
+    const contentEl = document.getElementById('docs-content');
+    const titleEl = document.getElementById('docs-current-title');
+
+    if (!contentEl) return;
+
+    // Show loading
+    contentEl.innerHTML = '<div class="text-center text-gray-500 py-12"><div class="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>Loading...</div>';
+
+    try {
+        const response = await fetch(`/api/docs/${slug}`);
+        const data = await response.json();
+
+        if (data.success && data.content) {
+            // Update title
+            if (titleEl) {
+                titleEl.textContent = data.title;
+            }
+
+            // Configure marked
+            if (typeof marked !== 'undefined') {
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true,
+                    highlight: function(code, lang) {
+                        if (typeof hljs !== 'undefined' && lang && hljs.getLanguage(lang)) {
+                            try {
+                                return hljs.highlight(code, { language: lang }).value;
+                            } catch (err) {}
+                        }
+                        return code;
+                    }
+                });
+
+                contentEl.innerHTML = marked.parse(data.content);
+
+                // Apply syntax highlighting to code blocks
+                if (typeof hljs !== 'undefined') {
+                    contentEl.querySelectorAll('pre code').forEach(block => {
+                        hljs.highlightElement(block);
+                    });
+                }
+            } else {
+                // Fallback: render as preformatted text
+                contentEl.innerHTML = `<pre style="white-space: pre-wrap;">${data.content}</pre>`;
+            }
+        } else {
+            contentEl.innerHTML = '<div class="text-center text-red-400 py-12">Document not found</div>';
+        }
+    } catch (err) {
+        console.error('Failed to load doc:', err);
+        contentEl.innerHTML = '<div class="text-center text-red-400 py-12">Failed to load document</div>';
+    }
+}
+
+// Refresh current doc
+function refreshCurrentDoc() {
+    loadDoc(currentDocSlug);
+}
+
+// Open docs on GitHub
+function openDocsOnGithub() {
+    // This would link to your GitHub repo's docs folder
+    window.open('https://github.com/devbyteai/ghoststorm/tree/main/docs', '_blank');
+}
+
+// Initialize docs page when it becomes visible
+function initDocsPage() {
+    const docsNav = document.getElementById('docs-nav');
+    if (docsNav && docsNav.innerHTML.includes('Loading docs')) {
+        loadDocsList();
+    }
+}
+
+// Call init after pages are loaded
+setTimeout(initDocsPage, 1000);
