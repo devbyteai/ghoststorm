@@ -1253,7 +1253,9 @@ class ZefoyAutomation:
                 seconds = (
                     int(re.search(r"\d+", num_part).group()) if re.search(r"\d+", num_part) else 0
                 )
-            return minutes * 60 + seconds + 5  # +5 buffer
+            total = minutes * 60 + seconds + 5  # +5 buffer
+            # Sanity check: cap at 10 minutes max
+            return min(total, 600)
         except Exception:
             return 60  # Default 60s
 

@@ -184,11 +184,12 @@ async def check_zefoy_services_now() -> dict:
 
 
 async def _run_zefoy_job(job_id: str) -> None:
-    """Background task to run Zefoy automation."""
+    """Background task to run Zefoy automation with parallel workers."""
     from ghoststorm.plugins.automation.zefoy import ZefoyAutomation, ZefoyConfig
 
     job = _jobs[job_id]
     config = job["config"]
+    workers = config.get("workers", 1)
 
     # Get proxy if enabled
     proxy_list: list[str] = []
@@ -205,87 +206,116 @@ async def _run_zefoy_job(job_id: str) -> None:
                 with open(proxy_file) as f:
                     proxy_list = [line.strip() for line in f if line.strip()][:100]
 
-    proxy_index = 0
+    proxy_index = [0]  # Use list for mutable reference in nested function
 
-    try:
-        for service in job["services"]:
-            for run_idx in range(config["repeat"]):
-                if job.get("cancelled"):
-                    job["status"] = "cancelled"
-                    return
+    async def run_single_task(service: str, run_idx: int, worker_idx: int = 0) -> None:
+        """Run a single automation task."""
+        if job.get("cancelled"):
+            return
 
-                job["current_run"] += 1
-                job["current_service"] = service
+        job["current_run"] += 1
+        job["current_service"] = service
 
-                _add_job_log(job_id, f"Starting {service} run {run_idx + 1}/{config['repeat']}")
+        _add_job_log(
+            job_id,
+            f"[Worker {worker_idx + 1}] Starting {service} run {run_idx + 1}/{config['repeat']}",
+        )
 
-                # Get proxy
-                proxy = None
-                if proxy_list and config["use_proxy"]:
-                    if config["rotate_proxy"]:
-                        proxy = proxy_list[proxy_index % len(proxy_list)]
-                        proxy_index += 1
-                    else:
-                        proxy = proxy_list[0]
+        # Get proxy
+        proxy = None
+        if proxy_list and config["use_proxy"]:
+            if config["rotate_proxy"]:
+                proxy = proxy_list[proxy_index[0] % len(proxy_list)]
+                proxy_index[0] += 1
+            else:
+                proxy = proxy_list[0]
 
-                    # Format proxy URL
-                    if proxy and not proxy.startswith("http"):
-                        proxy = f"http://{proxy}"
+            # Format proxy URL
+            if proxy and not proxy.startswith("http"):
+                proxy = f"http://{proxy}"
 
-                # Create automation config
-                zefoy_config = ZefoyConfig(
-                    tiktok_url=job["url"],
-                    service=service,
-                    headless=config["headless"],
-                    proxy=proxy,
+        # Create automation config
+        zefoy_config = ZefoyConfig(
+            tiktok_url=job["url"],
+            service=service,
+            headless=config["headless"],
+            proxy=proxy,
+        )
+
+        # Run automation
+        automation = ZefoyAutomation(config=zefoy_config)
+
+        try:
+            result = await automation.run()
+
+            if result.success:
+                job["successful_runs"] += 1
+                _add_job_log(
+                    job_id, f"✓ [Worker {worker_idx + 1}] {service} completed successfully"
+                )
+            else:
+                job["failed_runs"] += 1
+                error_icon = {
+                    "proxy": "🔌",
+                    "captcha": "🔐",
+                    "service_offline": "⚠️",
+                    "timeout": "⏱️",
+                    "network": "🌐",
+                }.get(result.error_type, "❌")
+                _add_job_log(
+                    job_id,
+                    f"{error_icon} [Worker {worker_idx + 1}] {service} FAILED [{result.error_type or 'unknown'}]: {result.error}",
                 )
 
-                # Run automation
-                automation = ZefoyAutomation(config=zefoy_config)
+            job["captchas_solved"] += result.captchas_solved
 
-                try:
-                    result = await automation.run()
+            # Wait for cooldown if present (cap at 5 minutes max)
+            if result.cooldown_seconds > 0:
+                cooldown = min(result.cooldown_seconds, 300)  # Max 5 minutes
+                if cooldown != result.cooldown_seconds:
+                    _add_job_log(
+                        job_id,
+                        f"[Worker {worker_idx + 1}] Cooldown {result.cooldown_seconds}s capped to {cooldown}s",
+                    )
+                _add_job_log(
+                    job_id,
+                    f"[Worker {worker_idx + 1}] Waiting {cooldown}s cooldown...",
+                )
+                await asyncio.sleep(cooldown)
 
-                    if result.success:
-                        job["successful_runs"] += 1
-                        _add_job_log(job_id, f"✓ {service} completed successfully")
-                    else:
-                        job["failed_runs"] += 1
-                        error_icon = {
-                            "proxy": "🔌",
-                            "captcha": "🔐",
-                            "service_offline": "⚠️",
-                            "timeout": "⏱️",
-                            "network": "🌐",
-                        }.get(result.error_type, "❌")
-                        _add_job_log(
-                            job_id,
-                            f"{error_icon} {service} FAILED [{result.error_type or 'unknown'}]: {result.error}",
-                        )
+        except Exception as e:
+            job["failed_runs"] += 1
+            _add_job_log(job_id, f"❌ [Worker {worker_idx + 1}] {service} EXCEPTION: {e!s}")
 
-                    job["captchas_solved"] += result.captchas_solved
+    try:
+        # Build list of all tasks
+        # Workers means: run this many browsers in parallel for each service
+        tasks = []
+        for service in job["services"]:
+            for run_idx in range(config["repeat"]):
+                # Create 'workers' number of parallel tasks for each run
+                for worker_idx in range(workers):
+                    tasks.append(run_single_task(service, run_idx, worker_idx))
 
-                    # Wait for cooldown if present
-                    if result.cooldown_seconds > 0:
-                        _add_job_log(job_id, f"Waiting {result.cooldown_seconds}s cooldown...")
-                        await asyncio.sleep(result.cooldown_seconds)
+        _add_job_log(
+            job_id,
+            f"Starting {len(tasks)} tasks ({workers} workers × {len(job['services'])} services × {config['repeat']} repeats)",
+        )
 
-                except Exception as e:
-                    job["failed_runs"] += 1
-                    _add_job_log(job_id, f"❌ {service} EXCEPTION: {e!s}")
-
-                # Delay between runs
-                if run_idx < config["repeat"] - 1 or service != job["services"][-1]:
-                    await asyncio.sleep(config["delay"])
+        # Run all tasks in parallel (no semaphore limiting - all workers run at once)
+        await asyncio.gather(*tasks)
 
         # Job completed
-        job["status"] = "completed"
-        job["completed_at"] = datetime.now(UTC).isoformat()
-
-        if job["failed_runs"] == 0:
-            _stats["successful"] += 1
+        if job.get("cancelled"):
+            job["status"] = "cancelled"
         else:
-            _stats["failed"] += 1
+            job["status"] = "completed"
+            job["completed_at"] = datetime.now(UTC).isoformat()
+
+            if job["failed_runs"] == 0:
+                _stats["successful"] += 1
+            else:
+                _stats["failed"] += 1
 
         _add_job_log(
             job_id,
