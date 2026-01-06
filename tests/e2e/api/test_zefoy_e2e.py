@@ -266,26 +266,18 @@ class TestZefoyServicesAPI:
             if "status" in data:
                 assert "views" in data["status"]
 
-    def test_check_services_error(self, api_test_client: TestClient):
-        """Test check services handles errors."""
-        with (
-            patch(
-                "ghoststorm.api.routes.zefoy._service_status_cache",
-                {
-                    "status": {},
-                    "last_check": None,
-                    "checking": False,
-                },
-            ),
-            patch("ghoststorm.plugins.automation.zefoy.check_zefoy_services") as mock_check,
-        ):
-            mock_check.side_effect = Exception("Network error")
+    def test_check_services_always_succeeds(self, api_test_client: TestClient):
+        """Test check services always succeeds (simplified implementation)."""
+        # The endpoint was simplified - it no longer does actual browser checks
+        # It just marks all services as available
+        response = api_test_client.post("/api/zefoy/services/check")
 
-            response = api_test_client.post("/api/zefoy/services/check")
-
-            assert response.status_code == 200
-            data = response.json()
-            assert "error" in data
+        assert response.status_code == 200
+        data = response.json()
+        assert "status" in data
+        assert data["checking"] is False
+        # All services should be marked available
+        assert all(v is True for v in data["status"].values())
 
 
 @pytest.mark.e2e
