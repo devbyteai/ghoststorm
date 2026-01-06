@@ -36,11 +36,13 @@ async def list_docs() -> dict[str, Any]:
             except Exception:
                 pass
 
-            docs.append({
-                "filename": file.name,
-                "slug": file.stem,
-                "title": title,
-            })
+            docs.append(
+                {
+                    "filename": file.name,
+                    "slug": file.stem,
+                    "title": title,
+                }
+            )
 
         return {"success": True, "docs": docs}
 
