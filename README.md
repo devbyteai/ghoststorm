@@ -4,10 +4,12 @@
 
 # GhostStorm
 
+[![PyPI](https://img.shields.io/pypi/v/ghoststorm?style=flat-square&color=blue)](https://pypi.org/project/ghoststorm/)
+[![Downloads](https://img.shields.io/pypi/dm/ghoststorm?style=flat-square&color=green)](https://pypi.org/project/ghoststorm/)
 [![CI](https://img.shields.io/github/actions/workflow/status/devbyteai/ghoststorm/ci.yml?style=flat-square&label=CI)](https://github.com/devbyteai/ghoststorm/actions)
+[![Python](https://img.shields.io/badge/python-3.12+-blue?style=flat-square)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.11+-blue?style=flat-square)](https://python.org)
-[![Docs](https://img.shields.io/badge/docs-available-brightgreen?style=flat-square)](https://devbyteai.github.io/ghoststorm)
+[![CLI](https://img.shields.io/badge/CLI-available-brightgreen?style=flat-square)](https://devbyteai.github.io/ghoststorm/cli)
 
 ### See any page. Control any browser. Detect nothing.
 
@@ -79,6 +81,31 @@ Browse without exposing anything real:
 - **Behavior Pattern** — Human-like
 
 **Zero trace. Zero detection.**
+
+---
+
+## 🗂️ Data & Generation
+
+Built-in datasets + real-time generation for fingerprints, device profiles, user agents, screen sizes, behavior patterns, and more. Generate unlimited unique identities on the fly.
+
+---
+
+## 🛡️ Anti-Detection
+
+Bypass every major anti-bot system:
+
+| System | Status |
+|--------|--------|
+| Cloudflare | Bypassed |
+| Cloudflare Turnstile | Bypassed |
+| DataDome | Bypassed |
+| PerimeterX / HUMAN | Bypassed |
+| Akamai Bot Manager | Bypassed |
+| Kasada | Bypassed |
+| Shape Security | Bypassed |
+| Imperva | Bypassed |
+| reCAPTCHA | Solver Integration |
+| hCaptcha | Solver Integration |
 
 ---
 
