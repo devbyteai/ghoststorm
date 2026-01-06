@@ -1609,21 +1609,26 @@ class ZefoyAutomation:
                 return False
 
             await search_btn.click(force=True, timeout=5000)
-            await asyncio.sleep(3)
+            logger.info("[ZEFOY] Search clicked! Waiting for result button to appear...")
+            await asyncio.sleep(5)  # Wait longer for button to appear
             await self._hide_ad_overlays()
 
-            # Now find and click the result button
-            logger.info("[ZEFOY] Looking for result button after Search...")
-            result_btn = await self._find_result_button(div_num)
-            if result_btn:
-                logger.info("[ZEFOY] Found result button - clicking!")
-                await result_btn.click(force=True, timeout=5000)
+            # Try multiple times to find the result button (it might take a moment)
+            for attempt in range(3):
+                logger.info(f"[ZEFOY] Looking for result button (attempt {attempt + 1}/3)...")
+                result_btn = await self._find_result_button(div_num)
+                if result_btn:
+                    logger.info("[ZEFOY] Found result button - clicking!")
+                    await result_btn.click(force=True, timeout=5000)
+                    await asyncio.sleep(2)
+                    logger.info("[ZEFOY] Result button clicked successfully!")
+                    return True
+                # Wait a bit more and try again
                 await asyncio.sleep(2)
-                logger.info("[ZEFOY] Result button clicked successfully!")
-                return True
-            else:
-                logger.warning("[ZEFOY] Result button not found after Search")
-                return False
+                await self._hide_ad_overlays()
+
+            logger.warning("[ZEFOY] Result button not found after Search")
+            return False
 
         logger.warning("[ZEFOY] Neither button nor 'ready' text found after cooldown")
         return False
@@ -1645,10 +1650,11 @@ class ZefoyAutomation:
                 locator = self._page.locator(sel)
                 count = await locator.count()
                 logger.debug(f"[ZEFOY] Selector '{sel}' found {count} elements")
-                if count > 0:
-                    btn = locator.first
+                # Check ALL matches, not just first - find visible one
+                for i in range(count):
+                    btn = locator.nth(i)
                     if await btn.is_visible():
-                        logger.info(f"[ZEFOY] Found search button with: {sel}")
+                        logger.info(f"[ZEFOY] Found search button with: {sel} (index {i})")
                         return btn
             except Exception as e:
                 logger.debug(f"[ZEFOY] Selector '{sel}' error: {e}")
@@ -1678,19 +1684,65 @@ class ZefoyAutomation:
         return None
 
     async def _find_result_button(self, div_num: str) -> Any:
-        """Find the button in the result/countdown area."""
+        """Find the result button that appears after clicking Search.
+
+        This button shows hearts/likes count and appears where the cooldown was.
+        It's NOT the Search button (btn-primary index 8).
+        """
+        # Specific selectors for the result button area
         selectors = [
+            # XPath to the specific form/button in result area
             f"xpath=/html/body/div[5]/div[{div_num}]/div/div/div[1]/div/form/button",
+            f"xpath=/html/body/div[5]/div[{div_num}]/div/div/div[1]//button",
+            # btn-success is the typical result button
             f"xpath=/html/body/div[5]/div[{div_num}]/div/div//button[contains(@class,'btn-success')]",
-            "button.btn-success:visible",
+            "button.btn-success",
+            # btn-dark or btn-secondary might be used
+            f"xpath=/html/body/div[5]/div[{div_num}]/div/div//button[contains(@class,'btn-dark')]",
+            f"xpath=/html/body/div[5]/div[{div_num}]/div/div//button[contains(@class,'btn-secondary')]",
+            "button.btn-dark",
+            "button.btn-secondary",
+            # Button with heart icon
+            "button:has(i.fa-heart)",
+            "button:has(.fa-heart)",
+            # Any button in the result div area (more specific path)
+            f"xpath=/html/body/div[5]/div[{div_num}]/div/div//button",
         ]
         for sel in selectors:
             try:
-                btn = self._page.locator(sel).first
-                if await btn.count() and await btn.is_visible():
-                    return btn
+                locator = self._page.locator(sel)
+                count = await locator.count()
+                logger.debug(f"[ZEFOY] Result button selector '{sel}' found {count} elements")
+                for i in range(count):
+                    btn = locator.nth(i)
+                    if await btn.is_visible():
+                        # Skip if it's the Search button (has "Search" text)
+                        try:
+                            btn_text = await btn.inner_text()
+                            if "search" in btn_text.lower():
+                                logger.debug(f"[ZEFOY] Skipping Search button at index {i}")
+                                continue
+                        except Exception:
+                            pass
+                        logger.info(f"[ZEFOY] Found result button with: {sel} (index {i})")
+                        return btn
             except Exception:
                 pass
+
+        # Debug: log all visible buttons to help identify the correct one
+        logger.warning("[ZEFOY] Result button not found! Listing visible buttons...")
+        try:
+            all_btns = await self._page.locator("button:visible").all()
+            for i, btn in enumerate(all_btns[:20]):
+                try:
+                    txt = await btn.inner_text()
+                    cls = await btn.get_attribute("class") or ""
+                    logger.debug(f"[ZEFOY] Visible button {i}: text='{txt[:50]}' class='{cls[:50]}'")
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
         return None
 
     async def _find_send_button(self, div_num: str) -> Any:
