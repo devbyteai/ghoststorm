@@ -4,12 +4,11 @@
 
 # GhostStorm
 
-[![PyPI](https://img.shields.io/pypi/v/ghoststorm?style=flat-square&color=blue)](https://pypi.org/project/ghoststorm/)
-[![Downloads](https://img.shields.io/pypi/dm/ghoststorm?style=flat-square&color=green)](https://pypi.org/project/ghoststorm/)
 [![CI](https://img.shields.io/github/actions/workflow/status/devbyteai/ghoststorm/ci.yml?style=flat-square&label=CI)](https://github.com/devbyteai/ghoststorm/actions)
 [![Python](https://img.shields.io/badge/python-3.12+-blue?style=flat-square)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
-[![CLI](https://img.shields.io/badge/CLI-available-brightgreen?style=flat-square)](https://devbyteai.github.io/ghoststorm/cli)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)](https://github.com/devbyteai/ghoststorm/releases)
+[![Maintained](https://img.shields.io/badge/maintained-yes-green?style=flat-square)](https://github.com/devbyteai/ghoststorm/commits/main)
 
 ### See any page. Control any browser. Detect nothing.
 
