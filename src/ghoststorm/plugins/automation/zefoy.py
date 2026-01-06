@@ -1759,8 +1759,6 @@ class ZefoyAutomation:
         """
         # The send button appears in a specific location within the service div
         # It should be a btn-success (green) button with "Send" text
-        service_div_selector = f"xpath=/html/body/div[5]/div[{div_num}]/div/div"
-
         # Specific selectors for the button that replaces the timer
         # These are scoped to the service result div only
         scoped_selectors = [
