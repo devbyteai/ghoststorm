@@ -36,74 +36,74 @@ classifiers = [
 
 dependencies = [
     # Browser automation
-    "patchright>=1.0.0",
-    "camoufox>=0.4.0",
-    "playwright>=1.49.0",
+    "patchright>=1.58.2",
+    "camoufox>=0.4.11",
+    "playwright>=1.58.0",
 
     # Fingerprinting
-    "browserforge>=1.2.3",
+    "browserforge>=1.2.4",
 
     # CLI
-    "typer[all]>=0.12.0",
-    "rich>=13.9.0",
+    "typer[all]>=0.24.1",
+    "rich>=15.0.0",
 
     # Config
-    "pydantic>=2.10.0",
-    "pydantic-settings>=2.6.0",
-    "pyyaml>=6.0.2",
+    "pydantic>=2.13.0",
+    "pydantic-settings>=2.13.1",
+    "pyyaml>=6.0.3",
 
     # Plugin system
-    "pluggy>=1.5.0",
+    "pluggy>=1.6.0",
 
     # Async
-    "aiohttp>=3.11.0",
-    "aiofiles>=24.1.0",
+    "aiohttp>=3.13.5",
+    "aiofiles>=25.1.0",
 
     # Logging & metrics
-    "structlog>=24.4.0",
-    "prometheus-client>=0.21.0",
+    "structlog>=25.5.0",
+    "prometheus-client>=0.25.0",
 
     # Proxy
-    "python-socks[asyncio]>=2.5.0",
+    "python-socks[asyncio]>=2.8.1",
 
     # Data
-    "orjson>=3.10.0",
-    "aiosqlite>=0.20.0",
+    "orjson>=3.11.8",
+    "aiosqlite>=0.22.1",
 
     # GeoIP (identity coherence)
-    "geoip2fast>=1.2.0",
+    "geoip2fast>=1.2.2",
 
     # Scraping
-    "beautifulsoup4>=4.12.0",
-    "lxml>=5.0.0",
+    "beautifulsoup4>=4.14.3",
+    "lxml>=6.0.4",
 
     # System monitoring
-    "psutil>=6.0.0",
+    "psutil>=7.2.2",
 
     # API (for future GUI)
-    "fastapi>=0.115.0",
-    "uvicorn[standard]>=0.32.0",
-    "websockets>=14.0",
+    "fastapi>=0.135.3",
+    "uvicorn[standard]>=0.44.0",
+    "websockets>=16.0",
 ]
 
 [project.optional-dependencies]
 captcha = [
-    "2captcha-python>=1.5.0",
-    "anticaptchaofficial>=1.0.0",
+    "2captcha-python>=2.0.6",
+    "anticaptchaofficial>=1.0.69",
 ]
 gui = [
-    "nicegui>=2.0.0",
+    "nicegui>=3.10.0",
 ]
 dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
     "pytest-cov>=6.0.0",
     "pytest-playwright>=0.4.0",
-    "playwright>=1.40.0",
-    "httpx>=0.27.0",
+    "playwright>=1.58.0",
+    "httpx>=0.28.1",
     "ruff>=0.8.0",
     "mypy>=1.13.0",
-    "pre-commit>=4.0.0",
+    "pre-commit>=4.5.1",
 ]
 all = [
     "ghoststorm[captcha,gui,dev]",
