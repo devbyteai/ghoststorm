@@ -56,7 +56,7 @@ dependencies = [
     "pluggy>=1.5.0",
 
     # Async
-    "aiohttp>=3.11.0",
+    "aiohttp>=3.14.1",
     "aiofiles>=24.1.0",
 
     # Logging & metrics
@@ -67,7 +67,7 @@ dependencies = [
     "python-socks[asyncio]>=2.5.0",
 
     # Data
-    "orjson>=3.10.0",
+    "orjson>=3.11.6",
     "aiosqlite>=0.20.0",
 
     # GeoIP (identity coherence)
@@ -75,7 +75,7 @@ dependencies = [
 
     # Scraping
     "beautifulsoup4>=4.12.0",
-    "lxml>=5.0.0",
+    "lxml>=6.1.0",
 
     # System monitoring
     "psutil>=6.0.0",
@@ -92,10 +92,10 @@ captcha = [
     "anticaptchaofficial>=1.0.0",
 ]
 gui = [
-    "nicegui>=2.0.0",
+    "nicegui>=3.12.0",
 ]
 dev = [
-    "pytest>=8.3.0",
+    "pytest>=9.0.3",
     "pytest-asyncio>=0.24.0",
     "pytest-cov>=6.0.0",
     "pytest-playwright>=0.4.0",
